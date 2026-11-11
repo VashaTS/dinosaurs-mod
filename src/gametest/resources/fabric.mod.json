@@ -1,0 +1,11 @@
+{
+	"schemaVersion": 1,
+	"id": "dinosaurs-test",
+	"version": "1.0.0",
+	"name": "Dinosaurs client test",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-client-gametest": ["net.vsh33.dinosaurs.test.DinosaursScreenshotTest"]
+	},
+	"depends": {"dinosaurs": "*"}
+}

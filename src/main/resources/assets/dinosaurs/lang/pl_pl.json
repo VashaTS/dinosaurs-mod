@@ -1,0 +1,23 @@
+{
+  "itemGroup.dinosaurs.dinosaurs": "Dinozaury",
+  "entity.dinosaurs.t_rex": "Tyranozaur",
+  "item.dinosaurs.t_rex_spawn_egg": "Jajo przywołania: Tyranozaur",
+  "entity.dinosaurs.velociraptor": "Welociraptor",
+  "item.dinosaurs.velociraptor_spawn_egg": "Jajo przywołania: Welociraptor",
+  "entity.dinosaurs.spinosaurus": "Spinozaur",
+  "item.dinosaurs.spinosaurus_spawn_egg": "Jajo przywołania: Spinozaur",
+  "entity.dinosaurs.triceratops": "Triceratops",
+  "item.dinosaurs.triceratops_spawn_egg": "Jajo przywołania: Triceratops",
+  "entity.dinosaurs.stegosaurus": "Stegozaur",
+  "item.dinosaurs.stegosaurus_spawn_egg": "Jajo przywołania: Stegozaur",
+  "entity.dinosaurs.ankylosaurus": "Ankylozaur",
+  "item.dinosaurs.ankylosaurus_spawn_egg": "Jajo przywołania: Ankylozaur",
+  "entity.dinosaurs.brachiosaurus": "Brachiozaur",
+  "item.dinosaurs.brachiosaurus_spawn_egg": "Jajo przywołania: Brachiozaur",
+  "entity.dinosaurs.parasaurolophus": "Parazaurolof",
+  "item.dinosaurs.parasaurolophus_spawn_egg": "Jajo przywołania: Parazaurolof",
+  "entity.dinosaurs.megalodon": "Megalodon",
+  "item.dinosaurs.megalodon_spawn_egg": "Jajo przywołania: Megalodon",
+  "entity.dinosaurs.pteranodon": "Pteranodon",
+  "item.dinosaurs.pteranodon_spawn_egg": "Jajo przywołania: Pteranodon"
+}

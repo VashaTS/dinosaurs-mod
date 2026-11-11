@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "dinosaurs",
+	"version": "${version}",
+	"name": "Dinosaurs",
+	"description": "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. English and Polish translations.",
+	"authors": ["Vasha"],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/dinosaurs",
+		"sources": "https://github.com/VashaTS/dinosaurs-mod",
+		"issues": "https://github.com/VashaTS/dinosaurs-mod/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/dinosaurs/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["net.vsh33.dinosaurs.Dinosaurs"],
+		"client": ["net.vsh33.dinosaurs.client.DinosaursClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,23 @@
+{
+  "itemGroup.dinosaurs.dinosaurs": "Dinosaurs",
+  "entity.dinosaurs.t_rex": "Tyrannosaurus Rex",
+  "item.dinosaurs.t_rex_spawn_egg": "Tyrannosaurus Rex Spawn Egg",
+  "entity.dinosaurs.velociraptor": "Velociraptor",
+  "item.dinosaurs.velociraptor_spawn_egg": "Velociraptor Spawn Egg",
+  "entity.dinosaurs.spinosaurus": "Spinosaurus",
+  "item.dinosaurs.spinosaurus_spawn_egg": "Spinosaurus Spawn Egg",
+  "entity.dinosaurs.triceratops": "Triceratops",
+  "item.dinosaurs.triceratops_spawn_egg": "Triceratops Spawn Egg",
+  "entity.dinosaurs.stegosaurus": "Stegosaurus",
+  "item.dinosaurs.stegosaurus_spawn_egg": "Stegosaurus Spawn Egg",
+  "entity.dinosaurs.ankylosaurus": "Ankylosaurus",
+  "item.dinosaurs.ankylosaurus_spawn_egg": "Ankylosaurus Spawn Egg",
+  "entity.dinosaurs.brachiosaurus": "Brachiosaurus",
+  "item.dinosaurs.brachiosaurus_spawn_egg": "Brachiosaurus Spawn Egg",
+  "entity.dinosaurs.parasaurolophus": "Parasaurolophus",
+  "item.dinosaurs.parasaurolophus_spawn_egg": "Parasaurolophus Spawn Egg",
+  "entity.dinosaurs.megalodon": "Megalodon",
+  "item.dinosaurs.megalodon_spawn_egg": "Megalodon Spawn Egg",
+  "entity.dinosaurs.pteranodon": "Pteranodon",
+  "item.dinosaurs.pteranodon_spawn_egg": "Pteranodon Spawn Egg"
+}
