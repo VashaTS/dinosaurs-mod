@@ -41,6 +41,24 @@ English and Polish. Minecraft picks the language automatically from the game set
 
 Install on the server **and** on every client.
 
+## Screenshots
+
+These are in-game screenshots of the mobs:
+
+![Tyrannosaurus rex](screenshots/2026-11-11_15.30.58.png)
+
+![Spinosaurus](screenshots/2026-11-11_15.31.02.png)
+
+![Brachiosaurus and Parasaurolophus](screenshots/2026-11-11_15.31.11.png)
+
+![Velociraptor pack](screenshots/2026-11-11_15.31.31.png)
+
+![Pteranodon on the ground](screenshots/2026-11-11_15.32.00.png)
+
+![Pteranodon in flight](screenshots/2026-11-11_15.32.02.png)
+
+![Megalodon](screenshots/2026-11-11_15.32.24.png)
+
 ## Building
 
 ```bash
