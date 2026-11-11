@@ -134,8 +134,9 @@ SPECIES["brachiosaurus"] = dict(
         *legs_pair("hind_leg", 3.5, 14, 6, [B(-2, 0, -2, 4, 10, 4)]),
         P("neck", None, (0, 6, -8), rot=(0.35, 0, 0), boxes=[B(-2, -20, -3, 4, 22, 4)]),
         P("head", "neck", (0, -20, -1), rot=(-0.35, 0, 0), boxes=[B(-2, -3, -6, 4, 4, 6, eyes=True), B(-1.5, -4, -3, 3, 1, 3, "accent")]),
-        P("tail", None, (0, 6, 9), boxes=[B(-2.5, -2, 0, 5, 5, 10)]),
-        P("tail2", "tail", (0, 0.5, 10), boxes=[B(-1.5, -1.5, 0, 3, 3, 10)]),
+        # Tail rests drooping ~20 degrees down (negative pitch = down in model space); DinoModel bobs it up and down.
+        P("tail", None, (0, 6, 9), rot=(-0.35, 0, 0), boxes=[B(-2.5, -2, 0, 5, 5, 10)]),
+        P("tail2", "tail", (0, 0.5, 10), rot=(-0.12, 0, 0), boxes=[B(-1.5, -1.5, 0, 3, 3, 10)]),
     ])
 
 # ---------------------------------------------------------------- Parasaurolophus
