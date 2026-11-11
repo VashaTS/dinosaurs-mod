@@ -27,6 +27,7 @@
   "item.dinosaurs.brachiosaurus_hide": "Brachiosaurus Hide",
   "item.dinosaurs.parasaurolophus_crest": "Parasaurolophus Crest",
   "item.dinosaurs.dinosaur_saddle": "Dinosaur Saddle",
+  "item.dinosaurs.tab_icon": "Dinosaurs",
   "item.dinosaurs.amulet_of_dino_protection.desc": "Hostile dinosaurs ignore you until you attack them",
   "item.dinosaurs.dinosaur_saddle.desc": "Use on a Triceratops to ride it",
   "config.dinosaurs.title": "Dinosaurs",

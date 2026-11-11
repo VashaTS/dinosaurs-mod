@@ -42,6 +42,9 @@ public final class ModItems {
 	public static final Item PARASAUROLOPHUS_CREST = register("parasaurolophus_crest", Item::new, new Item.Properties());
 	public static final Item DINOSAUR_SADDLE = register("dinosaur_saddle", Item::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
 
+	/** Creative tab icon only (Spinosaurus head); not listed in any tab. */
+	public static final Item TAB_ICON = registerHidden("tab_icon");
+
 	public static final ResourceKey<CreativeModeTab> TAB_KEY = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Dinosaurs.id("dinosaurs"));
 
 	private static Item register(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
@@ -49,6 +52,11 @@ public final class ModItems {
 		Item item = Registry.register(BuiltInRegistries.ITEM, key, factory.apply(properties.setId(key)));
 		ITEMS.add(item);
 		return item;
+	}
+
+	private static Item registerHidden(String name) {
+		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Dinosaurs.id(name));
+		return Registry.register(BuiltInRegistries.ITEM, key, new Item(new Item.Properties().setId(key)));
 	}
 
 	public static void initialize() {
@@ -60,7 +68,7 @@ public final class ModItems {
 		}
 
 		CreativeModeTab tab = FabricCreativeModeTab.builder()
-				.icon(() -> new ItemStack(SPAWN_EGGS.get(0)))
+				.icon(() -> new ItemStack(TAB_ICON))
 				.title(Component.translatable("itemGroup.dinosaurs.dinosaurs"))
 				.displayItems((params, output) -> {
 					SPAWN_EGGS.forEach(output::accept);

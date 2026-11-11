@@ -115,10 +115,10 @@ def raptor_claw():
     for i in range(15):
         a = math.radians(-20 + i * 14)      # sweep from right/bottom over the top to the left
         r = 2.9 - 2.2 * (i / 14)
-        pts.append((8.4 + 4.9 * math.cos(a), 10.2 - 5.4 * math.sin(a), r))
+        pts.append((5.9 + 4.6 * math.cos(a), 10.0 - 5.2 * math.sin(a), r))
     c.fill(c.disc_line(pts), (104, 92, 82), rng, outline=0.5)
     c.fill(c.disc_line(pts[:2]), (176, 146, 116), rng, outline=0.6)   # toe / base
-    for x, y in ((8, 5), (9, 5), (10, 5)):
+    for x, y in ((5, 4), (6, 4), (7, 4)):
         c.put(x, y, (160, 148, 136))
     return c
 
@@ -250,7 +250,41 @@ def saddle_overlay():
         put(u + d + w + col, v + (z0 + z1) // 2, dark)
     return img
 
+# Creative tab icon: the Spinosaurus head from the mod icon (side view, snout to the left), simplified to 16x16.
+TAB_ICON = [
+    "................",
+    "................",
+    "..........oooo..",
+    ".........oggggo.",
+    ".........ogyggo.",
+    "..oooooooogkgggo",
+    ".odddddddggggggo",
+    ".ogggggggggggggo",
+    ".ogggggggggggggo",
+    ".owgwgwgwgwggggo",
+    ".ollllllllllggo.",
+    ".obbbbbbbbbbbo..",
+    "..obbbbbbbbbo...",
+    "...ooooooooo....",
+    "................",
+    "................",
+]
+
+def tab_icon():
+    c = Canvas(); rng = random.Random("tab")
+    pal = {"o": (34, 40, 40), "g": (88, 100, 100), "d": (108, 120, 120), "y": (226, 190, 40), "k": (20, 20, 20),
+           "w": (240, 238, 228), "l": (204, 200, 176), "b": (168, 166, 146)}
+    for y, row in enumerate(TAB_ICON):
+        for x, ch in enumerate(row):
+            if ch in pal:
+                col = pal[ch]
+                if ch in "gb":
+                    col = shade(col, 1.08 - 0.02 * y + rng.uniform(-0.04, 0.04))
+                c.put(x, y, col)
+    return c
+
 ITEMS = {
+    "tab_icon": tab_icon,
     "t_rex_tooth": t_rex_tooth, "raptor_claw": raptor_claw, "megalodon_tooth": megalodon_tooth,
     "amulet_of_dino_protection": amulet, "brachiosaurus_hide": brachiosaurus_hide,
     "parasaurolophus_crest": parasaurolophus_crest, "dinosaur_saddle": dinosaur_saddle,
