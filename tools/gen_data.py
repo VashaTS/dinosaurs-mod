@@ -80,7 +80,7 @@ RECIPES = {
 def riding_predicate(modifier_key):
     if modifier_key == "modifier":  # 26.3
         return {"type": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:vehicle": {"minecraft:entity_type": "dinosaurs:triceratops"}}}
-    return [{"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"vehicle": {"type": "dinosaurs:triceratops"}}}]
+    return [{"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:vehicle": {"minecraft:entity_type": "dinosaurs:triceratops"}}}]
 
 def data_files(modifier_key):
     for rid, r in RECIPES.items():
@@ -89,7 +89,7 @@ def data_files(modifier_key):
             "parent": "minecraft:recipes/root",
             "criteria": {
                 "has_ingredient": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": r["unlock"]}]}},
-                "has_the_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {"recipes": f"dinosaurs:{rid}"}},
+                "has_the_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {("recipes" if modifier_key == "modifier" else "recipe"): f"dinosaurs:{rid}"}},
             },
             "requirements": [["has_the_recipe", "has_ingredient"]],
             "rewards": {"recipes": [f"dinosaurs:{rid}"]},
