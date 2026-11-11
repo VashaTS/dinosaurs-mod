@@ -78,6 +78,13 @@ public class DinoModel extends EntityModel<DinoRenderState> {
 		if (tail != null) tail.yRot += tailSway;
 		if (tail2 != null) tail2.yRot += tailSway * 1.5F;
 		if (swimmer && head != null) head.yRot -= tailSway * 0.3F;
+		// Drooping tails (rest pose pitched down, e.g. Brachiosaurus) also bob slowly up and down,
+		// staying below horizontal: amplitude ~4 degrees around the ~20 degree droop.
+		if (tail != null && tail.getInitialPose().xRot() < 0.0F) {
+			float bob = Mth.sin(age * 0.06F) * 0.07F + Mth.sin(pos * 0.6662F * 2.0F) * 0.04F * speed;
+			tail.xRot += bob;
+			if (tail2 != null) tail2.xRot += bob * 0.8F;
+		}
 
 		if (jaw != null) {
 			jaw.xRot += state.attackProgress * 0.7F + Math.max(0.0F, Mth.sin(age * 0.05F)) * 0.04F;
