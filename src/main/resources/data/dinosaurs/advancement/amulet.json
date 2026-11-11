@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:adventure/root",
+  "criteria": {
+    "amulet": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "dinosaurs:amulet_of_dino_protection"
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "dinosaurs:amulet_of_dino_protection"
+    },
+    "title": {
+      "translate": "advancements.dinosaurs.amulet.title"
+    },
+    "description": {
+      "translate": "advancements.dinosaurs.amulet.description"
+    },
+    "frame": "goal"
+  },
+  "requirements": [
+    [
+      "amulet"
+    ]
+  ]
+}

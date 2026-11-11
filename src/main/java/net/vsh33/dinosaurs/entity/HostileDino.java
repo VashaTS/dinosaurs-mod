@@ -6,6 +6,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
@@ -24,6 +25,7 @@ import net.minecraft.world.level.pathfinder.PathType;
 /** Carnivorous dinosaur: hostile to players (T. rex, Velociraptor, Spinosaurus). */
 public class HostileDino extends Monster implements AttackAnimated {
 	private int attackTicks;
+	private final DinoProtection protection = new DinoProtection();
 
 	public HostileDino(EntityType<? extends HostileDino> type, Level level) {
 		super(type, level);
@@ -64,6 +66,18 @@ public class HostileDino extends Monster implements AttackAnimated {
 	}
 
 	@Override
+	public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+		protection.onHurt(source);
+		return super.hurtServer(level, source, damage);
+	}
+
+	@Override
+	public boolean canAttack(LivingEntity target) {
+		// Amulet of Dino Protection: leave its wearer alone unless they attacked this dinosaur first.
+		return super.canAttack(target) && !protection.isShielded(target);
+	}
+
+	@Override
 	public boolean doHurtTarget(ServerLevel level, Entity target) {
 		boolean hit = super.doHurtTarget(level, target);
 		if (hit) {
@@ -86,6 +100,9 @@ public class HostileDino extends Monster implements AttackAnimated {
 		super.aiStep();
 		if (this.attackTicks > 0) {
 			this.attackTicks--;
+		}
+		if (!this.level().isClientSide()) {
+			protection.tick(this);
 		}
 	}
 

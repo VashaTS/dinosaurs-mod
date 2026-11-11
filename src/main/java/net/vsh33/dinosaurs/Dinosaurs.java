@@ -2,6 +2,7 @@ package net.vsh33.dinosaurs;
 
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
+import net.vsh33.dinosaurs.config.DinoConfig;
 import net.vsh33.dinosaurs.entity.ModEntities;
 import net.vsh33.dinosaurs.item.ModItems;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ public class Dinosaurs implements ModInitializer {
 	public void onInitialize() {
 		ModEntities.initialize();
 		ModItems.initialize();
+		DinoConfig.load();
 		LOGGER.info("Dinosaurs loaded: {} species", ModEntities.ALL.size());
 	}
 }

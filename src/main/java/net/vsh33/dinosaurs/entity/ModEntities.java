@@ -22,6 +22,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.SpawnPlacementType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -33,6 +34,7 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.vsh33.dinosaurs.Dinosaurs;
+import net.vsh33.dinosaurs.config.DinoConfig;
 
 public final class ModEntities {
 	public static final List<EntityType<? extends Mob>> ALL = new ArrayList<>();
@@ -58,9 +60,9 @@ public final class ModEntities {
 	public static final EntityType<HostileDino> SPINOSAURUS = register("spinosaurus",
 			EntityType.Builder.<HostileDino>of(HostileDino::new, MobCategory.MONSTER)
 					.sized(1.8F, 3.2F).eyeHeight(2.6F).clientTrackingRange(10).notInPeaceful());
-	public static final EntityType<HerbivoreDino> TRICERATOPS = register("triceratops",
-			EntityType.Builder.<HerbivoreDino>of(HerbivoreDino::new, MobCategory.CREATURE)
-					.sized(1.7F, 2.1F).eyeHeight(1.5F).clientTrackingRange(10));
+	public static final EntityType<Triceratops> TRICERATOPS = register("triceratops",
+			EntityType.Builder.<Triceratops>of(Triceratops::new, MobCategory.CREATURE)
+					.sized(1.7F, 2.1F).eyeHeight(1.5F).passengerAttachments(1.75F).clientTrackingRange(10));
 	public static final EntityType<HerbivoreDino> STEGOSAURUS = register("stegosaurus",
 			EntityType.Builder.<HerbivoreDino>of(HerbivoreDino::new, MobCategory.CREATURE)
 					.sized(1.6F, 2.2F).eyeHeight(1.2F).clientTrackingRange(10));
@@ -118,15 +120,17 @@ public final class ModEntities {
 		FabricDefaultAttributeRegistry.register(PTERANODON, Mob.createMobAttributes()
 				.add(Attributes.MAX_HEALTH, 16).add(Attributes.MOVEMENT_SPEED, 0.25).add(Attributes.FLYING_SPEED, 0.6));
 
-		// Spawn placement rules
-		SpawnPlacements.register(T_REX, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
-		SpawnPlacements.register(VELOCIRAPTOR, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 6, 2));
-		SpawnPlacements.register(SPINOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
-		for (EntityType<HerbivoreDino> herbivore : List.of(TRICERATOPS, STEGOSAURUS, ANKYLOSAURUS, BRACHIOSAURUS, PARASAUROLOPHUS)) {
-			SpawnPlacements.register(herbivore, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ModEntities::checkHerbivoreSpawn);
-		}
-		SpawnPlacements.register(MEGALODON, SpawnPlacementTypes.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ModEntities::checkMegalodonSpawn);
-		SpawnPlacements.register(PTERANODON, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING, ModEntities::checkPteranodonSpawn);
+		// Spawn placement rules (every rule first checks the config: per-species toggle and the daylight option)
+		placement(T_REX, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
+		placement(VELOCIRAPTOR, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 6, 2));
+		placement(SPINOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
+		placement(TRICERATOPS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(STEGOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(ANKYLOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(BRACHIOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(PARASAUROLOPHUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(MEGALODON, SpawnPlacementTypes.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, ModEntities::checkMegalodonSpawn);
+		placement(PTERANODON, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING, false, ModEntities::checkPteranodonSpawn);
 
 		// Biomes: every species has its own home so they are spread over the world.
 		addSpawn(MobCategory.MONSTER, T_REX, 4, 1, 1, Biomes.PLAINS, Biomes.SUNFLOWER_PLAINS, Biomes.FOREST, Biomes.DARK_FOREST);
@@ -144,6 +148,35 @@ public final class ModEntities {
 	@SafeVarargs
 	private static void addSpawn(MobCategory category, EntityType<?> type, int weight, int min, int max, ResourceKey<Biome>... biomes) {
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(biomes), category, type, weight, min, max);
+	}
+
+	/** Hostile species (T. rex, Velociraptor, Spinosaurus, Megalodon) - used by the "no hostile spawns in daylight" option. */
+	public static boolean isHostile(EntityType<?> type) {
+		return type == T_REX || type == VELOCIRAPTOR || type == SPINOSAURUS || type == MEGALODON;
+	}
+
+	private static <T extends Mob> void placement(EntityType<T> type, SpawnPlacementType placementType, Heightmap.Types heightmap, boolean hostile, SpawnPlacements.SpawnPredicate<T> rule) {
+		SpawnPlacements.register(type, placementType, heightmap,
+				(t, level, reason, pos, random) -> configAllows(t, level, reason, pos, hostile) && rule.test(t, level, reason, pos, random));
+	}
+
+	/**
+	 * Config checks for natural spawning (world generation and the regular mob spawner).
+	 * Spawn eggs, spawners and /summon are never blocked.
+	 */
+	private static boolean configAllows(EntityType<?> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, boolean hostile) {
+		if (reason != EntitySpawnReason.NATURAL && reason != EntitySpawnReason.CHUNK_GENERATION) {
+			return true;
+		}
+		DinoConfig config = DinoConfig.get();
+		if (!config.isSpawnEnabled(type)) {
+			return false;
+		}
+		if (hostile && !config.hostileSpawnInDaylight) {
+			// Only at night and only where it is dark (like vanilla monsters: light level 7 or less).
+			return level.getLevel().isDarkOutside() && level.getMaxLocalRawBrightness(pos) <= 7;
+		}
+		return true;
 	}
 
 	private static int countNearby(ServerLevelAccessor level, EntityType<?> type, BlockPos pos, double radius) {

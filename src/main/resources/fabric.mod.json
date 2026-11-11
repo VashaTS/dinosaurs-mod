@@ -3,8 +3,10 @@
 	"id": "dinosaurs",
 	"version": "${version}",
 	"name": "Dinosaurs",
-	"description": "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. English and Polish translations.",
-	"authors": ["Vasha"],
+	"description": "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection from predator drops and a Dinosaur Saddle to ride a Triceratops. English and Polish translations.",
+	"authors": [
+		"Vasha"
+	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/dinosaurs-mod",
 		"sources": "https://github.com/VashaTS/dinosaurs-mod",
@@ -14,13 +16,25 @@
 	"icon": "assets/dinosaurs/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": ["net.vsh33.dinosaurs.Dinosaurs"],
-		"client": ["net.vsh33.dinosaurs.client.DinosaursClient"]
+		"main": [
+			"net.vsh33.dinosaurs.Dinosaurs"
+		],
+		"client": [
+			"net.vsh33.dinosaurs.client.DinosaursClient"
+		],
+		"modmenu": [
+			"net.vsh33.dinosaurs.client.compat.ModMenuIntegration"
+		]
 	},
 	"depends": {
 		"fabricloader": ">=0.20.1",
 		"minecraft": "~26.3",
 		"java": ">=25",
 		"fabric-api": "*"
+	},
+	"suggests": {
+		"cloth-config": "*",
+		"modmenu": "*",
+		"trinkets": "*"
 	}
 }

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "minecraft:string",
+    "G": "minecraft:gold_ingot",
+    "R": "dinosaurs:raptor_claw",
+    "T": "dinosaurs:t_rex_tooth",
+    "M": "dinosaurs:megalodon_tooth"
+  },
+  "pattern": [
+    "SGS",
+    "RTR",
+    " M "
+  ],
+  "result": {
+    "id": "dinosaurs:amulet_of_dino_protection"
+  }
+}
