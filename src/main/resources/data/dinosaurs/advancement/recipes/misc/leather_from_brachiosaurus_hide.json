@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:leather_from_brachiosaurus_hide"
+        "recipe": "dinosaurs:leather_from_brachiosaurus_hide"
       }
     }
   },
