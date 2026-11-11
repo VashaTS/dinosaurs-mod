@@ -1,5 +1,7 @@
 # Dinosaurs (Fabric mod for Minecraft 26.2 / 26.3)
 
+Modrinth: https://modrinth.com/mod/dinosaurs-mod
+
 Adds well-known prehistoric animals as new mobs. Every species lives in its own biomes, so the world
 is spread out instead of everything spawning in one place. Behaviour follows current science:
 carnivores are hostile, armoured or horned herbivores defend themselves, the others run away.

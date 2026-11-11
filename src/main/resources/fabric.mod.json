@@ -6,7 +6,7 @@
 	"description": "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. English and Polish translations.",
 	"authors": ["Vasha"],
 	"contact": {
-		"homepage": "https://modrinth.com/mod/dinosaurs",
+		"homepage": "https://modrinth.com/mod/dinosaurs-mod",
 		"sources": "https://github.com/VashaTS/dinosaurs-mod",
 		"issues": "https://github.com/VashaTS/dinosaurs-mod/issues"
 	},
