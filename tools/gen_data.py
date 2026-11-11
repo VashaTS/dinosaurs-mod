@@ -24,9 +24,11 @@ def w(path, obj):
         json.dump(obj, f, indent=2, ensure_ascii=False); f.write("\n")
 
 def item_entry(name, lo, hi, modifier_key):
+    # 26.3+: "modifier": [{"type": ...}]   26.2: "functions": [{"function": ...}]
+    tkey = "type" if modifier_key == "modifier" else "function"
     return {"type": "minecraft:item", "name": name, modifier_key: [
-        {"type": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": lo, "max": hi}},
-        {"type": "minecraft:enchanted_count_increase", "count": {"type": "minecraft:uniform", "min": 0.0, "max": 1.0}, "enchantment": "minecraft:looting"},
+        {tkey: "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": lo, "max": hi}},
+        {tkey: "minecraft:enchanted_count_increase", "count": {"type": "minecraft:uniform", "min": 0.0, "max": 1.0}, "enchantment": "minecraft:looting"},
     ]}
 
 def main(modifier_key):
@@ -48,4 +50,4 @@ def main(modifier_key):
 
 if __name__ == "__main__":
     import sys
-    main(sys.argv[1] if len(sys.argv) > 1 else "modifier")
+    main(sys.argv[1] if len(sys.argv) > 1 else "modifier")  # 26.3 uses "modifier", 26.2 uses "functions"
