@@ -40,7 +40,7 @@ SPECIES["t_rex"] = dict(
     parts=[
         P("body", None, (0, 9, 0), boxes=[B(-5, -6, -9, 10, 11, 18)]),
         *legs_pair("leg", 4.5, 11, 3, [B(-2.5, -2, -3, 5, 9, 6), B(-2, 7, -1, 4, 4, 4), B(-2.5, 11, -4, 5, 2, 6, "dark")]),
-        *legs_pair("arm", 4.5, 9, -6, [B(-1, 0, -1, 2, 5, 2), B(-1, 5, -2, 2, 1, 2, "horn")]),
+        *legs_pair("arm", 4.5, 9.5, -6, [B(-1, 0, -1, 2, 5, 2), B(-1, 5, -2, 2, 1, 2, "horn")]),
         P("tail", None, (0, 5, 9), boxes=[B(-4, -3, 0, 8, 7, 10)]),
         P("tail2", "tail", (0, 0.5, 10), boxes=[B(-2.5, -2, 0, 5, 5, 10)]),
         P("neck", None, (0, 4, -8), boxes=[B(-3, -4, -5, 6, 7, 6)]),
@@ -55,12 +55,12 @@ SPECIES["velociraptor"] = dict(
     parts=[
         P("body", None, (0, 14, 0), boxes=[B(-2.5, -3, -5, 5, 6, 10, "feather")]),
         *legs_pair("leg", 2, 16, 1, [B(-1, -1, -2, 2, 4, 3, "feather"), B(-1, 3, -1, 2, 4, 2, "skin"), B(-1, 7, -3, 2, 1, 4, "dark"), B(-0.5, 6, -3, 1, 1, 1, "horn")]),
-        *legs_pair("arm", 2.5, 13, -3, [B(-0.5, 0, -1, 1, 4, 2, "feather"), B(-0.5, 1, 0, 1, 4, 2, "accent")]),
+        *legs_pair("arm", 2.5, 13.5, -3, [B(-0.5, 0, -1, 1, 4, 2, "feather"), B(-0.5, 1, 0, 1, 4, 2, "accent")]),
         P("tail", None, (0, 12, 5), boxes=[B(-1.5, -1, 0, 3, 3, 8, "feather")]),
         P("tail2", "tail", (0, 0, 8), boxes=[B(-1, 0, 0, 2, 2, 8, "feather"), B(-2.5, 0.5, 3, 5, 1, 6, "accent")]),
         P("neck", None, (0, 12, -4), boxes=[B(-1.5, -5, -2, 3, 6, 3, "feather")]),
         P("head", "neck", (0, -5, -1), boxes=[B(-2, -3, -6, 4, 3, 6, eyes=True, teeth=True)]),
-        P("jaw", "head", (0, 0, 0), boxes=[B(-1.5, 0, -6, 3, 1, 6, "belly")]),
+        P("jaw", "head", (0, 0, 0), boxes=[B(-1.5, 0, -6, 3, 1, 5, "belly")]),
     ])
 
 # ---------------------------------------------------------------- Spinosaurus
@@ -74,7 +74,7 @@ SPECIES["spinosaurus"] = dict(
         P("tail", None, (0, 7, 10), boxes=[B(-3, -3, 0, 6, 6, 12), B(-0.5, -6, 0, 1, 3, 12, "accent")]),
         P("tail2", "tail", (0, 0, 12), boxes=[B(-2, -3, 0, 4, 5, 12), B(-0.5, -7, 0, 1, 4, 10, "accent")]),
         P("neck", None, (0, 6, -9), boxes=[B(-2.5, -3, -6, 5, 6, 7)]),
-        P("head", "neck", (0, -1, -5), boxes=[B(-2.5, -3, -6, 5, 5, 6, eyes=True), B(-1.5, -1, -15, 3, 3, 9, teeth=True)]),
+        P("head", "neck", (0, -1, -5), boxes=[B(-2.5, -3, -6, 5, 5, 5, eyes=True), B(-1.5, -1, -15, 3, 3, 9, teeth=True)]),
         P("jaw", "head", (0, 2, -2), boxes=[B(-1.5, 0, -13, 3, 1, 13, "belly")]),
     ])
 
@@ -84,7 +84,7 @@ SPECIES["triceratops"] = dict(
     pattern="spots",
     parts=[
         P("body", None, (0, 12, 0), boxes=[B(-6, -6, -10, 12, 11, 21)]),
-        *legs_pair("front_leg", 4, 15, -7, [B(-2, 0, -2, 4, 9, 4)]),
+        *legs_pair("front_leg", 3.5, 15, -7, [B(-2, 0, -2, 4, 9, 4)]),
         *legs_pair("hind_leg", 4, 15, 7, [B(-2.5, 0, -2.5, 5, 9, 5)]),
         P("tail", None, (0, 9, 11), boxes=[B(-2.5, -2, 0, 5, 5, 9)]),
         P("tail2", "tail", (0, 0, 9), boxes=[B(-1.5, -1, 0, 3, 3, 7)]),
@@ -102,7 +102,7 @@ SPECIES["stegosaurus"] = dict(
     parts=[
         P("body", None, (0, 11, 0), boxes=[B(-5.5, -6, -10, 11, 11, 20), *plates]),
         *legs_pair("front_leg", 3.5, 15, -7, [B(-1.5, 0, -1.5, 3, 9, 3)]),
-        *legs_pair("hind_leg", 3.5, 14, 7, [B(-2, 0, -2, 4, 10, 4)]),
+        *legs_pair("hind_leg", 3, 14, 7, [B(-2, 0, -2, 4, 10, 4)]),
         P("head", None, (0, 13, -10), boxes=[B(-1.5, -1.5, -5, 3, 3, 5), B(-2, -2, -10, 4, 4, 5, eyes=True)]),
         P("tail", None, (0, 8, 10), boxes=[B(-2.5, -2, 0, 5, 5, 9), B(-0.5, -5, 2, 1, 3, 3, "accent")]),
         P("tail2", "tail", (0, 1, 9), boxes=[B(-1.5, -1, 0, 3, 3, 9), B(-4.5, -1, 4, 3, 1, 1, "horn"), B(1.5, -1, 4, 3, 1, 1, "horn"), B(-4.5, -1, 7, 3, 1, 1, "horn"), B(1.5, -1, 7, 3, 1, 1, "horn")]),
@@ -145,7 +145,7 @@ SPECIES["parasaurolophus"] = dict(
     parts=[
         P("body", None, (0, 12, 0), boxes=[B(-4, -5, -7, 8, 9, 14)]),
         *legs_pair("leg", 3, 14, 3, [B(-2, -1, -2, 4, 6, 5), B(-1.5, 5, -1, 3, 3, 3), B(-2, 8, -3, 4, 2, 5, "dark")]),
-        *legs_pair("arm", 3, 13, -6, [B(-1, 0, -1, 2, 6, 2)]),
+        *legs_pair("arm", 4.5, 13, -5.5, [B(-1, 0, -1, 2, 6, 2)]),
         P("tail", None, (0, 9, 7), boxes=[B(-2.5, -2, 0, 5, 5, 10)]),
         P("tail2", "tail", (0, 0, 10), boxes=[B(-1.5, -1, 0, 3, 3, 8)]),
         P("neck", None, (0, 9, -6), rot=(0.3, 0, 0), boxes=[B(-1.5, -7, -3, 3, 8, 4)]),

@@ -18,8 +18,8 @@ public final class DinoModelLayers {
 		PartDefinition p_body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-5F, -6F, -9F, 10F, 11F, 18F), PartPose.offset(0F, 9F, 0F));
 		PartDefinition p_right_leg = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(36, 29).addBox(-2.5F, -2F, -3F, 5F, 9F, 6F).texOffs(58, 46).addBox(-2F, 7F, -1F, 4F, 4F, 4F).texOffs(74, 46).addBox(-2.5F, 11F, -4F, 5F, 2F, 6F), PartPose.offset(-4.5F, 11F, 3F));
 		PartDefinition p_left_leg = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(58, 29).addBox(-2.5F, -2F, -3F, 5F, 9F, 6F).texOffs(96, 46).addBox(-2F, 7F, -1F, 4F, 4F, 4F).texOffs(0, 59).addBox(-2.5F, 11F, -4F, 5F, 2F, 6F), PartPose.offset(4.5F, 11F, 3F));
-		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(22, 59).addBox(-1F, 0F, -1F, 2F, 5F, 2F).texOffs(38, 59).addBox(-1F, 5F, -2F, 2F, 1F, 2F), PartPose.offset(-4.5F, 9F, -6F));
-		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(30, 59).addBox(-1F, 0F, -1F, 2F, 5F, 2F).texOffs(46, 59).addBox(-1F, 5F, -2F, 2F, 1F, 2F), PartPose.offset(4.5F, 9F, -6F));
+		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(22, 59).addBox(-1F, 0F, -1F, 2F, 5F, 2F).texOffs(38, 59).addBox(-1F, 5F, -2F, 2F, 1F, 2F), PartPose.offset(-4.5F, 9.5F, -6F));
+		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(30, 59).addBox(-1F, 0F, -1F, 2F, 5F, 2F).texOffs(46, 59).addBox(-1F, 5F, -2F, 2F, 1F, 2F), PartPose.offset(4.5F, 9.5F, -6F));
 		PartDefinition p_tail = root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(0, 29).addBox(-4F, -3F, 0F, 8F, 7F, 10F), PartPose.offset(0F, 5F, 9F));
 		PartDefinition p_tail2 = p_tail.addOrReplaceChild("tail2", CubeListBuilder.create().texOffs(80, 29).addBox(-2.5F, -2F, 0F, 5F, 5F, 10F), PartPose.offset(0F, 0.5F, 10F));
 		PartDefinition p_neck = root.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(0, 46).addBox(-3F, -4F, -5F, 6F, 7F, 6F), PartPose.offset(0F, 4F, -8F));
@@ -32,15 +32,15 @@ public final class DinoModelLayers {
 		MeshDefinition mesh = new MeshDefinition();
 		PartDefinition root = mesh.getRoot();
 		PartDefinition p_body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-2.5F, -3F, -5F, 5F, 6F, 10F), PartPose.offset(0F, 14F, 0F));
-		PartDefinition p_right_leg = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(52, 16).addBox(-1F, -1F, -2F, 2F, 4F, 3F).texOffs(50, 26).addBox(-1F, 3F, -1F, 2F, 4F, 2F).texOffs(32, 33).addBox(-1F, 7F, -3F, 2F, 1F, 4F).texOffs(56, 33).addBox(-0.5F, 6F, -3F, 1F, 1F, 1F), PartPose.offset(-2F, 16F, 1F));
-		PartDefinition p_left_leg = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(0, 26).addBox(-1F, -1F, -2F, 2F, 4F, 3F).texOffs(0, 33).addBox(-1F, 3F, -1F, 2F, 4F, 2F).texOffs(44, 33).addBox(-1F, 7F, -3F, 2F, 1F, 4F).texOffs(60, 33).addBox(-0.5F, 6F, -3F, 1F, 1F, 1F), PartPose.offset(2F, 16F, 1F));
-		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(8, 33).addBox(-0.5F, 0F, -1F, 1F, 4F, 2F).texOffs(14, 33).addBox(-0.5F, 1F, 0F, 1F, 4F, 2F), PartPose.offset(-2.5F, 13F, -3F));
-		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(20, 33).addBox(-0.5F, 0F, -1F, 1F, 4F, 2F).texOffs(26, 33).addBox(-0.5F, 1F, 0F, 1F, 4F, 2F), PartPose.offset(2.5F, 13F, -3F));
+		PartDefinition p_right_leg = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(52, 16).addBox(-1F, -1F, -2F, 2F, 4F, 3F).texOffs(32, 26).addBox(-1F, 3F, -1F, 2F, 4F, 2F).texOffs(28, 33).addBox(-1F, 7F, -3F, 2F, 1F, 4F).texOffs(52, 33).addBox(-0.5F, 6F, -3F, 1F, 1F, 1F), PartPose.offset(-2F, 16F, 1F));
+		PartDefinition p_left_leg = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(0, 26).addBox(-1F, -1F, -2F, 2F, 4F, 3F).texOffs(40, 26).addBox(-1F, 3F, -1F, 2F, 4F, 2F).texOffs(40, 33).addBox(-1F, 7F, -3F, 2F, 1F, 4F).texOffs(56, 33).addBox(-0.5F, 6F, -3F, 1F, 1F, 1F), PartPose.offset(2F, 16F, 1F));
+		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(48, 26).addBox(-0.5F, 0F, -1F, 1F, 4F, 2F).texOffs(54, 26).addBox(-0.5F, 1F, 0F, 1F, 4F, 2F), PartPose.offset(-2.5F, 13.5F, -3F));
+		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 33).addBox(-0.5F, 0F, -1F, 1F, 4F, 2F).texOffs(6, 33).addBox(-0.5F, 1F, 0F, 1F, 4F, 2F), PartPose.offset(2.5F, 13.5F, -3F));
 		PartDefinition p_tail = root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(30, 0).addBox(-1.5F, -1F, 0F, 3F, 3F, 8F), PartPose.offset(0F, 12F, 5F));
 		PartDefinition p_tail2 = p_tail.addOrReplaceChild("tail2", CubeListBuilder.create().texOffs(0, 16).addBox(-1F, 0F, 0F, 2F, 2F, 8F).texOffs(10, 26).addBox(-2.5F, 0.5F, 3F, 5F, 1F, 6F), PartPose.offset(0F, 0F, 8F));
 		PartDefinition p_neck = root.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(20, 16).addBox(-1.5F, -5F, -2F, 3F, 6F, 3F), PartPose.offset(0F, 12F, -4F));
 		PartDefinition p_head = p_neck.addOrReplaceChild("head", CubeListBuilder.create().texOffs(32, 16).addBox(-2F, -3F, -6F, 4F, 3F, 6F), PartPose.offset(0F, -5F, -1F));
-		PartDefinition p_jaw = p_head.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(32, 26).addBox(-1.5F, 0F, -6F, 3F, 1F, 6F), PartPose.offset(0F, 0F, 0F));
+		PartDefinition p_jaw = p_head.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(12, 33).addBox(-1.5F, 0F, -6F, 3F, 1F, 5F), PartPose.offset(0F, 0F, 0F));
 		return LayerDefinition.create(mesh, 64, 64);
 	}
 
@@ -50,12 +50,12 @@ public final class DinoModelLayers {
 		PartDefinition p_body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-4.5F, -5F, -10F, 9F, 10F, 20F).texOffs(58, 0).addBox(-0.5F, -14F, -8F, 1F, 9F, 16F), PartPose.offset(0F, 10F, 0F));
 		PartDefinition p_right_leg = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(24, 47).addBox(-2F, -1F, -3F, 4F, 7F, 5F).texOffs(36, 60).addBox(-1.5F, 6F, -1F, 3F, 3F, 3F).texOffs(0, 60).addBox(-2F, 9F, -3F, 4F, 2F, 5F), PartPose.offset(-4F, 13F, 3F));
 		PartDefinition p_left_leg = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(42, 47).addBox(-2F, -1F, -3F, 4F, 7F, 5F).texOffs(48, 60).addBox(-1.5F, 6F, -1F, 3F, 3F, 3F).texOffs(18, 60).addBox(-2F, 9F, -3F, 4F, 2F, 5F), PartPose.offset(4F, 13F, 3F));
-		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(106, 47).addBox(-1F, 0F, -1F, 2F, 7F, 2F).texOffs(60, 60).addBox(-1F, 7F, -2F, 2F, 1F, 2F), PartPose.offset(-4F, 12F, -8F));
-		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(114, 47).addBox(-1F, 0F, -1F, 2F, 7F, 2F).texOffs(68, 60).addBox(-1F, 7F, -2F, 2F, 1F, 2F), PartPose.offset(4F, 12F, -8F));
+		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(104, 47).addBox(-1F, 0F, -1F, 2F, 7F, 2F).texOffs(60, 60).addBox(-1F, 7F, -2F, 2F, 1F, 2F), PartPose.offset(-4F, 12F, -8F));
+		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(112, 47).addBox(-1F, 0F, -1F, 2F, 7F, 2F).texOffs(68, 60).addBox(-1F, 7F, -2F, 2F, 1F, 2F), PartPose.offset(4F, 12F, -8F));
 		PartDefinition p_tail = root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(92, 0).addBox(-3F, -3F, 0F, 6F, 6F, 12F).texOffs(32, 30).addBox(-0.5F, -6F, 0F, 1F, 3F, 12F), PartPose.offset(0F, 7F, 10F));
 		PartDefinition p_tail2 = p_tail.addOrReplaceChild("tail2", CubeListBuilder.create().texOffs(0, 30).addBox(-2F, -3F, 0F, 4F, 5F, 12F).texOffs(58, 30).addBox(-0.5F, -7F, 0F, 1F, 4F, 10F), PartPose.offset(0F, 0F, 12F));
 		PartDefinition p_neck = root.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(0, 47).addBox(-2.5F, -3F, -6F, 5F, 6F, 7F), PartPose.offset(0F, 6F, -9F));
-		PartDefinition p_head = p_neck.addOrReplaceChild("head", CubeListBuilder.create().texOffs(84, 47).addBox(-2.5F, -3F, -6F, 5F, 5F, 6F).texOffs(60, 47).addBox(-1.5F, -1F, -15F, 3F, 3F, 9F), PartPose.offset(0F, -1F, -5F));
+		PartDefinition p_head = p_neck.addOrReplaceChild("head", CubeListBuilder.create().texOffs(84, 47).addBox(-2.5F, -3F, -6F, 5F, 5F, 5F).texOffs(60, 47).addBox(-1.5F, -1F, -15F, 3F, 3F, 9F), PartPose.offset(0F, -1F, -5F));
 		PartDefinition p_jaw = p_head.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(80, 30).addBox(-1.5F, 0F, -13F, 3F, 1F, 13F), PartPose.offset(0F, 2F, -2F));
 		return LayerDefinition.create(mesh, 128, 128);
 	}
@@ -64,8 +64,8 @@ public final class DinoModelLayers {
 		MeshDefinition mesh = new MeshDefinition();
 		PartDefinition root = mesh.getRoot();
 		PartDefinition p_body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-6F, -6F, -10F, 12F, 11F, 21F), PartPose.offset(0F, 12F, 0F));
-		PartDefinition p_right_front_leg = root.addOrReplaceChild("right_front_leg", CubeListBuilder.create().texOffs(48, 32).addBox(-2F, 0F, -2F, 4F, 9F, 4F), PartPose.offset(-4F, 15F, -7F));
-		PartDefinition p_left_front_leg = root.addOrReplaceChild("left_front_leg", CubeListBuilder.create().texOffs(64, 32).addBox(-2F, 0F, -2F, 4F, 9F, 4F), PartPose.offset(4F, 15F, -7F));
+		PartDefinition p_right_front_leg = root.addOrReplaceChild("right_front_leg", CubeListBuilder.create().texOffs(48, 32).addBox(-2F, 0F, -2F, 4F, 9F, 4F), PartPose.offset(-3.5F, 15F, -7F));
+		PartDefinition p_left_front_leg = root.addOrReplaceChild("left_front_leg", CubeListBuilder.create().texOffs(64, 32).addBox(-2F, 0F, -2F, 4F, 9F, 4F), PartPose.offset(3.5F, 15F, -7F));
 		PartDefinition p_right_hind_leg = root.addOrReplaceChild("right_hind_leg", CubeListBuilder.create().texOffs(100, 0).addBox(-2.5F, 0F, -2.5F, 5F, 9F, 5F), PartPose.offset(-4F, 15F, 7F));
 		PartDefinition p_left_hind_leg = root.addOrReplaceChild("left_hind_leg", CubeListBuilder.create().texOffs(0, 32).addBox(-2.5F, 0F, -2.5F, 5F, 9F, 5F), PartPose.offset(4F, 15F, 7F));
 		PartDefinition p_tail = root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(20, 32).addBox(-2.5F, -2F, 0F, 5F, 5F, 9F), PartPose.offset(0F, 9F, 11F));
@@ -81,8 +81,8 @@ public final class DinoModelLayers {
 		PartDefinition p_body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-5.5F, -6F, -10F, 11F, 11F, 20F).texOffs(106, 31).addBox(-1.5F, -10F, -9F, 1F, 4F, 3F).texOffs(56, 31).addBox(0.5F, -12F, -5F, 1F, 6F, 3F).texOffs(48, 31).addBox(-1.5F, -13F, -1F, 1F, 7F, 3F).texOffs(64, 31).addBox(0.5F, -12F, 3F, 1F, 6F, 3F).texOffs(114, 31).addBox(-1.5F, -10F, 7F, 1F, 4F, 3F), PartPose.offset(0F, 11F, 0F));
 		PartDefinition p_right_front_leg = root.addOrReplaceChild("right_front_leg", CubeListBuilder.create().texOffs(0, 31).addBox(-1.5F, 0F, -1.5F, 3F, 9F, 3F), PartPose.offset(-3.5F, 15F, -7F));
 		PartDefinition p_left_front_leg = root.addOrReplaceChild("left_front_leg", CubeListBuilder.create().texOffs(12, 31).addBox(-1.5F, 0F, -1.5F, 3F, 9F, 3F), PartPose.offset(3.5F, 15F, -7F));
-		PartDefinition p_right_hind_leg = root.addOrReplaceChild("right_hind_leg", CubeListBuilder.create().texOffs(62, 0).addBox(-2F, 0F, -2F, 4F, 10F, 4F), PartPose.offset(-3.5F, 14F, 7F));
-		PartDefinition p_left_hind_leg = root.addOrReplaceChild("left_hind_leg", CubeListBuilder.create().texOffs(78, 0).addBox(-2F, 0F, -2F, 4F, 10F, 4F), PartPose.offset(3.5F, 14F, 7F));
+		PartDefinition p_right_hind_leg = root.addOrReplaceChild("right_hind_leg", CubeListBuilder.create().texOffs(62, 0).addBox(-2F, 0F, -2F, 4F, 10F, 4F), PartPose.offset(-3F, 14F, 7F));
+		PartDefinition p_left_hind_leg = root.addOrReplaceChild("left_hind_leg", CubeListBuilder.create().texOffs(78, 0).addBox(-2F, 0F, -2F, 4F, 10F, 4F), PartPose.offset(3F, 14F, 7F));
 		PartDefinition p_head = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(90, 31).addBox(-1.5F, -1.5F, -5F, 3F, 3F, 5F).texOffs(72, 31).addBox(-2F, -2F, -10F, 4F, 4F, 5F), PartPose.offset(0F, 13F, -10F));
 		PartDefinition p_tail = root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(94, 0).addBox(-2.5F, -2F, 0F, 5F, 5F, 9F).texOffs(0, 43).addBox(-0.5F, -5F, 2F, 1F, 3F, 3F), PartPose.offset(0F, 8F, 10F));
 		PartDefinition p_tail2 = p_tail.addOrReplaceChild("tail2", CubeListBuilder.create().texOffs(24, 31).addBox(-1.5F, -1F, 0F, 3F, 3F, 9F).texOffs(8, 43).addBox(-4.5F, -1F, 4F, 3F, 1F, 1F).texOffs(16, 43).addBox(1.5F, -1F, 4F, 3F, 1F, 1F).texOffs(24, 43).addBox(-4.5F, -1F, 7F, 3F, 1F, 1F).texOffs(32, 43).addBox(1.5F, -1F, 7F, 3F, 1F, 1F), PartPose.offset(0F, 1F, 9F));
@@ -124,8 +124,8 @@ public final class DinoModelLayers {
 		PartDefinition p_body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-4F, -5F, -7F, 8F, 9F, 14F), PartPose.offset(0F, 12F, 0F));
 		PartDefinition p_right_leg = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 23).addBox(-2F, -1F, -2F, 4F, 6F, 5F).texOffs(0, 34).addBox(-1.5F, 5F, -1F, 3F, 3F, 3F).texOffs(92, 23).addBox(-2F, 8F, -3F, 4F, 2F, 5F), PartPose.offset(-3F, 14F, 3F));
 		PartDefinition p_left_leg = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(18, 23).addBox(-2F, -1F, -2F, 4F, 6F, 5F).texOffs(12, 34).addBox(-1.5F, 5F, -1F, 3F, 3F, 3F).texOffs(110, 23).addBox(-2F, 8F, -3F, 4F, 2F, 5F), PartPose.offset(3F, 14F, 3F));
-		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(76, 23).addBox(-1F, 0F, -1F, 2F, 6F, 2F), PartPose.offset(-3F, 13F, -6F));
-		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(84, 23).addBox(-1F, 0F, -1F, 2F, 6F, 2F), PartPose.offset(3F, 13F, -6F));
+		PartDefinition p_right_arm = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(76, 23).addBox(-1F, 0F, -1F, 2F, 6F, 2F), PartPose.offset(-4.5F, 13F, -5.5F));
+		PartDefinition p_left_arm = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(84, 23).addBox(-1F, 0F, -1F, 2F, 6F, 2F), PartPose.offset(4.5F, 13F, -5.5F));
 		PartDefinition p_tail = root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(44, 0).addBox(-2.5F, -2F, 0F, 5F, 5F, 10F), PartPose.offset(0F, 9F, 7F));
 		PartDefinition p_tail2 = p_tail.addOrReplaceChild("tail2", CubeListBuilder.create().texOffs(36, 23).addBox(-1.5F, -1F, 0F, 3F, 3F, 8F), PartPose.offset(0F, 0F, 10F));
 		PartDefinition p_neck = root.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(100, 0).addBox(-1.5F, -7F, -3F, 3F, 8F, 4F), PartPose.offsetAndRotation(0F, 9F, -6F, 0.3F, 0F, 0F));
