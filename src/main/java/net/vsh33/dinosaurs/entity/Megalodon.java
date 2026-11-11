@@ -25,6 +25,7 @@ import net.minecraft.world.phys.Vec3;
 /** Giant prehistoric shark. Lives in deep oceans and attacks players that are in the water. */
 public class Megalodon extends WaterAnimal implements AttackAnimated {
 	private int attackTicks;
+	private final DinoProtection protection = new DinoProtection();
 
 	public Megalodon(EntityType<? extends Megalodon> type, Level level) {
 		super(type, level);
@@ -54,6 +55,9 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 		if (this.attackTicks > 0) {
 			this.attackTicks--;
 		}
+		if (!this.level().isClientSide()) {
+			protection.tick(this);
+		}
 		LivingEntity target = this.getTarget();
 		if (!this.level().isClientSide() && target != null && !target.isInWater()) {
 			// Only dangerous in the water: lose interest once the target climbs out.
@@ -69,6 +73,18 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 		if (this.getTarget() == null) {
 			this.setDeltaMovement(this.getDeltaMovement().add(0.0, -0.005, 0.0));
 		}
+	}
+
+	@Override
+	public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+		protection.onHurt(source);
+		return super.hurtServer(level, source, damage);
+	}
+
+	@Override
+	public boolean canAttack(LivingEntity target) {
+		// Amulet of Dino Protection: leave its wearer alone unless they attacked this dinosaur first.
+		return super.canAttack(target) && !protection.isShielded(target);
 	}
 
 	@Override

@@ -11,6 +11,13 @@ base {
 }
 
 repositories {
+	// Optional integrations (Trinkets Updated, Cloth Config, Mod Menu) are pulled from Modrinth's Maven.
+	exclusiveContent {
+		forRepository {
+			maven { name = "Modrinth"; url = "https://api.modrinth.com/maven" }
+		}
+		filter { includeGroup "maven.modrinth" }
+	}
 }
 
 loom {
@@ -29,7 +36,7 @@ fabricApi {
 	configureTests {
 		createSourceSet = true
 		modId = "dinosaurs-test"
-		enableGameTests = false
+		enableGameTests = true
 		enableClientGameTests = true
 		eula = true
 	}
@@ -39,6 +46,15 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// All three are OPTIONAL at runtime: the mod checks FabricLoader.isModLoaded before touching them.
+	compileOnly "maven.modrinth:trinkets-updated:${project.trinkets_version}"
+	compileOnly "maven.modrinth:cloth-config:${project.cloth_config_version}"
+	compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+	if (project.findProperty("withTrinkets") == "true") {
+		// ./gradlew runServer -PwithTrinkets=true  -> test the Trinkets integration in the dev server
+		localRuntime "maven.modrinth:trinkets-updated:${project.trinkets_version}"
+	}
 }
 
 processResources {

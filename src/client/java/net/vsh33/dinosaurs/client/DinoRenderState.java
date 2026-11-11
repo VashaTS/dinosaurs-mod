@@ -5,4 +5,5 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 public class DinoRenderState extends LivingEntityRenderState {
 	public boolean flying;
 	public float attackProgress;
+	public boolean saddled;
 }
