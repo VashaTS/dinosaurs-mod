@@ -348,13 +348,7 @@ public final class DinoModelLayers {
 """ + "\n\n".join(methods) + "\n}\n"
     with open(JAVA_OUT, "w") as f:
         f.write(java)
-    # icon: T-Rex egg upscaled on a green background with a bone
-    icon = Image.new("RGBA", (128, 128), (68, 120, 60, 255))
-    d = ImageDraw.Draw(icon)
-    d.rounded_rectangle((4, 4, 123, 123), 18, fill=(84, 140, 70, 255))
-    e = egg(*EGGS["t_rex"], random.Random("icon")).resize((96, 96), Image.NEAREST)
-    icon.alpha_composite(e, (16, 14))
-    icon.save(os.path.join(ROOT, "src/main/resources/assets/dinosaurs/icon.png"))
+    # The mod icon (assets/dinosaurs/icon.png) is the Spinosaurus head render, same as the Modrinth logo; not generated here.
     print("ok")
 
 if __name__ == "__main__":

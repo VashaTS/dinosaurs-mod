@@ -48,6 +48,7 @@ ITEMS = {  # id: (English, Polish)
     "brachiosaurus_hide": ("Brachiosaurus Hide", "Skóra brachiozaura"),
     "parasaurolophus_crest": ("Parasaurolophus Crest", "Grzebień parazaurolofa"),
     "dinosaur_saddle": ("Dinosaur Saddle", "Siodło na dinozaura"),
+    "tab_icon": ("Dinosaurs", "Dinozaury"),
 }
 
 EXTRA_LANG = {  # key: (English, Polish)
@@ -77,6 +78,10 @@ RECIPES = {
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
 }
 
+SHAPELESS = {  # id: (ingredients, result, count, unlock item)
+    "leather_from_brachiosaurus_hide": (["dinosaurs:brachiosaurus_hide"], "minecraft:leather", 2, "dinosaurs:brachiosaurus_hide"),
+}
+
 def riding_predicate(modifier_key):
     if modifier_key == "modifier":  # 26.3
         return {"type": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:vehicle": {"minecraft:entity_type": "dinosaurs:triceratops"}}}
@@ -89,6 +94,17 @@ def data_files(modifier_key):
             "parent": "minecraft:recipes/root",
             "criteria": {
                 "has_ingredient": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": r["unlock"]}]}},
+                "has_the_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {("recipes" if modifier_key == "modifier" else "recipe"): f"dinosaurs:{rid}"}},
+            },
+            "requirements": [["has_the_recipe", "has_ingredient"]],
+            "rewards": {"recipes": [f"dinosaurs:{rid}"]},
+        })
+    for rid, (ingredients, result, count, unlock) in SHAPELESS.items():
+        w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shapeless", "category": "misc", "ingredients": ingredients, "result": {"id": result, "count": count}})
+        w(f"{D}/advancement/recipes/misc/{rid}.json", {
+            "parent": "minecraft:recipes/root",
+            "criteria": {
+                "has_ingredient": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": unlock}]}},
                 "has_the_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {("recipes" if modifier_key == "modifier" else "recipe"): f"dinosaurs:{rid}"}},
             },
             "requirements": [["has_the_recipe", "has_ingredient"]],
