@@ -42,6 +42,9 @@ public final class ModItems {
 	public static final Item PARASAUROLOPHUS_CREST = register("parasaurolophus_crest", Item::new, new Item.Properties());
 	public static final Item DINOSAUR_SADDLE = register("dinosaur_saddle", Item::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
 
+	/** Illustrated field guide (Book + Leather + any dinosaur trophy). */
+	public static final Item GUIDE_BOOK = register("guide_book", GuideBookItem::new, new Item.Properties().stacksTo(16));
+
 	/** Creative tab icon only (Spinosaurus head); not listed in any tab. */
 	public static final Item TAB_ICON = registerHidden("tab_icon");
 
@@ -78,6 +81,11 @@ public final class ModItems {
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB_KEY, tab);
 
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(output -> SPAWN_EGGS.forEach(output::accept));
+	}
+
+	/** Spawn egg of a species (registered in {@link #initialize()}, same order as {@link ModEntities#ALL}). */
+	public static Item spawnEgg(EntityType<?> type) {
+		return SPAWN_EGGS.get(ModEntities.ALL.indexOf(type));
 	}
 
 	private ModItems() {

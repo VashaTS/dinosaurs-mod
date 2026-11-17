@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:leather",
+    "#dinosaurs:guide_book_trophies"
+  ],
+  "result": {
+    "id": "dinosaurs:guide_book"
+  }
+}

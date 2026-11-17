@@ -52,6 +52,18 @@ The saddle is saved with the mob and dropped when it dies.
                      iron ingot
 ```
 
+**Dinosaur Field Guide** (1.2.0) – an illustrated guide book. Right-click it to open: a clickable table of
+contents, a page for every dinosaur with a 3D picture (drag it to rotate), where it lives and what it drops,
+plus every item with its crafting grid (click an ingredient to jump to its page) and the current spawn settings.
+
+```
+ shapeless: book + leather + any dinosaur trophy
+ (T-Rex tooth, raptor claw, megalodon tooth, brachiosaurus hide or parasaurolophus crest)
+```
+
+Book + leather alone is left free so it cannot clash with other mods' guide books; the trophy
+(item tag `#dinosaurs:guide_book_trophies`) makes the recipe unique.
+
 Advancements: *Dino Whisperer* (get the amulet) and *Three Horns, One Rider* (ride a Triceratops).
 
 ## Configuration
@@ -114,7 +126,8 @@ python3 tools/gen_assets.py         # regenerates models (DinoModelLayers.java),
 python3 tools/gen_data.py           # regenerates lang files, loot tables, item models, recipes, advancements
 python3 tools/gen_items.py          # regenerates the item textures and the Triceratops saddle overlay
 ./tools/server-test.sh              # headless dedicated-server smoke test
-./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes); add -PwithTrinkets=true
+./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book); add -PwithTrinkets=true
+SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, mob screenshots
 ```
 
 Branches: `master` targets Minecraft 26.3, branch `26.2` targets Minecraft 26.2.
@@ -141,6 +154,9 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   (wrogie dinozaury cię ignorują, dopóki ich nie zaatakujesz; działa w ekwipunku i w slocie naszyjnika Trinkets).
   Skóra brachiozaura i grzebień parazaurolofa (+ skóra, nić, żelazo) → **Siodło na dinozaura**: użyj go na
   triceratopsie, a potem pustą ręką, żeby na nim jeździć (WASD). Kucnięcie + pusta ręka zdejmuje siodło.
+* **Nowe w 1.2.0: Przewodnik po dinozaurach** – ilustrowana książka (bez kształtu: książka + skóra + dowolne
+  trofeum dinozaura: ząb, pazur, skóra lub grzebień). Każdy dinozaur z obrazkiem 3D, opisem, biomami i łupami,
+  wszystkie receptury z klikalnymi składnikami oraz aktualne ustawienia pojawiania się.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się
   wrogich dinozaurów za dnia oraz osobny przełącznik pojawiania się dla każdego gatunku.
 * Na poziomie trudności „Pokojowy” wrogie gatunki się nie pojawiają.
