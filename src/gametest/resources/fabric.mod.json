@@ -6,6 +6,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"fabric-client-gametest": [
+			"net.vsh33.dinosaurs.test.GuideBookScreenshotTest",
 			"net.vsh33.dinosaurs.test.DinosaursScreenshotTest"
 		],
 		"fabric-gametest": [

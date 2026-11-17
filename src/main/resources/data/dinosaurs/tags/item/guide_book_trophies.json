@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "dinosaurs:parasaurolophus_crest",
+    "dinosaurs:brachiosaurus_hide",
+    "dinosaurs:raptor_claw",
+    "dinosaurs:t_rex_tooth",
+    "dinosaurs:megalodon_tooth"
+  ]
+}

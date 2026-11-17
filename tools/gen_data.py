@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Generates lang files, loot tables, item models, recipes, advancements and Trinkets data."""
-import json, os
+import json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from book_lang import BOOK_LANG
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 A = os.path.join(ROOT, "src/main/resources/assets/dinosaurs")
 D = os.path.join(ROOT, "src/main/resources/data/dinosaurs")
@@ -48,6 +50,7 @@ ITEMS = {  # id: (English, Polish)
     "brachiosaurus_hide": ("Brachiosaurus Hide", "Skóra brachiozaura"),
     "parasaurolophus_crest": ("Parasaurolophus Crest", "Grzebień parazaurolofa"),
     "dinosaur_saddle": ("Dinosaur Saddle", "Siodło na dinozaura"),
+    "guide_book": ("Dinosaur Field Guide", "Przewodnik po dinozaurach"),
     "tab_icon": ("Dinosaurs", "Dinozaury"),
 }
 
@@ -78,9 +81,14 @@ RECIPES = {
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
 }
 
-SHAPELESS = {  # id: (ingredients, result, count, unlock item)
+SHAPELESS = {  # id: (ingredients, result, count, unlock item or #tag)
     "leather_from_brachiosaurus_hide": (["dinosaurs:brachiosaurus_hide"], "minecraft:leather", 2, "dinosaurs:brachiosaurus_hide"),
+    # Book + Leather alone is left free for other mods' guide books; the dinosaur trophy makes this one unique.
+    "guide_book": (["minecraft:book", "minecraft:leather", "#dinosaurs:guide_book_trophies"], "dinosaurs:guide_book", 1, "#dinosaurs:guide_book_trophies"),
 }
+
+# Any unique dinosaur drop works as the third guide-book ingredient.
+TROPHIES = ["dinosaurs:parasaurolophus_crest", "dinosaurs:brachiosaurus_hide", "dinosaurs:raptor_claw", "dinosaurs:t_rex_tooth", "dinosaurs:megalodon_tooth"]
 
 def riding_predicate(modifier_key):
     if modifier_key == "modifier":  # 26.3
@@ -100,7 +108,8 @@ def data_files(modifier_key):
             "rewards": {"recipes": [f"dinosaurs:{rid}"]},
         })
     for rid, (ingredients, result, count, unlock) in SHAPELESS.items():
-        w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shapeless", "category": "misc", "ingredients": ingredients, "result": {"id": result, "count": count}})
+        res = {"id": result, "count": count} if count != 1 else {"id": result}
+        w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shapeless", "category": "misc", "ingredients": ingredients, "result": res})
         w(f"{D}/advancement/recipes/misc/{rid}.json", {
             "parent": "minecraft:recipes/root",
             "criteria": {
@@ -110,6 +119,7 @@ def data_files(modifier_key):
             "requirements": [["has_the_recipe", "has_ingredient"]],
             "rewards": {"recipes": [f"dinosaurs:{rid}"]},
         })
+    w(f"{D}/tags/item/guide_book_trophies.json", {"replace": False, "values": TROPHIES})
     w(f"{D}/advancement/amulet.json", {
         "parent": "minecraft:adventure/root",
         "criteria": {"amulet": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": "dinosaurs:amulet_of_dino_protection"}]}}},
@@ -149,7 +159,7 @@ def main(modifier_key):
         pl[f"item.dinosaurs.{iid}"] = p
         w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}"}})
         w(f"{A}/models/item/{iid}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"dinosaurs:item/{iid}"}})
-    for k, (e, p) in EXTRA_LANG.items():
+    for k, (e, p) in list(EXTRA_LANG.items()) + list(BOOK_LANG.items()):
         en[k] = e
         pl[k] = p
     data_files(modifier_key)
@@ -157,5 +167,4 @@ def main(modifier_key):
     w(f"{A}/lang/pl_pl.json", pl)
 
 if __name__ == "__main__":
-    import sys
     main(sys.argv[1] if len(sys.argv) > 1 else "functions")  # 26.2 uses "functions", 26.3 uses "modifier"

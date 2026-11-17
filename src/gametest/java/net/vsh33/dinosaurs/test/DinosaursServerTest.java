@@ -21,6 +21,17 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.vsh33.dinosaurs.Dinosaurs;
 import net.vsh33.dinosaurs.entity.ModEntities;
 import net.vsh33.dinosaurs.entity.Triceratops;
@@ -136,6 +147,56 @@ public class DinosaursServerTest {
 		for (String id : new String[]{"amulet", "ride_triceratops", "recipes/equipment/dinosaur_saddle", "recipes/equipment/amulet_of_dino_protection", "recipes/misc/leather_from_brachiosaurus_hide"}) {
 			helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id(id)) != null, "missing advancement " + id);
 		}
+		helper.succeed();
+	}
+
+	private static List<String> craftingMatches(GameTestHelper helper, CraftingInput input) {
+		var level = helper.getLevel();
+		List<String> matches = new ArrayList<>();
+		for (RecipeHolder<?> holder : level.getServer().getRecipeManager().getRecipes()) {
+			if (holder.value().getType() != RecipeType.CRAFTING) {
+				continue;
+			}
+			@SuppressWarnings("unchecked")
+			Recipe<CraftingInput> recipe = (Recipe<CraftingInput>) holder.value();
+			if (recipe.matches(input, level)) {
+				matches.add(holder.id().identifier().toString());
+			}
+		}
+		return matches;
+	}
+
+	/**
+	 * Guide book: Book + Leather + any dinosaur trophy is the ONLY recipe for that grid; Book + Leather alone
+	 * (left free for other mods' guide books) and Book + Leather + Bone do not make it.
+	 */
+	@GameTest
+	public void guideBookRecipe(GameTestHelper helper) {
+		TagKey<Item> trophies = TagKey.create(Registries.ITEM, Dinosaurs.id("guide_book_trophies"));
+		Item[] expected = {ModItems.PARASAUROLOPHUS_CREST, ModItems.BRACHIOSAURUS_HIDE, ModItems.RAPTOR_CLAW, ModItems.T_REX_TOOTH, ModItems.MEGALODON_TOOTH};
+		int tagged = 0;
+		for (Item item : BuiltInRegistries.ITEM) {
+			if (new ItemStack(item).is(trophies)) {
+				tagged++;
+			}
+		}
+		helper.assertTrue(tagged == expected.length, "trophy tag should hold " + expected.length + " items, has " + tagged);
+		CraftingRecipe recipe = (CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
+				.byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id("guide_book"))).orElseThrow().value();
+		for (Item trophy : expected) {
+			helper.assertTrue(new ItemStack(trophy).is(trophies), trophy + " must be a guide book trophy");
+			CraftingInput input = CraftingInput.of(3, 1, List.of(new ItemStack(trophy), new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER)));
+			List<String> matches = craftingMatches(helper, input);
+			helper.assertTrue(matches.equals(List.of("dinosaurs:guide_book")), "book + leather + " + trophy + " matches " + matches);
+			ItemStack out = recipe.assemble(input);
+			helper.assertTrue(out.is(ModItems.GUIDE_BOOK) && out.getCount() == 1, "should craft one guide book, got " + out);
+		}
+		List<String> plain = craftingMatches(helper, CraftingInput.of(2, 1, List.of(new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER))));
+		helper.assertTrue(plain.isEmpty(), "book + leather must stay free, matches " + plain);
+		List<String> bone = craftingMatches(helper, CraftingInput.of(3, 1, List.of(new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER), new ItemStack(Items.BONE))));
+		helper.assertTrue(bone.isEmpty(), "book + leather + bone must not match, got " + bone);
+		helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id("recipes/misc/guide_book")) != null, "missing guide book recipe advancement");
+		Dinosaurs.LOGGER.info("[test] guide book: {} trophies, no conflicts, book + leather left free", expected.length);
 		helper.succeed();
 	}
 }

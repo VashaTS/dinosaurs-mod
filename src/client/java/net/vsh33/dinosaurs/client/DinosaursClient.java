@@ -9,7 +9,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.vsh33.dinosaurs.Dinosaurs;
 import net.vsh33.dinosaurs.entity.ModEntities;
+import net.vsh33.dinosaurs.client.book.GuideBookScreen;
+import net.vsh33.dinosaurs.item.GuideBookScreens;
 import net.vsh33.dinosaurs.item.ModItems;
+import net.minecraft.client.Minecraft;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -29,6 +32,9 @@ public class DinosaursClient implements ClientModInitializer {
 		register(ModEntities.PARASAUROLOPHUS, "parasaurolophus", DinoModelLayers::createParasaurolophus, 1.4F, 0.8F, 0.8F, false);
 		register(ModEntities.MEGALODON, "megalodon", DinoModelLayers::createMegalodon, 2.0F, 0.0F, 1.0F, true);
 		register(ModEntities.PTERANODON, "pteranodon", DinoModelLayers::createPteranodon, 1.4F, 0.5F, 1.0F, false);
+
+		// The guide book item lives in the common source set; the screen is client-only.
+		GuideBookScreens.setOpener(() -> Minecraft.getInstance().gui.setScreen(new GuideBookScreen()));
 
 		// One-line descriptions under the new items' names.
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
