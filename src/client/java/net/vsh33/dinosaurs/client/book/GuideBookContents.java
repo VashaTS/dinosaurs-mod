@@ -2,7 +2,12 @@ package net.vsh33.dinosaurs.client.book;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
@@ -58,11 +63,19 @@ public final class GuideBookContents {
 	 * a habitat text; item entries have recipes and "dropped by" links.
 	 */
 	public record Entry(String id, ItemStack icon, Component title, Component body, EntityType<? extends Mob> entity,
-			Component habitat, List<ItemStack> drops, List<RecipeGrid> recipes, List<EntityType<? extends Mob>> droppedBy) {
+			Component habitat, List<ItemStack> drops, List<RecipeGrid> recipes, List<EntityType<? extends Mob>> droppedBy,
+			List<StatRow> stats) {
 		public boolean isDino() {
 			return entity != null;
 		}
 	}
+
+	/** One line of an armor stats table: this item's value next to the netherite helmet's. */
+	public record StatRow(Component label, String value, String netherite) {
+	}
+
+	/** Item the stats table compares against. */
+	public static final ItemStack STATS_REFERENCE = new ItemStack(Items.NETHERITE_HELMET);
 
 	public record Category(String id, Location target, ItemStack icon, Component title) {
 	}
@@ -93,7 +106,7 @@ public final class GuideBookContents {
 		ItemStack bone = new ItemStack(Items.BONE);
 		ItemStack meal = new ItemStack(Items.BONE_MEAL);
 		List<Entry> dinos = List.of(
-				dino("t_rex", ModEntities.T_REX, bone, meal, new ItemStack(ModItems.T_REX_TOOTH)),
+				dino("t_rex", ModEntities.T_REX, bone, meal, new ItemStack(ModItems.T_REX_TOOTH), new ItemStack(ModItems.T_REX_SKULL)),
 				dino("velociraptor", ModEntities.VELOCIRAPTOR, bone, new ItemStack(ModItems.RAPTOR_CLAW)),
 				dino("spinosaurus", ModEntities.SPINOSAURUS, bone, meal),
 				dino("megalodon", ModEntities.MEGALODON, bone, meal, new ItemStack(ModItems.MEGALODON_TOOTH)),
@@ -112,13 +125,17 @@ public final class GuideBookContents {
 				ModItems.BRACHIOSAURUS_HIDE, Items.LEATHER, ModItems.BRACHIOSAURUS_HIDE,
 				Items.STRING, ModItems.PARASAUROLOPHUS_CREST, Items.STRING,
 				null, Items.IRON_INGOT, null);
+		RecipeGrid helmet = shapeless(new ItemStack(ModItems.T_REX_SKULL_HELMET), List.of(new ItemStack(ModItems.T_REX_SKULL)),
+				List.of(new ItemStack(Items.LEATHER)), List.of(new ItemStack(Items.NETHERITE_INGOT)));
 		RecipeGrid leather = shapeless(new ItemStack(Items.LEATHER, 2), List.of(new ItemStack(ModItems.BRACHIOSAURUS_HIDE)));
 
 		List<Entry> items = List.of(
 				item("guide_book", ModItems.GUIDE_BOOK, List.of(guideBookRecipe()), List.of()),
 				item("amulet_of_dino_protection", ModItems.AMULET_OF_DINO_PROTECTION, List.of(amulet), List.of()),
 				item("dinosaur_saddle", ModItems.DINOSAUR_SADDLE, List.of(saddle), List.of()),
+				item("t_rex_skull_helmet", ModItems.T_REX_SKULL_HELMET, List.of(helmet), List.of(), helmetStats()),
 				item("t_rex_tooth", ModItems.T_REX_TOOTH, List.of(amulet), List.of(ModEntities.T_REX)),
+				item("t_rex_skull", ModItems.T_REX_SKULL, List.of(helmet), List.of(ModEntities.T_REX)),
 				item("raptor_claw", ModItems.RAPTOR_CLAW, List.of(amulet), List.of(ModEntities.VELOCIRAPTOR)),
 				item("megalodon_tooth", ModItems.MEGALODON_TOOTH, List.of(amulet), List.of(ModEntities.MEGALODON)),
 				item("brachiosaurus_hide", ModItems.BRACHIOSAURUS_HIDE, List.of(saddle, leather), List.of(ModEntities.BRACHIOSAURUS)),
@@ -240,13 +257,48 @@ public final class GuideBookContents {
 	private static Entry dino(String id, EntityType<? extends Mob> type, ItemStack... drops) {
 		return new Entry(id, new ItemStack(ModItems.spawnEgg(type)), type.getDescription(),
 				Component.translatable("book.dinosaurs.dino." + id), type,
-				Component.translatable("book.dinosaurs.habitat." + id), List.of(drops), List.of(), List.of());
+				Component.translatable("book.dinosaurs.habitat." + id), List.of(drops), List.of(), List.of(), List.of());
 	}
 
 	private static Entry item(String id, Item item, List<RecipeGrid> recipes, List<EntityType<? extends Mob>> droppedBy) {
+		return item(id, item, recipes, droppedBy, List.of());
+	}
+
+	private static Entry item(String id, Item item, List<RecipeGrid> recipes, List<EntityType<? extends Mob>> droppedBy, List<StatRow> stats) {
 		ItemStack icon = new ItemStack(item);
 		return new Entry(id, icon, icon.getHoverName(), Component.translatable("book.dinosaurs.item." + id), null, null,
-				List.of(), recipes, droppedBy);
+				List.of(), recipes, droppedBy, stats);
+	}
+
+	/**
+	 * Helmet vs. netherite helmet, read from the real items so the book can never disagree with the game.
+	 * Knockback resistance is shown x10, as in the vanilla tooltip (netherite: +1).
+	 */
+	public static List<StatRow> helmetStats() {
+		ItemStack ours = new ItemStack(ModItems.T_REX_SKULL_HELMET);
+		return List.of(
+				new StatRow(Component.translatable("book.dinosaurs.stats.armor"), num(attr(ours, Attributes.ARMOR)), num(attr(STATS_REFERENCE, Attributes.ARMOR))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.toughness"), num(attr(ours, Attributes.ARMOR_TOUGHNESS)),
+						num(attr(STATS_REFERENCE, Attributes.ARMOR_TOUGHNESS))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.knockback"), num(10 * attr(ours, Attributes.KNOCKBACK_RESISTANCE)),
+						num(10 * attr(STATS_REFERENCE, Attributes.KNOCKBACK_RESISTANCE))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.durability"), Integer.toString(ours.getMaxDamage()),
+						Integer.toString(STATS_REFERENCE.getMaxDamage())));
+	}
+
+	private static double attr(ItemStack stack, Holder<Attribute> attribute) {
+		double[] total = {0};
+		stack.forEachModifier(EquipmentSlot.HEAD, (holder, modifier) -> {
+			if (holder.equals(attribute) && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
+				total[0] += modifier.amount();
+			}
+		});
+		return total[0];
+	}
+
+	private static String num(double value) {
+		double rounded = Math.round(value * 100.0) / 100.0;
+		return rounded == Math.rint(rounded) ? Long.toString(Math.round(rounded)) : Double.toString(rounded);
 	}
 
 	private static RecipeGrid shaped(ItemStack result, Item... pattern) {

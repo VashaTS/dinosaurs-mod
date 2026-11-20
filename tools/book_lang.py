@@ -33,6 +33,11 @@ BOOK_LANG = {
         "Zmień to w pliku dinosaurs.json (folder config) lub przez Mod Menu + Cloth Config. Na serwerze liczy się plik serwera."),
     "book.dinosaurs.settings.legend": ("Green: spawns. Red: turned off.", "Zielony: pojawia się. Czerwony: wyłączony."),
     "book.dinosaurs.settings.spawning": ("Natural spawning", "Pojawianie się"),
+    "book.dinosaurs.stats.heading": ("Stats", "Statystyki"),
+    "book.dinosaurs.stats.armor": ("Armor", "Pancerz"),
+    "book.dinosaurs.stats.toughness": ("Armor Toughness", "Twardość pancerza"),
+    "book.dinosaurs.stats.knockback": ("Knockback Resistance", "Odporność na odrzut"),
+    "book.dinosaurs.stats.durability": ("Durability", "Trwałość"),
 
     # ---- Dinosaurs: behaviour (left page) and where to find them (right page)
     "book.dinosaurs.dino.t_rex": (
@@ -121,4 +126,10 @@ BOOK_LANG = {
     "book.dinosaurs.item.parasaurolophus_crest": (
         "Up to 1 from a Parasaurolophus, more with Looting. Part of the saddle.",
         "Do 1 z parazaurolofa, więcej z Grabieżą. Składnik siodła."),
+    "book.dinosaurs.item.t_rex_skull": (
+        "Rare: 4% of T. rexes killed by a player drop one, up to 10% with Looting. Craft it with Leather and a Netherite Ingot into a helmet.",
+        "Rzadka: wypada z 4% tyranozaurów zabitych przez gracza, do 10% z Grabieżą. Ze skórą i sztabką netherytu zrobisz z niej hełm."),
+    "book.dinosaurs.item.t_rex_skull_helmet": (
+        "Wear a T. rex skull on your head. Fire resistant like netherite. Repair it with a Netherite Ingot or a T-Rex Skull.",
+        "Noś czaszkę tyranozaura na głowie. Odporny na ogień jak netheryt. Napraw go sztabką netherytu lub czaszką tyranozaura."),
 }

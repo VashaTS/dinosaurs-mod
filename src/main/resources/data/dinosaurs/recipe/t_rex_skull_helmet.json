@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "dinosaurs:t_rex_skull",
+    "minecraft:leather",
+    "minecraft:netherite_ingot"
+  ],
+  "result": {
+    "id": "dinosaurs:t_rex_skull_helmet"
+  }
+}

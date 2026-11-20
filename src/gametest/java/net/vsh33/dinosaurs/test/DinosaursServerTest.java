@@ -141,7 +141,7 @@ public class DinosaursServerTest {
 
 	@GameTest
 	public void recipesAndAdvancements(GameTestHelper helper) {
-		for (String id : new String[]{"amulet_of_dino_protection", "dinosaur_saddle", "leather_from_brachiosaurus_hide"}) {
+		for (String id : new String[]{"amulet_of_dino_protection", "dinosaur_saddle", "leather_from_brachiosaurus_hide", "t_rex_skull_helmet"}) {
 			helper.assertTrue(helper.getLevel().recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id(id))).isPresent(), "missing recipe " + id);
 		}
 		for (String id : new String[]{"amulet", "ride_triceratops", "recipes/equipment/dinosaur_saddle", "recipes/equipment/amulet_of_dino_protection", "recipes/misc/leather_from_brachiosaurus_hide"}) {
@@ -198,5 +198,132 @@ public class DinosaursServerTest {
 		helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id("recipes/misc/guide_book")) != null, "missing guide book recipe advancement");
 		Dinosaurs.LOGGER.info("[test] guide book: {} trophies, no conflicts, book + leather left free", expected.length);
 		helper.succeed();
+	}
+
+	/** T-Rex Skull + Leather + Netherite Ingot (any order) makes the helmet, and nothing else uses that grid. */
+	@GameTest
+	public void skullHelmetRecipe(GameTestHelper helper) {
+		CraftingRecipe recipe = (CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
+				.byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id("t_rex_skull_helmet"))).orElseThrow().value();
+		List<List<ItemStack>> orders = List.of(
+				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER), new ItemStack(Items.NETHERITE_INGOT)),
+				List.of(new ItemStack(Items.NETHERITE_INGOT), new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER)));
+		for (List<ItemStack> items : orders) {
+			CraftingInput input = CraftingInput.of(3, 1, items);
+			List<String> matches = craftingMatches(helper, input);
+			helper.assertTrue(matches.equals(List.of("dinosaurs:t_rex_skull_helmet")), "skull + leather + netherite matches " + matches);
+			ItemStack out = recipe.assemble(input);
+			helper.assertTrue(out.is(ModItems.T_REX_SKULL_HELMET) && out.getCount() == 1, "should craft one helmet, got " + out);
+		}
+		CraftingInput tall = CraftingInput.of(1, 3, List.of(new ItemStack(Items.LEATHER), new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.NETHERITE_INGOT)));
+		helper.assertTrue(craftingMatches(helper, tall).equals(List.of("dinosaurs:t_rex_skull_helmet")), "shapeless recipe should work in a column too");
+		for (List<ItemStack> partial : List.of(
+				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER)),
+				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.NETHERITE_INGOT)),
+				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER)))) {
+			List<String> matches = craftingMatches(helper, CraftingInput.of(partial.size(), 1, partial));
+			helper.assertTrue(matches.isEmpty(), partial + " must not craft anything, got " + matches);
+		}
+		helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id("recipes/equipment/t_rex_skull_helmet")) != null,
+				"missing helmet recipe advancement");
+		helper.succeed();
+	}
+
+	/** Above netherite in every stat, fire resistant, a head item, repairable with netherite or a skull, and wearable. */
+	@GameTest(maxTicks = 40)
+	public void skullHelmetStats(GameTestHelper helper) {
+		ItemStack helmet = new ItemStack(ModItems.T_REX_SKULL_HELMET);
+		ItemStack netherite = new ItemStack(Items.NETHERITE_HELMET);
+		double[] ours = headStats(helmet);
+		double[] neth = headStats(netherite);
+		Dinosaurs.LOGGER.info("[test] helmet armor/toughness/knockback {}/{}/{} durability {} (netherite {}/{}/{} {})",
+				ours[0], ours[1], ours[2], helmet.getMaxDamage(), neth[0], neth[1], neth[2], netherite.getMaxDamage());
+		for (int i = 0; i < 3; i++) {
+			helper.assertTrue(ours[i] > neth[i], "stat " + i + " should beat netherite: " + ours[i] + " vs " + neth[i]);
+		}
+		helper.assertTrue(helmet.getMaxDamage() > netherite.getMaxDamage(), "durability should beat netherite");
+		helper.assertTrue(helmet.get(net.minecraft.core.component.DataComponents.ENCHANTABLE).value()
+				>= netherite.get(net.minecraft.core.component.DataComponents.ENCHANTABLE).value(), "enchantability at least netherite");
+		helper.assertTrue(helmet.has(net.minecraft.core.component.DataComponents.DAMAGE_RESISTANT), "helmet must be fire resistant");
+		helper.assertTrue(helmet.is(net.minecraft.tags.ItemTags.HEAD_ARMOR), "helmet must be #minecraft:head_armor (helmet enchantments)");
+		var repairable = helmet.get(net.minecraft.core.component.DataComponents.REPAIRABLE);
+		helper.assertTrue(repairable != null && repairable.isValidRepairItem(new ItemStack(Items.NETHERITE_INGOT))
+				&& repairable.isValidRepairItem(new ItemStack(ModItems.T_REX_SKULL)), "repair with netherite ingot or T-Rex skull");
+		var equippable = helmet.get(net.minecraft.core.component.DataComponents.EQUIPPABLE);
+		helper.assertTrue(equippable != null && equippable.slot() == net.minecraft.world.entity.EquipmentSlot.HEAD && equippable.assetId().isEmpty(),
+				"head slot, no flat armor layer (3D model is drawn instead)");
+		Player player = survivalPlayer(helper);
+		player.setItemInHand(InteractionHand.MAIN_HAND, helmet.copy());
+		player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+		helper.assertTrue(player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD).is(ModItems.T_REX_SKULL_HELMET), "right-click should put it on");
+		// Attribute modifiers from equipment are applied on the wearer's next tick (the mock player is not ticked).
+		var stand = helper.spawn(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, new BlockPos(2, 1, 2));
+		stand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, helmet.copy());
+		helper.runAfterDelay(3, () -> {
+			helper.assertTrue(stand.getArmorValue() == (int) ours[0], "worn helmet should give " + ours[0] + " armor, got " + stand.getArmorValue());
+			helper.succeed();
+		});
+	}
+
+	private static double[] headStats(ItemStack stack) {
+		double[] stats = new double[3];
+		stack.forEachModifier(net.minecraft.world.entity.EquipmentSlot.HEAD, (attribute, modifier) -> {
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR)) stats[0] += modifier.amount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS)) stats[1] += modifier.amount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE)) stats[2] += modifier.amount();
+		});
+		return stats;
+	}
+
+	/**
+	 * T. rex loot table, rolled 4000 times: the skull drops only when a player killed it, about 4% of the time,
+	 * about 10% with Looting III; the tooth still drops every time.
+	 */
+	@GameTest(maxTicks = 100)
+	public void tRexSkullLoot(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		var table = level.getServer().reloadableRegistries().getLootTable(
+				ResourceKey.create(Registries.LOOT_TABLE, Dinosaurs.id("entities/t_rex")));
+		Mob rex = helper.spawn(ModEntities.T_REX, new BlockPos(4, 1, 4));
+		Player player = survivalPlayer(helper);
+		int rolls = 4000;
+		int noPlayer = skulls(table, level, rex, null, rolls);
+		int plain = skulls(table, level, rex, player, rolls);
+		ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+		sword.enchant(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+				.getOrThrow(net.minecraft.world.item.enchantment.Enchantments.LOOTING), 3);
+		player.setItemInHand(InteractionHand.MAIN_HAND, sword);
+		int looting = skulls(table, level, rex, player, rolls);
+		Dinosaurs.LOGGER.info("[test] T-Rex skull drops in {} rolls: no player {}, player {}, Looting III {}", rolls, noPlayer, plain, looting);
+		helper.assertTrue(noPlayer == 0, "skull must need a player kill, dropped " + noPlayer);
+		helper.assertTrue(plain >= 110 && plain <= 220, "about 4% expected (160), got " + plain);
+		helper.assertTrue(looting >= 320 && looting <= 480, "about 10% with Looting III expected (400), got " + looting);
+		rex.discard();
+		helper.succeed();
+	}
+
+	private static int skulls(net.minecraft.world.level.storage.loot.LootTable table, ServerLevel level, Mob rex, Player player, int rolls) {
+		var source = player != null ? level.damageSources().playerAttack(player) : level.damageSources().generic();
+		var builder = new net.minecraft.world.level.storage.loot.LootParams.Builder(level)
+				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, rex)
+				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, rex.position())
+				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.DAMAGE_SOURCE, source)
+				.withOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ATTACKING_ENTITY, player);
+		if (player != null) {
+			builder.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.LAST_DAMAGE_PLAYER, player);
+		}
+		var params = builder.create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.ENTITY);
+		int skulls = 0;
+		int teeth = 0;
+		for (int i = 0; i < rolls; i++) {
+			for (ItemStack stack : table.getRandomItems(params)) {
+				if (stack.is(ModItems.T_REX_SKULL)) skulls += stack.getCount();
+				if (stack.is(ModItems.T_REX_TOOTH)) teeth++;
+			}
+		}
+		if (teeth != rolls) {
+			throw new AssertionError("every roll should still drop teeth, got " + teeth + "/" + rolls);
+		}
+		return skulls;
 	}
 }
