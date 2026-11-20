@@ -2,6 +2,7 @@ package net.vsh33.dinosaurs.item;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
@@ -18,6 +19,14 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.vsh33.dinosaurs.Dinosaurs;
 import net.vsh33.dinosaurs.entity.ModEntities;
 
@@ -41,6 +50,30 @@ public final class ModItems {
 	public static final Item BRACHIOSAURUS_HIDE = register("brachiosaurus_hide", Item::new, new Item.Properties());
 	public static final Item PARASAUROLOPHUS_CREST = register("parasaurolophus_crest", Item::new, new Item.Properties());
 	public static final Item DINOSAUR_SADDLE = register("dinosaur_saddle", Item::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
+
+	// Rare T. rex drop (killed by a player: 4%, up to 10% with Looting) -> T-Rex Skull Helmet
+	public static final Item T_REX_SKULL = register("t_rex_skull", Item::new, new Item.Properties().stacksTo(16).rarity(Rarity.RARE));
+	/** Netherite ingot or another skull repair the helmet (#dinosaurs:repairs_t_rex_skull_helmet). */
+	public static final TagKey<Item> REPAIRS_T_REX_SKULL_HELMET = TagKey.create(Registries.ITEM, Dinosaurs.id("repairs_t_rex_skull_helmet"));
+	/**
+	 * Helmet stats, a step above netherite (3 armor, 3 toughness, 0.1 knockback resistance, 37 x 11 = 407 durability,
+	 * enchantability 15). Only the helmet exists; the asset id is never rendered.
+	 */
+	public static final ArmorMaterial T_REX_SKULL_MATERIAL = new ArmorMaterial(46, Map.of(ArmorType.HELMET, 4), 15,
+			SoundEvents.ARMOR_EQUIP_NETHERITE, 3.5F, 0.15F, REPAIRS_T_REX_SKULL_HELMET,
+			ResourceKey.create(EquipmentAssets.ROOT_ID, Dinosaurs.id("t_rex_skull")));
+	/**
+	 * Worn helmet. Its Equippable has no equipment asset, so instead of a flat armor layer the game draws the
+	 * 3D item model on the head (CustomHeadLayer, like a carved pumpkin): players, armor stands, zombies...
+	 */
+	public static final Item T_REX_SKULL_HELMET = register("t_rex_skull_helmet", Item::new, new Item.Properties()
+			.durability(ArmorType.HELMET.getDurability(T_REX_SKULL_MATERIAL.durability()))
+			.attributes(T_REX_SKULL_MATERIAL.createAttributes(ArmorType.HELMET))
+			.enchantable(T_REX_SKULL_MATERIAL.enchantmentValue())
+			.component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setEquipSound(T_REX_SKULL_MATERIAL.equipSound()).build())
+			.repairable(REPAIRS_T_REX_SKULL_HELMET)
+			.fireResistant()
+			.rarity(Rarity.EPIC));
 
 	/** Illustrated field guide (Book + Leather + any dinosaur trophy). */
 	public static final Item GUIDE_BOOK = register("guide_book", GuideBookItem::new, new Item.Properties().stacksTo(16));

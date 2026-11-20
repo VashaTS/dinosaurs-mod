@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0
+
+* New rare drop: **T-Rex Skull**. Only when a player kills the T. rex: 4% chance, 6/8/10% with Looting I/II/III.
+* New item: **T-Rex Skull Helmet**. Shapeless recipe: T-Rex Skull + Leather + Netherite Ingot.
+  When worn it is a 3D T. rex skull on your head (snout, teeth, eye sockets), on players, armor stands and mobs.
+  Better than netherite: 4 armor, 3.5 toughness, 0.15 knockback resistance, 506 durability (netherite: 3 / 3 / 0.1 / 407),
+  enchantability 15, fire resistant, takes helmet enchantments, repaired with a Netherite Ingot or a T-Rex Skull.
+* Guide book: pages for the skull and the helmet (with a stats table against the netherite helmet),
+  and the skull is listed in the T. rex drops. English and Polish.
+
 ## 1.2.0
 
 * New item: **Dinosaur Field Guide**, an illustrated guide book. Shapeless recipe: Book + Leather + any dinosaur trophy

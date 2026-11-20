@@ -34,6 +34,7 @@ import net.vsh33.dinosaurs.client.book.GuideBookContents.Entry;
 import net.vsh33.dinosaurs.client.book.GuideBookContents.Framing;
 import net.vsh33.dinosaurs.client.book.GuideBookContents.Location;
 import net.vsh33.dinosaurs.client.book.GuideBookContents.RecipeGrid;
+import net.vsh33.dinosaurs.client.book.GuideBookContents.StatRow;
 import net.vsh33.dinosaurs.config.DinoConfig;
 import net.vsh33.dinosaurs.entity.ModEntities;
 import org.joml.Quaternionf;
@@ -320,7 +321,10 @@ public class GuideBookScreen extends Screen {
 		int lx = this.leftPos + LEFT;
 		int ly = this.topPos + TOP;
 		int y = ly + this.drawIconTitle(graphics, lx, ly, entry.icon(), entry.title());
-		y = this.drawWrapped(graphics, entry.body(), lx, y, PAGE_W, INK);
+		boolean statsPage = !entry.stats().isEmpty();
+		if (!statsPage) {
+			y = this.drawWrapped(graphics, entry.body(), lx, y, PAGE_W, INK);
+		}
 		if (!entry.droppedBy().isEmpty()) {
 			y += 5;
 			y = this.drawWrapped(graphics, Component.translatable("book.dinosaurs.heading.dropped_by"), lx, y, PAGE_W, INK_SOFT) + 1;
@@ -329,12 +333,63 @@ public class GuideBookScreen extends Screen {
 				y += this.drawLinkRow(graphics, lx, y, PAGE_W, dino.icon(), dino.title(), Location.entry(dino.id()), mouseX, mouseY, LIST_ROW);
 			}
 		}
+		if (statsPage) {
+			// Armor: the stats table fills the left page, the description goes under the recipe.
+			this.drawStats(graphics, lx, y, entry);
+		}
 
 		int rx = this.leftPos + RIGHT;
 		int ry = this.topPos + TOP;
 		for (RecipeGrid grid : entry.recipes()) {
 			ry += this.drawRecipe(graphics, rx, ry, grid, recipeHeader(entry, grid), mouseX, mouseY) + 8;
 		}
+		if (statsPage) {
+			this.drawWrapped(graphics, entry.body(), rx, ry - 2, PAGE_W, INK);
+		}
+	}
+
+	private static final int STATS_LABEL_W = PAGE_W - 39;
+	private static final int STATS_HEAD_H = 18;
+
+	/** Armor table: label, this item's value (under its icon) and the netherite helmet's (under its icon). */
+	private void drawStats(GuiGraphicsExtractor graphics, int x, int y, Entry entry) {
+		y += 2;
+		int c2 = x + PAGE_W - 8;
+		int c1 = c2 - 21;
+		graphics.text(this.font, this.fitOneLine(bold(Component.translatable("book.dinosaurs.stats.heading")), STATS_LABEL_W), x, y + 5, INK, false);
+		graphics.item(entry.icon(), c1 - 8, y);
+		this.hotspots.add(new Hotspot(c1 - 8, y, 16, 16, null, entry.icon(), null));
+		graphics.item(GuideBookContents.STATS_REFERENCE, c2 - 8, y);
+		this.hotspots.add(new Hotspot(c2 - 8, y, 16, 16, null, GuideBookContents.STATS_REFERENCE, null));
+		y += STATS_HEAD_H;
+		graphics.fill(x, y - 1, x + PAGE_W, y, FRAME);
+		y += 1;
+		for (StatRow row : entry.stats()) {
+			List<FormattedCharSequence> lines = this.font.split(row.label(), STATS_LABEL_W);
+			int yy = y;
+			for (FormattedCharSequence line : lines) {
+				graphics.text(this.font, line, x, yy, INK, false);
+				yy += 9;
+			}
+			graphics.text(this.font, row.value(), c1 - this.font.width(row.value()) / 2, y, ON, false);
+			graphics.text(this.font, row.netherite(), c2 - this.font.width(row.netherite()) / 2, y, INK_SOFT, false);
+			y += statRowH(this.font, row);
+		}
+	}
+
+	private static int statRowH(Font font, StatRow row) {
+		return Math.max(1, font.split(row.label(), STATS_LABEL_W).size()) * 9 + 1;
+	}
+
+	private static int statsH(Font font, List<StatRow> stats) {
+		if (stats.isEmpty()) {
+			return 0;
+		}
+		int h = 2 + STATS_HEAD_H + 1;
+		for (StatRow row : stats) {
+			h += statRowH(font, row);
+		}
+		return h;
 	}
 
 	private static Component recipeHeader(Entry entry, RecipeGrid grid) {
@@ -679,10 +734,23 @@ public class GuideBookScreen extends Screen {
 		for (Entry entry : contents.itemEntries()) {
 			width(font, errors, lang, "list." + entry.id(), entry.title(), 3, PAGE_W - 18);
 			int titleLines = font.split(bold(entry.title()), ICON_TITLE_W).size();
-			int l = iconTitleH(font, entry.title()) + textH(font, entry.body());
+			boolean statsPage = !entry.stats().isEmpty();
+			int l = iconTitleH(font, entry.title()) + (statsPage ? 0 : textH(font, entry.body()));
 			if (!entry.droppedBy().isEmpty()) {
 				l += 5 + textH(font, Component.translatable("book.dinosaurs.heading.dropped_by")) + 1 + LIST_ROW * entry.droppedBy().size();
 			}
+			l += statsH(font, entry.stats());
+			for (StatRow row : entry.stats()) {
+				width(font, errors, lang, entry.id() + ".stats", row.label(), 2, STATS_LABEL_W);
+				for (String word : row.label().getString().split(" ")) {
+					if (font.width(word) > STATS_LABEL_W) {
+						errors.append(' ').append(entry.id()).append(".stats word wider than ").append(STATS_LABEL_W).append("px: ").append(word).append('\n');
+					}
+				}
+				width(font, errors, lang, entry.id() + ".stats.value", Component.literal(row.value()), 1, 19);
+				width(font, errors, lang, entry.id() + ".stats.netherite", Component.literal(row.netherite()), 1, 19);
+			}
+			width(font, errors, lang, "stats.heading", bold(Component.translatable("book.dinosaurs.stats.heading")), 1, STATS_LABEL_W);
 			fit(errors, lang, entry.id() + ".left", l);
 			if (titleLines > 4) {
 				errors.append(' ').append(entry.id()).append(" title has ").append(titleLines).append(" lines\n");
@@ -691,7 +759,7 @@ public class GuideBookScreen extends Screen {
 			for (RecipeGrid grid : entry.recipes()) {
 				r += textH(font, bold(recipeHeader(entry, grid))) + 3 + RECIPE_H + 8;
 			}
-			fit(errors, lang, entry.id() + ".right", r - 8);
+			fit(errors, lang, entry.id() + ".right", r - 8 + (statsPage ? 6 + textH(font, entry.body()) : 0));
 			widest(font, errors, lang, entry.id(), entry.body());
 		}
 		if (!errors.isEmpty()) {

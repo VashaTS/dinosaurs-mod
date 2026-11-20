@@ -10,7 +10,7 @@ carnivores are hostile, armoured or horned herbivores defend themselves, the oth
 
 | Mob | Behaviour | Spawns in | Drops |
 |-----|-----------|-----------|-------|
-| Tyrannosaurus Rex | Hostile, rare (max 1 per area) | Plains, Sunflower Plains, Forest, Dark Forest | 4-8 bones, bone meal, 1-2 **T-Rex Teeth** |
+| Tyrannosaurus Rex | Hostile, rare (max 1 per area) | Plains, Sunflower Plains, Forest, Dark Forest | 4-8 bones, bone meal, 1-2 **T-Rex Teeth**, rarely a **T-Rex Skull** |
 | Velociraptor (feathered) | Hostile, small packs; hitting one alerts the pack | Savanna, Savanna Plateau, Windswept Savanna, Badlands (all 3) | 0-2 bones, 0-1 **Raptor Claw** |
 | Spinosaurus (sail, semi-aquatic) | Hostile, rare | Mangrove Swamp, Beach | 4-7 bones, bone meal |
 | Triceratops | Neutral: fights back when hit; **rideable with a Dinosaur Saddle** | Plains, Sunflower Plains, Meadow | 2-5 bones, bone meal |
@@ -25,7 +25,7 @@ carnivores are hostile, armoured or horned herbivores defend themselves, the oth
   limited per area (for example only one T. rex within 64 blocks) so they never flood a biome.
 * Herbivores and pterosaurs stay in the world like vanilla animals; predators despawn like monsters.
 * Every mob has a spawn egg (creative tab **Dinosaurs** and the vanilla Spawn Eggs tab).
-* Looting increases every drop by up to 1 per level.
+* Looting increases every drop by up to 1 per level (the rare T-Rex Skull: 4%, with Looting I/II/III 6/8/10%).
 * Sounds reuse vanilla sounds.
 
 ## Items (1.1.0)
@@ -63,6 +63,25 @@ plus every item with its crafting grid (click an ingredient to jump to its page)
 
 Book + leather alone is left free so it cannot clash with other mods' guide books; the trophy
 (item tag `#dinosaurs:guide_book_trophies`) makes the recipe unique.
+
+**T-Rex Skull Helmet** (1.3.0) – the T. rex rarely drops a **T-Rex Skull** (only when killed by a player:
+4% of the time, 6/8/10% with Looting I/II/III). Craft it into a helmet you wear as a 3D T. rex skull, snout
+forward, with teeth and eye sockets (on players, armor stands, mannequins and mobs alike). Better than netherite:
+
+| | T-Rex Skull Helmet | Netherite Helmet |
+|---|---|---|
+| Armor | 4 | 3 |
+| Armor Toughness | 3.5 | 3 |
+| Knockback Resistance | 0.15 | 0.1 |
+| Durability | 506 | 407 |
+| Enchantability | 15 | 15 |
+
+Fire resistant like netherite, takes all helmet enchantments (`#minecraft:head_armor`), repaired with a
+netherite ingot or another T-Rex Skull.
+
+```
+ shapeless: T-Rex skull + leather + netherite ingot
+```
 
 Advancements: *Dino Whisperer* (get the amulet) and *Three Horns, One Rider* (ride a Triceratops).
 
@@ -126,8 +145,9 @@ python3 tools/gen_assets.py         # regenerates models (DinoModelLayers.java),
 python3 tools/gen_data.py           # regenerates lang files, loot tables, item models, recipes, advancements
 python3 tools/gen_items.py          # regenerates the item textures and the Triceratops saddle overlay
 ./tools/server-test.sh              # headless dedicated-server smoke test
-./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book); add -PwithTrinkets=true
-SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, mob screenshots
+python3 tools/gen_skull.py          # regenerates the 3D T-Rex Skull / helmet models and their textures
+./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book, helmet, skull loot); add -PwithTrinkets=true
+SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, helmet and mob screenshots
 ```
 
 Branches: `master` targets Minecraft 26.3, branch `26.2` targets Minecraft 26.2.
@@ -157,6 +177,10 @@ więc nie pojawiają się wszystkie w jednym miejscu.
 * **Nowe w 1.2.0: Przewodnik po dinozaurach** – ilustrowana książka (bez kształtu: książka + skóra + dowolne
   trofeum dinozaura: ząb, pazur, skóra lub grzebień). Każdy dinozaur z obrazkiem 3D, opisem, biomami i łupami,
   wszystkie receptury z klikalnymi składnikami oraz aktualne ustawienia pojawiania się.
+* **Nowe w 1.3.0: Hełm z czaszki tyranozaura** – tyranozaur zabity przez gracza rzadko upuszcza **czaszkę**
+  (4%, z Grabieżą I/II/III 6/8/10%). Czaszka + skóra + sztabka netherytu (bez kształtu) = hełm, który na głowie
+  wygląda jak trójwymiarowa czaszka tyranozaura. Mocniejszy niż netherytowy (pancerz 4, twardość 3,5,
+  odporność na odrzut 0,15, trwałość 506), odporny na ogień, naprawiany sztabką netherytu lub czaszką.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się
   wrogich dinozaurów za dnia oraz osobny przełącznik pojawiania się dla każdego gatunku.
 * Na poziomie trudności „Pokojowy” wrogie gatunki się nie pojawiają.

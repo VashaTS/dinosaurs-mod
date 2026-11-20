@@ -42,6 +42,25 @@ DROPS = {
     "parasaurolophus": ("parasaurolophus_crest", 0, 1),
 }
 
+# Rare drops (killed by a player only): mob -> (item, chance without Looting, chance with Looting I, + per extra level).
+# T-Rex Skull: 4% normally; Looting I/II/III: 6/8/10%.
+RARE_DROPS = {
+    "t_rex": ("t_rex_skull", 0.04, 0.06, 0.02),
+}
+
+# Items with a hand-made 3D model (written by gen_skull.py), not a flat item/generated one.
+CUSTOM_MODELS = {"t_rex_skull", "t_rex_skull_helmet"}
+
+def rare_pool(item, base, looting, per_level, modifier_key):
+    chance = {"enchanted_chance": {"type": "minecraft:linear", "base": looting, "per_level_above_first": per_level},
+              "enchantment": "minecraft:looting", "unenchanted_chance": base}
+    entries = [{"type": "minecraft:item", "name": f"dinosaurs:{item}"}]
+    if modifier_key == "modifier":  # 26.3: one "condition" object
+        return {"rolls": 1, "condition": {"type": "minecraft:all_of", "terms": [
+            {"type": "minecraft:killed_by_player"}, {"type": "minecraft:random_chance_with_enchanted_bonus", **chance}]}, "entries": entries}
+    return {"rolls": 1, "conditions": [  # 26.2: list of "conditions"
+        {"condition": "minecraft:killed_by_player"}, {"condition": "minecraft:random_chance_with_enchanted_bonus", **chance}], "entries": entries}
+
 ITEMS = {  # id: (English, Polish)
     "t_rex_tooth": ("T-Rex Tooth", "Ząb tyranozaura"),
     "raptor_claw": ("Raptor Claw", "Pazur raptora"),
@@ -51,12 +70,16 @@ ITEMS = {  # id: (English, Polish)
     "parasaurolophus_crest": ("Parasaurolophus Crest", "Grzebień parazaurolofa"),
     "dinosaur_saddle": ("Dinosaur Saddle", "Siodło na dinozaura"),
     "guide_book": ("Dinosaur Field Guide", "Przewodnik po dinozaurach"),
+    "t_rex_skull": ("T-Rex Skull", "Czaszka tyranozaura"),
+    "t_rex_skull_helmet": ("T-Rex Skull Helmet", "Hełm z czaszki tyranozaura"),
     "tab_icon": ("Dinosaurs", "Dinozaury"),
 }
 
 EXTRA_LANG = {  # key: (English, Polish)
     "item.dinosaurs.amulet_of_dino_protection.desc": ("Hostile dinosaurs ignore you until you attack them", "Wrogie dinozaury ignorują cię, dopóki ich nie zaatakujesz"),
     "item.dinosaurs.dinosaur_saddle.desc": ("Use on a Triceratops to ride it", "Użyj na triceratopsie, aby na nim jeździć"),
+    "item.dinosaurs.t_rex_skull.desc": ("Rare T. rex trophy. Craft it into a helmet", "Rzadkie trofeum z tyranozaura. Zrób z niej hełm"),
+    "item.dinosaurs.t_rex_skull_helmet.desc": ("Stronger than netherite. Fire resistant", "Mocniejszy niż netheryt. Odporny na ogień"),
     "config.dinosaurs.title": ("Dinosaurs", "Dinozaury"),
     "config.dinosaurs.category.spawning": ("Spawning", "Pojawianie się"),
     "config.dinosaurs.hostile_daylight": ("Hostile dinosaurs spawn in daylight", "Wrogie dinozaury pojawiają się za dnia"),
@@ -72,8 +95,8 @@ EXTRA_LANG = {  # key: (English, Polish)
     "advancements.dinosaurs.ride_triceratops.title": ("Three Horns, One Rider", "Trzy rogi, jeden jeździec"),
     "advancements.dinosaurs.ride_triceratops.description": ("Ride a saddled Triceratops", "Pojedź na osiodłanym triceratopsie"),
     "modmenu.descriptionTranslation.dinosaurs": (
-        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection and a saddle to ride a Triceratops.",
-        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami i siodło, by jeździć na triceratopsie."),
+        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops and a T-Rex Skull Helmet.",
+        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, i hełm z czaszki tyranozaura."),
 }
 
 RECIPES = {
@@ -81,10 +104,12 @@ RECIPES = {
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
 }
 
-SHAPELESS = {  # id: (ingredients, result, count, unlock item or #tag)
+SHAPELESS = {  # id: (ingredients, result, count, unlock item or #tag[, category])
     "leather_from_brachiosaurus_hide": (["dinosaurs:brachiosaurus_hide"], "minecraft:leather", 2, "dinosaurs:brachiosaurus_hide"),
     # Book + Leather alone is left free for other mods' guide books; the dinosaur trophy makes this one unique.
     "guide_book": (["minecraft:book", "minecraft:leather", "#dinosaurs:guide_book_trophies"], "dinosaurs:guide_book", 1, "#dinosaurs:guide_book_trophies"),
+    # No vanilla or other dinosaurs recipe uses skull + leather + netherite ingot (checked by the server game test).
+    "t_rex_skull_helmet": (["dinosaurs:t_rex_skull", "minecraft:leather", "minecraft:netherite_ingot"], "dinosaurs:t_rex_skull_helmet", 1, "dinosaurs:t_rex_skull", "equipment"),
 }
 
 # Any unique dinosaur drop works as the third guide-book ingredient.
@@ -107,10 +132,11 @@ def data_files(modifier_key):
             "requirements": [["has_the_recipe", "has_ingredient"]],
             "rewards": {"recipes": [f"dinosaurs:{rid}"]},
         })
-    for rid, (ingredients, result, count, unlock) in SHAPELESS.items():
+    for rid, (ingredients, result, count, unlock, *rest) in SHAPELESS.items():
+        category = rest[0] if rest else "misc"
         res = {"id": result, "count": count} if count != 1 else {"id": result}
-        w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shapeless", "category": "misc", "ingredients": ingredients, "result": res})
-        w(f"{D}/advancement/recipes/misc/{rid}.json", {
+        w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shapeless", "category": category, "ingredients": ingredients, "result": res})
+        w(f"{D}/advancement/recipes/{category}/{rid}.json", {
             "parent": "minecraft:recipes/root",
             "criteria": {
                 "has_ingredient": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": unlock}]}},
@@ -120,6 +146,9 @@ def data_files(modifier_key):
             "rewards": {"recipes": [f"dinosaurs:{rid}"]},
         })
     w(f"{D}/tags/item/guide_book_trophies.json", {"replace": False, "values": TROPHIES})
+    # The skull helmet: repaired with netherite or another skull, enchantable like any helmet.
+    w(f"{D}/tags/item/repairs_t_rex_skull_helmet.json", {"replace": False, "values": ["minecraft:netherite_ingot", "dinosaurs:t_rex_skull"]})
+    w(os.path.join(ROOT, "src/main/resources/data/minecraft/tags/item/head_armor.json"), {"replace": False, "values": ["dinosaurs:t_rex_skull_helmet"]})
     w(f"{D}/advancement/amulet.json", {
         "parent": "minecraft:adventure/root",
         "criteria": {"amulet": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": "dinosaurs:amulet_of_dino_protection"}]}}},
@@ -151,6 +180,8 @@ def main(modifier_key):
         if mid in DROPS:
             item, dlo, dhi = DROPS[mid]
             pools.append({"rolls": 1, "entries": [item_entry(f"dinosaurs:{item}", dlo, dhi, modifier_key)]})
+        if mid in RARE_DROPS:
+            pools.append(rare_pool(*RARE_DROPS[mid], modifier_key))
         w(f"{D}/loot_table/entities/{mid}.json", {"type": "minecraft:entity", "pools": pools, "random_sequence": f"dinosaurs:entities/{mid}"})
         w(f"{A}/items/{mid}_spawn_egg.json", {"model": {"type": "minecraft:model", "model": f"dinosaurs:item/{mid}_spawn_egg"}})
         w(f"{A}/models/item/{mid}_spawn_egg.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"dinosaurs:item/{mid}_spawn_egg"}})
@@ -158,7 +189,8 @@ def main(modifier_key):
         en[f"item.dinosaurs.{iid}"] = e
         pl[f"item.dinosaurs.{iid}"] = p
         w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}"}})
-        w(f"{A}/models/item/{iid}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"dinosaurs:item/{iid}"}})
+        if iid not in CUSTOM_MODELS:
+            w(f"{A}/models/item/{iid}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"dinosaurs:item/{iid}"}})
     for k, (e, p) in list(EXTRA_LANG.items()) + list(BOOK_LANG.items()):
         en[k] = e
         pl[k] = p
