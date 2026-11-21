@@ -166,6 +166,23 @@ SHAPELESS = {  # id: (ingredients, result, count, unlock item or #tag[, category
 # Any unique dinosaur drop works as the third guide-book ingredient.
 TROPHIES = ["dinosaurs:parasaurolophus_crest", "dinosaurs:brachiosaurus_hide", "dinosaurs:raptor_claw", "dinosaurs:t_rex_tooth", "dinosaurs:megalodon_tooth"]
 
+# Xaero's Minimap radar icons (head icons like vanilla mobs; without these Xaero can't find the head of the
+# T-Rex, Raptor, Spinosaurus, Brachiosaurus and Parasaurolophus, whose head hangs off the neck, and shows the name).
+# Read by Xaero from any resource pack; ignored when Xaero isn't installed. id: (baseScale, rotationY, rotationX)
+XAERO_ICONS = {  # long snouts and crests are turned three-quarter so they show; scale evens out the head sizes
+    "t_rex": (0.9, 0, 0), "velociraptor": (1.6, 35, 0), "spinosaurus": (0.75, 35, 0), "triceratops": (0.6, 0, 0),
+    "stegosaurus": (1.2, 35, 0), "ankylosaurus": (1.1, 0, 0), "brachiosaurus": (1.5, 25, 0), "parasaurolophus": (0.9, 35, 0),
+    "megalodon": (0.85, 35, 0), "pteranodon": (0.85, 35, 0),
+}
+
+def xaero_icon(mid):
+    scale, ry, rx = XAERO_ICONS[mid]
+    cfg = {"baseScale": scale, "rotationY": ry, "rotationX": rx,
+           # DinoModel.head: the head part (with its jaw, horns, crest...) of every species.
+           "modelMainPartFieldAliases": ["net.vsh33.dinosaurs.client.DinoModel;head"],
+           "modelPartsFields": [], "renderingFullModel": False, "modelPartsRotationReset": True, "layersAllowed": False}
+    return {"variants": {"default": "model:0"}, "modelConfigs": [cfg]}
+
 def riding_predicate(modifier_key):
     if modifier_key == "modifier":  # 26.3
         return {"type": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:vehicle": {"minecraft:entity_type": "dinosaurs:triceratops"}}}
@@ -190,6 +207,8 @@ def data_files(modifier_key):
     for tag, item in (("chest_armor", "dinosaur_chestplate"), ("leg_armor", "dinosaur_leggings"), ("foot_armor", "dinosaur_boots")):
         w(os.path.join(ROOT, f"src/main/resources/data/minecraft/tags/item/{tag}.json"), {"replace": False, "values": [f"dinosaurs:{item}"]})
     w(f"{A}/equipment/dinosaur.json", equipment_asset())
+    for mid in MOBS:
+        w(os.path.join(ROOT, f"src/main/resources/assets/xaerominimap/entity/icon/definition/dinosaurs/{mid}.json"), xaero_icon(mid))
     for rid, r in RECIPES.items():
         if "keep_components_from" in r:
             # Shaped, but the result keeps the bow's enchantments, name, repair cost and (scaled) damage.

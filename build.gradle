@@ -51,6 +51,11 @@ dependencies {
 	compileOnly "maven.modrinth:trinkets-updated:${project.trinkets_version}"
 	compileOnly "maven.modrinth:cloth-config:${project.cloth_config_version}"
 	compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+	if (project.findProperty("xaeroJar")) {
+		// ./gradlew runClientGameTest -PxaeroJar=/path/to/xaerominimap-fabric-<mc>-<ver>.jar
+		//   -> only XaeroRadarScreenshotTest runs: minimap radar screenshots with the dinosaur head icons
+		localRuntime files(project.property("xaeroJar"))
+	}
 	if (project.findProperty("withTrinkets") == "true") {
 		// ./gradlew runServer -PwithTrinkets=true  -> test the Trinkets integration in the dev server
 		localRuntime "maven.modrinth:trinkets-updated:${project.trinkets_version}"
@@ -92,5 +97,33 @@ publishing {
 		}
 	}
 	repositories {
+	}
+}
+
+if (project.findProperty("xaeroJar")) {
+	def xaeroCfg = file("build/run/clientGameTest/config/xaero/minimap/profiles/default.cfg")
+	// -PxaeroRadar=always: icons and names always on (no Tab needed). Default: Xaero's defaults (icons while Tab is held).
+	def xaeroAlways = project.findProperty("xaeroRadar") == "always"
+	def xaeroCategories = file("src/gametest/xaero/default_radar_categories_client.json")
+	def xaeroCategoriesTarget = file("build/run/clientGameTest/config/xaero/minimap/default_radar_categories_client.json")
+	tasks.matching { it.name == "runClientGameTest" }.configureEach {
+		systemProperty "dinosaurs.xaeroOnly", "true"
+		systemProperty "dinosaurs.xaeroRadar", xaeroAlways ? "always" : "tab"
+		systemProperty "dinosaurs.xaeroShots", project.findProperty("xaeroShots") ?: "/workspace/dino-xaero"
+		// A bigger, zoomed-in, north-locked minimap so the radar icons are easy to see. Xaero keeps any other options.
+		doFirst {
+			def cfg = xaeroCfg
+			cfg.parentFile.mkdirs()
+			def want = [minimap_size: "200", minimap_zoom: "6", minimap_north_locked: "true", minimap_ui_scale: "2"]
+			def lines = cfg.exists() ? cfg.readLines() : []
+			want.each { k, v ->
+				int i = lines.findIndexOf { it.startsWith(k + " = ") }
+				if (i >= 0) lines[i] = k + " = " + v else lines << (k + " = " + v)
+			}
+			cfg.text = lines.join("\n") + "\n"
+			if (xaeroAlways) {
+				xaeroCategoriesTarget.text = xaeroCategories.text
+			}
+		}
 	}
 }

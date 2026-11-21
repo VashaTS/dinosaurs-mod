@@ -6,6 +6,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"fabric-client-gametest": [
+			"net.vsh33.dinosaurs.test.XaeroRadarScreenshotTest",
 			"net.vsh33.dinosaurs.test.ArmorScreenshotTest",
 			"net.vsh33.dinosaurs.test.HelmetScreenshotTest",
 			"net.vsh33.dinosaurs.test.BowScreenshotTest",

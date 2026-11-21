@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.1
+
+* **Xaero's Minimap / Better PvP**: every dinosaur (including the Megalodon and the Pteranodon) now has a head icon on
+  the entity radar, like vanilla mobs, instead of its name. Before, Xaero could not find the head of the T-Rex,
+  Velociraptor, Spinosaurus, Brachiosaurus and Parasaurolophus (it hangs off the neck) and fell back to the name.
+  The icons are bundled resource files (`assets/xaerominimap/entity/icon/definition/dinosaurs/*.json`) that render the
+  head of each dinosaur's own model; long snouts and crests are turned three-quarter and the sizes are evened out.
+  No dependency: without Xaero the files are simply unused. Tested with Xaero's Minimap 26.6.2.
+
 ## 1.5.0
 
 * New: **Dinosaur Armor** (chestplate, leggings, boots), the next step after netherite, made on the smithing table.

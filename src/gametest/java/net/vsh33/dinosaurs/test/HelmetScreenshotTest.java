@@ -35,6 +35,9 @@ public class HelmetScreenshotTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		if (XaeroRadarScreenshotTest.ONLY) {
+			return; // -PxaeroJar run: only the minimap test
+		}
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
 			TestServerContext server = world.getServer();
 			server.runCommand("gamerule spawn_mobs false");

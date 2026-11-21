@@ -166,6 +166,9 @@ installed, the same settings are available in-game (Mods → Dinosaurs → confi
 |-----|--------------|
 | [Trinkets Updated](https://modrinth.com/mod/trinkets-updated) (Fabric port of Trinkets) | The amulet goes in the **chest / necklace** slot and protects from there |
 | [Mod Menu](https://modrinth.com/mod/modmenu) + [Cloth Config](https://modrinth.com/mod/cloth-config) | In-game config screen |
+| [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) / Better PvP (1.5.1) | Dinosaur head icons on the entity radar, like vanilla mobs (resource files only, no code) |
+
+![Xaero's Minimap radar with dinosaur head icons](screenshots/xaero-minimap-icons.png)
 
 None of them is required. (Baubles and Curios are Forge/NeoForge-only; Accessories has no build for 26.x.)
 
@@ -179,7 +182,7 @@ English and Polish. Minecraft picks the language automatically from the game set
 * Fabric Loader 0.19.5+ (26.2) / 0.20.1+ (26.3)
 * [Fabric API](https://modrinth.com/mod/fabric-api)
 * Java 25
-* Optional: Trinkets Updated, Mod Menu, Cloth Config (see above)
+* Optional: Trinkets Updated, Mod Menu, Cloth Config, Xaero's Minimap (see above)
 
 Install on the server **and** on every client.
 
@@ -214,6 +217,8 @@ python3 tools/gen_skull.py          # regenerates the 3D T-Rex Skull / helmet mo
 python3 tools/gen_armor.py          # Dinosaur Armor worn layers, item icons, the upgrade template and smithing slot icons
 ./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot, dinosaur armor stats / smithing / template recipes / trophy loot); add -PwithTrinkets=true
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, armor, helmet, bone bow and mob screenshots
+SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest -PxaeroJar=/path/to/xaerominimap-fabric-26.3-26.6.2.jar [-PxaeroRadar=always]
+                                    # Xaero's Minimap radar screenshots only (icons with Tab held, or always on with names)
 ```
 
 Branches: `master` targets Minecraft 26.3, branch `26.2` targets Minecraft 26.2.
@@ -262,6 +267,8 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   odporność na odrzut 0,2, trwałość 656 / 615 / 533, zaklinalność 20 (pancerz 10 / 8 / 4, netheryt 8 / 6 / 3; cały zestaw z hełmem: 26). Hełmem
   zestawu jest hełm z czaszki tyranozaura (od 1.5.0: twardość 4, odporność na odrzut 0,2, zaklinalność 20).
   Wygląda jak kości (żebra, kręgosłup, rzepki) z ciemnym netherytem między nimi; naprawiana kośćmi dinozaura.
+* **Nowe w 1.5.1: ikony na minimapie Xaero** (Xaero's Minimap / Better PvP) – każdy dinozaur, także megalodon
+  i pteranodon, ma na radarze ikonę głowy jak zwykłe moby, zamiast nazwy. Same pliki zasobów, bez zależności.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się
   wrogich dinozaurów za dnia oraz osobny przełącznik pojawiania się dla każdego gatunku.
 * Na poziomie trudności „Pokojowy” wrogie gatunki się nie pojawiają.
