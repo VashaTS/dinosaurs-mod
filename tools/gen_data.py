@@ -91,6 +91,10 @@ ITEMS = {  # id: (English, Polish)
     "t_rex_skull_helmet": ("T-Rex Skull Helmet", "Hełm z czaszki tyranozaura"),
     "dinosaur_bones": ("Dinosaur Bones", "Kości dinozaura"),
     "dinosaur_bone_bow": ("Dinosaur Bone Bow", "Łuk z kości dinozaura"),
+    "dinosaur_upgrade_smithing_template": ("Dinosaur Upgrade", "Dinozaurowe ulepszenie"),
+    "dinosaur_chestplate": ("Dinosaur Chestplate", "Dinozaurowy napierśnik"),
+    "dinosaur_leggings": ("Dinosaur Leggings", "Dinozaurowe nogawice"),
+    "dinosaur_boots": ("Dinosaur Boots", "Dinozaurowe buty"),
     "tab_icon": ("Dinosaurs", "Dinozaury"),
 }
 
@@ -101,6 +105,13 @@ EXTRA_LANG = {  # key: (English, Polish)
     "item.dinosaurs.dinosaur_bones.desc": ("From large dinosaurs. Bone bow, or 4 bone meal", "Z dużych dinozaurów. Na łuk lub 4 mączki kostne"),
     "item.dinosaurs.dinosaur_bone_bow.desc": ("Draws faster, hits harder. Infinity + Mending OK", "Szybciej naciąga, mocniej bije. Nieskończoność + Naprawa"),
     "item.dinosaurs.t_rex_skull_helmet.desc": ("Stronger than netherite. Fire resistant", "Mocniejszy niż netheryt. Odporny na ogień"),
+    "item.dinosaurs.dinosaur_armor.desc": ("Stronger than netherite. Fire resistant", "Mocniejsza niż netheryt. Odporna na ogień"),
+    "item.dinosaurs.smithing_template.dinosaur_upgrade.applies_to": ("Netherite Armor", "Netherytowa zbroja"),
+    "item.dinosaurs.smithing_template.dinosaur_upgrade.ingredients": ("Dinosaur Trophies", "Trofea z dinozaurów"),
+    "item.dinosaurs.smithing_template.dinosaur_upgrade.base_slot_description": (
+        "Add a netherite chestplate, leggings or boots", "Dodaj netherytowy napierśnik, nogawice lub buty"),
+    "item.dinosaurs.smithing_template.dinosaur_upgrade.additions_slot_description": (
+        "Add Megalodon Tooth, Parasaurolophus Crest or Raptor Claw", "Dodaj ząb megalodona, grzebień parazaurolofa lub pazur raptora"),
     "config.dinosaurs.title": ("Dinosaurs", "Dinozaury"),
     "config.dinosaurs.category.spawning": ("Spawning", "Pojawianie się"),
     "config.dinosaurs.hostile_daylight": ("Hostile dinosaurs spawn in daylight", "Wrogie dinozaury pojawiają się za dnia"),
@@ -116,8 +127,8 @@ EXTRA_LANG = {  # key: (English, Polish)
     "advancements.dinosaurs.ride_triceratops.title": ("Three Horns, One Rider", "Trzy rogi, jeden jeździec"),
     "advancements.dinosaurs.ride_triceratops.description": ("Ride a saddled Triceratops", "Pojedź na osiodłanym triceratopsie"),
     "modmenu.descriptionTranslation.dinosaurs": (
-        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops, a T-Rex Skull Helmet and a Dinosaur Bone Bow.",
-        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, hełm z czaszki tyranozaura i łuk z kości dinozaura."),
+        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops, a T-Rex Skull Helmet, a Dinosaur Bone Bow and Dinosaur Armor.",
+        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, hełm z czaszki tyranozaura, łuk z kości dinozaura i dinozaurową zbroję."),
 }
 
 RECIPES = {
@@ -125,7 +136,23 @@ RECIPES = {
     "dinosaur_bone_bow": dict(pattern=[" B ", "BWB", " N "], key={"B": "dinosaurs:dinosaur_bones", "W": "minecraft:bow", "N": "minecraft:netherite_ingot"}, category="equipment", unlock="dinosaurs:dinosaur_bones", keep_components_from="minecraft:bow"),
     "amulet_of_dino_protection": dict(pattern=["SGS", "RTR", " M "], key={"S": "minecraft:string", "G": "minecraft:gold_ingot", "R": "dinosaurs:raptor_claw", "T": "dinosaurs:t_rex_tooth", "M": "dinosaurs:megalodon_tooth"}, category="equipment", unlock="dinosaurs:t_rex_tooth"),
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
+    # Netherite Upgrade surrounded by 8 Dinosaur Bones -> Dinosaur Upgrade.
+    "dinosaur_upgrade_smithing_template": dict(pattern=["BBB", "BTB", "BBB"], key={"B": "dinosaurs:dinosaur_bones", "T": "minecraft:netherite_upgrade_smithing_template"}, category="misc", unlock="dinosaurs:dinosaur_bones"),
+    # Duplication like vanilla's (template on top, 7 of the material, the cheap block in the middle): 2 templates.
+    "dinosaur_upgrade_smithing_template_duplication": dict(pattern=["BTB", "BCB", "BBB"], key={"B": "dinosaurs:dinosaur_bones", "T": "dinosaurs:dinosaur_upgrade_smithing_template", "C": "minecraft:bone_block"}, category="misc", unlock="dinosaurs:dinosaur_upgrade_smithing_template", result="dinosaurs:dinosaur_upgrade_smithing_template", count=2),
 }
+
+# Smithing table: Dinosaur Upgrade + netherite piece + trophy -> dinosaur piece (keeps enchantments, trims, name, damage).
+SMITHING = {  # result: (base, addition)
+    "dinosaur_chestplate": ("minecraft:netherite_chestplate", "dinosaurs:megalodon_tooth"),
+    "dinosaur_leggings": ("minecraft:netherite_leggings", "dinosaurs:parasaurolophus_crest"),
+    "dinosaur_boots": ("minecraft:netherite_boots", "dinosaurs:raptor_claw"),
+}
+ARMOR = list(SMITHING)
+
+def equipment_asset():
+    """Worn textures (tools/gen_armor.py): textures/entity/equipment/<layer>/dinosaur.png."""
+    return {"layers": {layer: [{"texture": "dinosaurs:dinosaur"}] for layer in ("humanoid", "humanoid_baby", "humanoid_leggings")}}
 
 SHAPELESS = {  # id: (ingredients, result, count, unlock item or #tag[, category])
     "bone_meal_from_dinosaur_bones": (["dinosaurs:dinosaur_bones"], "minecraft:bone_meal", 4, "dinosaurs:dinosaur_bones"),
@@ -145,14 +172,35 @@ def riding_predicate(modifier_key):
     return [{"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:vehicle": {"minecraft:entity_type": "dinosaurs:triceratops"}}}]
 
 def data_files(modifier_key):
+    rkey = "recipes" if modifier_key == "modifier" else "recipe"
+    for rid, (base, addition) in SMITHING.items():
+        name = f"{rid}_smithing"
+        w(f"{D}/recipe/{name}.json", {"type": "minecraft:smithing_transform", "addition": addition, "base": base,
+                                       "result": {"id": f"dinosaurs:{rid}"}, "template": "dinosaurs:dinosaur_upgrade_smithing_template"})
+        w(f"{D}/advancement/recipes/equipment/{name}.json", {
+            "parent": "minecraft:recipes/root",
+            "criteria": {
+                "has_template": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": "dinosaurs:dinosaur_upgrade_smithing_template"}]}},
+                "has_the_recipe": {"trigger": "minecraft:recipe_unlocked", "conditions": {rkey: f"dinosaurs:{name}"}},
+            },
+            "requirements": [["has_the_recipe", "has_template"]],
+            "rewards": {"recipes": [f"dinosaurs:{name}"]},
+        })
+    w(f"{D}/tags/item/repairs_dinosaur_armor.json", {"replace": False, "values": ["dinosaurs:dinosaur_bones"]})
+    for tag, item in (("chest_armor", "dinosaur_chestplate"), ("leg_armor", "dinosaur_leggings"), ("foot_armor", "dinosaur_boots")):
+        w(os.path.join(ROOT, f"src/main/resources/data/minecraft/tags/item/{tag}.json"), {"replace": False, "values": [f"dinosaurs:{item}"]})
+    w(f"{A}/equipment/dinosaur.json", equipment_asset())
     for rid, r in RECIPES.items():
         if "keep_components_from" in r:
             # Shaped, but the result keeps the bow's enchantments, name, repair cost and (scaled) damage.
             w(f"{D}/recipe/{rid}.json", {"type": "dinosaurs:crafting_shaped_keep_components", "category": r["category"], "key": r["key"], "pattern": r["pattern"],
                                          "source": r["keep_components_from"], "result": {"id": f"dinosaurs:{rid}"}})
         else:
-            w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shaped", "category": r["category"], "key": r["key"], "pattern": r["pattern"], "result": {"id": f"dinosaurs:{rid}"}})
-        w(f"{D}/advancement/recipes/equipment/{rid}.json", {
+            res = {"id": r.get("result", f"dinosaurs:{rid}")}
+            if r.get("count", 1) != 1:
+                res["count"] = r["count"]
+            w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shaped", "category": r["category"], "key": r["key"], "pattern": r["pattern"], "result": res})
+        w(f"{D}/advancement/recipes/{'misc' if r['category'] == 'misc' else 'equipment'}/{rid}.json", {
             "parent": "minecraft:recipes/root",
             "criteria": {
                 "has_ingredient": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": r["unlock"]}]}},

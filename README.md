@@ -71,10 +71,13 @@ forward, with teeth and eye sockets (on players, armor stands, mannequins and mo
 | | T-Rex Skull Helmet | Netherite Helmet |
 |---|---|---|
 | Armor | 4 | 3 |
-| Armor Toughness | 3.5 | 3 |
-| Knockback Resistance | 0.15 | 0.1 |
+| Armor Toughness | 4 (1.3.0-1.4.1: 3.5) | 3 |
+| Knockback Resistance | 0.2 (1.3.0-1.4.1: 0.15) | 0.1 |
 | Durability | 506 | 407 |
-| Enchantability | 15 | 15 |
+| Enchantability | 20 (1.3.0-1.4.1: 15) | 15 |
+
+Since 1.5.0 it is the helmet of the Dinosaur Armor set, so its toughness, knockback resistance and enchantability
+were raised to the set's values.
 
 Fire resistant like netherite, takes all helmet enchantments (`#minecraft:head_armor`), repaired with a
 netherite ingot or another T-Rex Skull.
@@ -107,6 +110,42 @@ repaired with Dinosaur Bones. **Infinity and Mending can be on it together** –
 `/enchant`; on every other bow the vanilla rule still applies. Draw animation and FOV zoom work like a vanilla bow.
 Crafting it from an enchanted bow keeps the bow's enchantments, name and repair cost (1.4.1); damage carries over
 as the same fraction of durability.
+
+**Dinosaur Armor** (1.5.0) – an upgrade for netherite armor, made on the **smithing table**, like netherite from diamond.
+First craft the **Dinosaur Upgrade** smithing template:
+
+```
+  B  B  B     B = Dinosaur Bones
+  B  T  B     T = Netherite Upgrade smithing template
+  B  B  B
+```
+
+Like vanilla templates it is used up; 7 Dinosaur Bones + a Bone Block copy it (template on top, bone block in the middle: 2 templates).
+Then on the smithing table: Dinosaur Upgrade + netherite piece + trophy:
+
+| Netherite piece | Trophy (drop) | Result |
+|---|---|---|
+| Netherite Chestplate | Megalodon Tooth (Megalodon, 1-3) | Dinosaur Chestplate |
+| Netherite Leggings | Parasaurolophus Crest (Parasaurolophus, 0-1) | Dinosaur Leggings |
+| Netherite Boots | Raptor Claw (Velociraptor, 0-1) | Dinosaur Boots |
+
+(+1 per Looting level.) Enchantments, name, trim and damage carry over, as with the netherite upgrade. The **T-Rex
+Skull Helmet** is the set's helmet. Each piece is better than netherite by exactly as much as netherite is better
+than diamond:
+
+| Piece | Diamond | Netherite | **Dinosaur** |
+|---|---|---|---|
+| Chestplate armor / durability | 8 / 528 | 8 / 592 | **8 / 656** |
+| Leggings armor / durability | 6 / 495 | 6 / 555 | **6 / 615** |
+| Boots armor / durability | 3 / 429 | 3 / 481 | **3 / 533** |
+| Armor toughness (each) | 2 | 3 | **4** |
+| Knockback resistance (each) | 0 | 0.1 | **0.2** |
+| Enchantability | 10 | 15 | **20** |
+
+(Armor points are the same for diamond and netherite, so they stay the same.) Full set with the skull helmet:
+21 armor, 16 toughness, 80% knockback resistance. Fire resistant, takes all armor enchantments and trims, repaired
+with Dinosaur Bones. When worn it looks bony: ribs and sternum on the chest, vertebrae down the back, bone shoulder
+plates, segmented legs with knee caps and toe claws, with dark netherite between the bones.
 
 Advancements: *Dino Whisperer* (get the amulet) and *Three Horns, One Rider* (ride a Triceratops).
 
@@ -172,8 +211,9 @@ python3 tools/gen_items.py          # regenerates the item textures and the Tric
 ./tools/server-test.sh              # headless dedicated-server smoke test
 python3 tools/gen_bow.py /path/to/vanilla/textures/item   # Dinosaur Bones and Bone Bow textures
 python3 tools/gen_skull.py          # regenerates the 3D T-Rex Skull / helmet models and their textures
-./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot); add -PwithTrinkets=true
-SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, helmet, bone bow and mob screenshots
+python3 tools/gen_armor.py          # Dinosaur Armor worn layers, item icons, the upgrade template and smithing slot icons
+./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot, dinosaur armor stats / smithing / template recipes / trophy loot); add -PwithTrinkets=true
+SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, armor, helmet, bone bow and mob screenshots
 ```
 
 Branches: `master` targets Minecraft 26.3, branch `26.2` targets Minecraft 26.2.
@@ -214,6 +254,14 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   i naprawiany kośćmi dinozaura. **Nieskończoność i Naprawa działają na nim razem** (kowadło lub `/enchant`).
   Zaklęcia, nazwa i koszt naprawy łuku użytego do wytworzenia zostają (1.4.1).
   1 kość dinozaura = 4 mączki kostne.
+* **Nowe w 1.5.0: Dinozaurowa zbroja** – ulepszenie netherytowej zbroi na **stole kowalskim**. Szablon
+  **Dinozaurowe ulepszenie**: netherytowe ulepszenie otoczone 8 kośćmi dinozaura (powielanie: szablon + 7 kości
+  dinozaura + blok kości = 2 szablony). Szablon + netherytowy napierśnik + ząb megalodona = dinozaurowy napierśnik,
+  nogawice + grzebień parazaurolofa = dinozaurowe nogawice, buty + pazur raptora = dinozaurowe buty. Zaklęcia, nazwa,
+  wykończenie i zużycie zostają. Każda część jest lepsza od netherytu o tyle, o ile netheryt od diamentu: twardość 4,
+  odporność na odrzut 0,2, trwałość 656 / 615 / 533, zaklinalność 20 (pancerz jak netheryt: 8 / 6 / 3). Hełmem
+  zestawu jest hełm z czaszki tyranozaura (od 1.5.0: twardość 4, odporność na odrzut 0,2, zaklinalność 20).
+  Wygląda jak kości (żebra, kręgosłup, rzepki) z ciemnym netherytem między nimi; naprawiana kośćmi dinozaura.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się
   wrogich dinozaurów za dnia oraz osobny przełącznik pojawiania się dla każdego gatunku.
 * Na poziomie trudności „Pokojowy” wrogie gatunki się nie pojawiają.

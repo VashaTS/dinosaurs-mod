@@ -20,6 +20,8 @@ BOOK_LANG = {
     "book.dinosaurs.heading.crafting": ("Crafting", "Wytwarzanie"),
     "book.dinosaurs.heading.shapeless": ("Shapeless", "Bez kształtu"),
     "book.dinosaurs.heading.used_in": ("Used for", "Zastosowanie"),
+    "book.dinosaurs.heading.smithing": ("Smithing Table", "Stół kowalski"),
+    "book.dinosaurs.title.dinosaur_armor": ("Dinosaur Armor", "Dinozaurowa zbroja"),
     "book.dinosaurs.drag_to_rotate": ("Drag to rotate", "Przeciągnij, by obrócić"),
     "book.dinosaurs.nav.back": ("Back", "Wstecz"),
     "book.dinosaurs.nav.index": ("Contents", "Spis treści"),
@@ -42,6 +44,7 @@ BOOK_LANG = {
     "book.dinosaurs.stats.arrow_speed": ("Arrow Speed", "Prędkość strzały"),
     "book.dinosaurs.stats.draw_ticks": ("Draw (ticks)", "Naciąganie (ticki)"),
     "book.dinosaurs.stats.enchantability": ("Enchantability", "Zaklinalność"),
+    "book.dinosaurs.stats.enchanting": ("Enchanting", "Zaklinanie"),
 
     # ---- Dinosaurs: behaviour (left page) and where to find them (right page)
     "book.dinosaurs.dino.t_rex": (
@@ -119,20 +122,20 @@ BOOK_LANG = {
         "1-2 from every Tyrannosaurus Rex, more with Looting. Part of the amulet.",
         "1-2 z każdego tyranozaura, więcej z Grabieżą. Składnik amuletu."),
     "book.dinosaurs.item.raptor_claw": (
-        "Up to 1 from a Velociraptor, more with Looting. The amulet needs 2.",
-        "Do 1 z welociraptora, więcej z Grabieżą. Amulet potrzebuje 2."),
+        "Up to 1 from a Velociraptor, more with Looting. The amulet needs 2. Also turns netherite boots into Dinosaur Boots.",
+        "Do 1 z welociraptora, więcej z Grabieżą. Amulet potrzebuje 2. Zmienia też netherytowe buty w dinozaurowe."),
     "book.dinosaurs.item.megalodon_tooth": (
-        "1-3 from a Megalodon, more with Looting. Part of the amulet.",
-        "1-3 z megalodona, więcej z Grabieżą. Składnik amuletu."),
+        "1-3 from a Megalodon, more with Looting. Part of the amulet and of the Dinosaur Chestplate.",
+        "1-3 z megalodona, więcej z Grabieżą. Składnik amuletu i dinozaurowego napierśnika."),
     "book.dinosaurs.item.brachiosaurus_hide": (
         "1-3 from a Brachiosaurus, more with Looting. Makes the saddle, or 2 Leather.",
         "1-3 z brachiozaura, więcej z Grabieżą. Z niej zrobisz siodło albo 2 skóry."),
     "book.dinosaurs.item.parasaurolophus_crest": (
-        "Up to 1 from a Parasaurolophus, more with Looting. Part of the saddle.",
-        "Do 1 z parazaurolofa, więcej z Grabieżą. Składnik siodła."),
+        "Up to 1 from a Parasaurolophus, more with Looting. Part of the saddle and of the Dinosaur Leggings.",
+        "Do 1 z parazaurolofa, więcej z Grabieżą. Składnik siodła i dinozaurowych nogawic."),
     "book.dinosaurs.item.dinosaur_bones": (
-        "Large dinosaurs drop these instead of bones (more with Looting). Craft them into the Bone Bow or Bone Meal.",
-        "Duże dinozaury upuszczają je zamiast kości (więcej z Grabieżą). Zrobisz z nich łuk z kości lub mączkę kostną."),
+        "Large dinosaurs drop these instead of bones, more with Looting. For the Bone Bow, the Upgrade or 4 Bone Meal.",
+        "Duże dinozaury upuszczają je zamiast kości, więcej z Grabieżą. Na łuk, ulepszenie lub 4 mączki kostne."),
     "book.dinosaurs.item.dinosaur_bone_bow": (
         "Faster draw, faster arrows that hit harder. Infinity and Mending work together on it! Enchantments from the bow are kept.",
         "Szybciej naciąga, strzały lecą szybciej i mocniej biją. Nieskończoność i Naprawa działają razem! Zaklęcia z łuku zostają."),
@@ -142,4 +145,10 @@ BOOK_LANG = {
     "book.dinosaurs.item.t_rex_skull_helmet": (
         "Wear a T. rex skull on your head. Fire resistant like netherite. Repair it with a Netherite Ingot or a T-Rex Skull.",
         "Noś czaszkę tyranozaura na głowie. Odporny na ogień jak netheryt. Napraw go sztabką netherytu lub czaszką tyranozaura."),
+    "book.dinosaurs.item.dinosaur_upgrade_smithing_template": (
+        "Smithing template that turns netherite chestplate, leggings and boots into Dinosaur Armor. Used up like the Netherite Upgrade. 7 Dinosaur Bones and a Bone Block copy it.",
+        "Szablon kowalski, który zmienia netherytowy napierśnik, nogawice i buty w dinozaurową zbroję. Zużywa się jak netherytowe ulepszenie. 7 kości dinozaura i blok kości go powielą."),
+    "book.dinosaurs.item.dinosaur_armor": (
+        "Enchantments stay. Beats netherite as netherite beats diamond. Repair: Dinosaur Bones. Helmet: T-Rex Skull Helmet.",
+        "Zaklęcia zostają. Lepsza od netherytu jak netheryt od diamentu. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura."),
 }

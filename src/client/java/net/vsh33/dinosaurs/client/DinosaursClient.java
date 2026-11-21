@@ -50,6 +50,9 @@ public class DinosaursClient implements ClientModInitializer {
 				lines.add(Component.translatable("item.dinosaurs.dinosaur_bones.desc").withStyle(ChatFormatting.GRAY));
 			} else if (stack.getItem() == ModItems.DINOSAUR_BONE_BOW) {
 				lines.add(Component.translatable("item.dinosaurs.dinosaur_bone_bow.desc").withStyle(ChatFormatting.GRAY));
+			} else if (stack.getItem() == ModItems.DINOSAUR_CHESTPLATE || stack.getItem() == ModItems.DINOSAUR_LEGGINGS
+					|| stack.getItem() == ModItems.DINOSAUR_BOOTS) {
+				lines.add(Component.translatable("item.dinosaurs.dinosaur_armor.desc").withStyle(ChatFormatting.GRAY));
 			}
 		});
 	}

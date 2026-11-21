@@ -56,11 +56,13 @@ public final class ModItems {
 	/** Netherite ingot or another skull repair the helmet (#dinosaurs:repairs_t_rex_skull_helmet). */
 	public static final TagKey<Item> REPAIRS_T_REX_SKULL_HELMET = TagKey.create(Registries.ITEM, Dinosaurs.id("repairs_t_rex_skull_helmet"));
 	/**
-	 * Helmet stats, a step above netherite (3 armor, 3 toughness, 0.1 knockback resistance, 37 x 11 = 407 durability,
-	 * enchantability 15). Only the helmet exists; the asset id is never rendered.
+	 * Helmet stats, above netherite (3 armor, 3 toughness, 0.1 knockback resistance, 37 x 11 = 407 durability,
+	 * enchantability 15) and at least the Dinosaur Armor tier it completes (1.5.0: toughness 4, knockback resistance 0.2,
+	 * enchantability 20 like the armor; it keeps its 4 armor and 46 x 11 = 506 durability). Only the helmet exists;
+	 * the asset id is never rendered.
 	 */
-	public static final ArmorMaterial T_REX_SKULL_MATERIAL = new ArmorMaterial(46, Map.of(ArmorType.HELMET, 4), 15,
-			SoundEvents.ARMOR_EQUIP_NETHERITE, 3.5F, 0.15F, REPAIRS_T_REX_SKULL_HELMET,
+	public static final ArmorMaterial T_REX_SKULL_MATERIAL = new ArmorMaterial(46, Map.of(ArmorType.HELMET, 4), 20,
+			SoundEvents.ARMOR_EQUIP_NETHERITE, 4.0F, 0.2F, REPAIRS_T_REX_SKULL_HELMET,
 			ResourceKey.create(EquipmentAssets.ROOT_ID, Dinosaurs.id("t_rex_skull")));
 	/**
 	 * Worn helmet. Its Equippable has no equipment asset, so instead of a flat armor layer the game draws the
@@ -84,6 +86,29 @@ public final class ModItems {
 			.repairable(DINOSAUR_BONES)
 			.fireResistant()
 			.rarity(Rarity.EPIC));
+
+	// Dinosaur Armor: netherite chestplate / leggings / boots upgraded on the smithing table with the Dinosaur Upgrade
+	// template and a trophy (Megalodon Tooth / Parasaurolophus Crest / Raptor Claw). The T-Rex Skull Helmet is the set's helmet.
+	/** Repair ingredient of the Dinosaur Armor (#dinosaurs:repairs_dinosaur_armor: Dinosaur Bones). */
+	public static final TagKey<Item> REPAIRS_DINOSAUR_ARMOR = TagKey.create(Registries.ITEM, Dinosaurs.id("repairs_dinosaur_armor"));
+	/**
+	 * One step above netherite by the same amount netherite is above diamond (26.x values):
+	 * durability multiplier 33 -> 37 -> 41, toughness 2 -> 3 -> 4, knockback resistance 0 -> 0.1 -> 0.2,
+	 * enchantability 10 -> 15 -> 20; armor points are equal for diamond and netherite, so they stay 3 / 6 / 8 / 3.
+	 */
+	public static final ArmorMaterial DINOSAUR_ARMOR_MATERIAL = new ArmorMaterial(41,
+			Map.of(ArmorType.BOOTS, 3, ArmorType.LEGGINGS, 6, ArmorType.CHESTPLATE, 8, ArmorType.HELMET, 3, ArmorType.BODY, 19), 20,
+			SoundEvents.ARMOR_EQUIP_NETHERITE, 4.0F, 0.2F, REPAIRS_DINOSAUR_ARMOR,
+			ResourceKey.create(EquipmentAssets.ROOT_ID, Dinosaurs.id("dinosaur")));
+	/** Smithing template: Netherite Upgrade surrounded by 8 Dinosaur Bones (or duplicated with 7 bones + a bone block). */
+	public static final Item DINOSAUR_UPGRADE_SMITHING_TEMPLATE = register("dinosaur_upgrade_smithing_template",
+			DinosaurUpgradeTemplate::create, new Item.Properties().rarity(Rarity.RARE));
+	public static final Item DINOSAUR_CHESTPLATE = register("dinosaur_chestplate", Item::new, new Item.Properties()
+			.humanoidArmor(DINOSAUR_ARMOR_MATERIAL, ArmorType.CHESTPLATE).fireResistant().rarity(Rarity.EPIC));
+	public static final Item DINOSAUR_LEGGINGS = register("dinosaur_leggings", Item::new, new Item.Properties()
+			.humanoidArmor(DINOSAUR_ARMOR_MATERIAL, ArmorType.LEGGINGS).fireResistant().rarity(Rarity.EPIC));
+	public static final Item DINOSAUR_BOOTS = register("dinosaur_boots", Item::new, new Item.Properties()
+			.humanoidArmor(DINOSAUR_ARMOR_MATERIAL, ArmorType.BOOTS).fireResistant().rarity(Rarity.EPIC));
 
 	/** Illustrated field guide (Book + Leather + any dinosaur trophy). */
 	public static final Item GUIDE_BOOK = register("guide_book", GuideBookItem::new, new Item.Properties().stacksTo(16));
