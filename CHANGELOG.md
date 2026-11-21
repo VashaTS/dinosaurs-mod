@@ -8,7 +8,7 @@
   * Smithing: Dinosaur Upgrade + Netherite Chestplate + Megalodon Tooth, + Netherite Leggings + Parasaurolophus Crest,
     + Netherite Boots + Raptor Claw. Keeps enchantments, name, trim and damage.
   * Above netherite by what netherite is above diamond: toughness 4 (3 / 2), knockback resistance 0.2 (0.1 / 0),
-    durability x41 (x37 / x33: 656 / 615 / 533), enchantability 20 (15 / 10); armor points as netherite (8 / 6 / 3).
+    durability x41 (x37 / x33: 656 / 615 / 533), enchantability 20 (15 / 10); armor points 10 / 8 / 4 (netherite 8 / 6 / 3); full set with the skull helmet: 26 armor.
     Fire resistant, all armor enchantments and trims, repaired with Dinosaur Bones.
   * Bony worn textures (ribs, sternum, vertebrae, bone shoulder plates, knee caps, toe claws) with dark netherite accents;
     item icons; the smithing table shows armor and trophy icons in the empty slots.
