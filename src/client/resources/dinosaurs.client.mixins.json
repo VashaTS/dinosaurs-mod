@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "net.vsh33.dinosaurs.mixin.client",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"AbstractClientPlayerMixin",
+		"FirstPersonHandsAndItemsMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

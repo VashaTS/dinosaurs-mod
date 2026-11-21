@@ -75,6 +75,16 @@ public final class ModItems {
 			.fireResistant()
 			.rarity(Rarity.EPIC));
 
+	// Large dinosaurs drop Dinosaur Bones instead of vanilla bones -> Dinosaur Bone Bow (also 1 -> 4 bone meal)
+	public static final Item DINOSAUR_BONES = register("dinosaur_bones", Item::new, new Item.Properties());
+	/** Faster draw, 1.5x arrow speed and damage, 3x durability; Infinity + Mending allowed together (see BoneBowEnchantments). */
+	public static final Item DINOSAUR_BONE_BOW = register("dinosaur_bone_bow", DinosaurBoneBowItem::new, new Item.Properties()
+			.durability(DinosaurBoneBowItem.DURABILITY)
+			.enchantable(DinosaurBoneBowItem.ENCHANTABILITY)
+			.repairable(DINOSAUR_BONES)
+			.fireResistant()
+			.rarity(Rarity.EPIC));
+
 	/** Illustrated field guide (Book + Leather + any dinosaur trophy). */
 	public static final Item GUIDE_BOOK = register("guide_book", GuideBookItem::new, new Item.Properties().stacksTo(16));
 

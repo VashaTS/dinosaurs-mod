@@ -10,14 +10,14 @@ carnivores are hostile, armoured or horned herbivores defend themselves, the oth
 
 | Mob | Behaviour | Spawns in | Drops |
 |-----|-----------|-----------|-------|
-| Tyrannosaurus Rex | Hostile, rare (max 1 per area) | Plains, Sunflower Plains, Forest, Dark Forest | 4-8 bones, bone meal, 1-2 **T-Rex Teeth**, rarely a **T-Rex Skull** |
+| Tyrannosaurus Rex | Hostile, rare (max 1 per area) | Plains, Sunflower Plains, Forest, Dark Forest | 2-4 **Dinosaur Bones**, bone meal, 1-2 **T-Rex Teeth**, rarely a **T-Rex Skull** |
 | Velociraptor (feathered) | Hostile, small packs; hitting one alerts the pack | Savanna, Savanna Plateau, Windswept Savanna, Badlands (all 3) | 0-2 bones, 0-1 **Raptor Claw** |
-| Spinosaurus (sail, semi-aquatic) | Hostile, rare | Mangrove Swamp, Beach | 4-7 bones, bone meal |
-| Triceratops | Neutral: fights back when hit; **rideable with a Dinosaur Saddle** | Plains, Sunflower Plains, Meadow | 2-5 bones, bone meal |
-| Stegosaurus | Neutral: fights back when hit | Forest, Flower Forest, Birch Forest, Old Growth Birch Forest | 2-5 bones, bone meal |
-| Ankylosaurus (heavily armoured) | Neutral: fights back when hit | Taiga (all), Windswept Hills / Forest / Gravelly Hills | 2-5 bones, bone meal |
-| Brachiosaurus | Passive: flees when hurt and avoids carnivores | Jungle, Sparse Jungle, Bamboo Jungle | 5-9 bones, bone meal, 1-3 **Brachiosaurus Hide** |
-| Parasaurolophus | Passive: flees when hurt and avoids carnivores | Swamp, River | 1-3 bones, 0-1 **Parasaurolophus Crest** |
+| Spinosaurus (sail, semi-aquatic) | Hostile, rare | Mangrove Swamp, Beach | 2-4 **Dinosaur Bones**, bone meal |
+| Triceratops | Neutral: fights back when hit; **rideable with a Dinosaur Saddle** | Plains, Sunflower Plains, Meadow | 1-3 **Dinosaur Bones**, bone meal |
+| Stegosaurus | Neutral: fights back when hit | Forest, Flower Forest, Birch Forest, Old Growth Birch Forest | 1-3 **Dinosaur Bones**, bone meal |
+| Ankylosaurus (heavily armoured) | Neutral: fights back when hit | Taiga (all), Windswept Hills / Forest / Gravelly Hills | 1-3 **Dinosaur Bones**, bone meal |
+| Brachiosaurus | Passive: flees when hurt and avoids carnivores | Jungle, Sparse Jungle, Bamboo Jungle | 2-5 **Dinosaur Bones**, bone meal, 1-3 **Brachiosaurus Hide** |
+| Parasaurolophus | Passive: flees when hurt and avoids carnivores | Swamp, River | 1-2 **Dinosaur Bones**, 0-1 **Parasaurolophus Crest** |
 | Megalodon | Hostile to players **in the water**, very rare | Deep Ocean, Deep Cold / Lukewarm / Frozen Ocean | 3-6 bones, bone meal, 1-3 **Megalodon Teeth** |
 | Pteranodon | Passive: flies around, perches on the highest nearby point, flees when hurt | Windswept Hills, Windswept Gravelly Hills, Stony Peaks, Jagged Peaks | 0-2 bones |
 
@@ -83,6 +83,29 @@ netherite ingot or another T-Rex Skull.
  shapeless: T-Rex skull + leather + netherite ingot
 ```
 
+**Dinosaur Bone Bow** (1.4.0) – the seven large dinosaurs (T. rex, Spinosaurus, Brachiosaurus, Triceratops,
+Stegosaurus, Ankylosaurus, Parasaurolophus) now drop **Dinosaur Bones** instead of vanilla bones; Velociraptor,
+Pteranodon and Megalodon (a shark: cartilage, not dinosaur bone) keep vanilla bones. One Dinosaur Bones also crafts
+into 4 bone meal. Three of them upgrade a bow:
+
+```
+  .  B  .     B = Dinosaur Bones
+  B  W  B     W = Bow
+  .  N  .     N = Netherite Ingot
+```
+
+| | Dinosaur Bone Bow | Bow |
+|---|---|---|
+| Full draw | 15 ticks (0.75 s) | 20 ticks (1 s) |
+| Arrow speed at full draw | 4.5 | 3 |
+| Arrow damage at full draw (no Power) | 9 | 6 |
+| Durability | 1152 | 384 |
+| Enchantability | 15 | 1 |
+
+Arrows fly 1.5x faster and farther and hit harder; it takes every bow enchantment, is fire resistant and is
+repaired with Dinosaur Bones. **Infinity and Mending can be on it together** – combine them in an anvil or with
+`/enchant`; on every other bow the vanilla rule still applies. Draw animation and FOV zoom work like a vanilla bow.
+
 Advancements: *Dino Whisperer* (get the amulet) and *Three Horns, One Rider* (ride a Triceratops).
 
 ## Configuration
@@ -145,9 +168,10 @@ python3 tools/gen_assets.py         # regenerates models (DinoModelLayers.java),
 python3 tools/gen_data.py           # regenerates lang files, loot tables, item models, recipes, advancements
 python3 tools/gen_items.py          # regenerates the item textures and the Triceratops saddle overlay
 ./tools/server-test.sh              # headless dedicated-server smoke test
+python3 tools/gen_bow.py /path/to/vanilla/textures/item   # Dinosaur Bones and Bone Bow textures
 python3 tools/gen_skull.py          # regenerates the 3D T-Rex Skull / helmet models and their textures
-./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book, helmet, skull loot); add -PwithTrinkets=true
-SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, helmet and mob screenshots
+./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot); add -PwithTrinkets=true
+SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, helmet, bone bow and mob screenshots
 ```
 
 Branches: `master` targets Minecraft 26.3, branch `26.2` targets Minecraft 26.2.
@@ -169,7 +193,7 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   Ankylozaur (tajgi, wietrzne wzgórza).
 * **Pokojowe (uciekają):** Brachiozaur (dżungle), Parazaurolof (bagna, rzeki),
   Pteranodon (góry: lata i siada na najwyższych punktach).
-* Łupy: kości (większe zwierzęta dają więcej) i mączka kostna. Każde zwierzę ma jajo przywołania w trybie kreatywnym.
+* Łupy: kości (duże dinozaury: kości dinozaura) i mączka kostna. Każde zwierzę ma jajo przywołania w trybie kreatywnym.
 * **Nowe w 1.1.0:** zęby tyranozaura, pazury raptora i zęby megalodona → **Amulet ochrony przed dinozaurami**
   (wrogie dinozaury cię ignorują, dopóki ich nie zaatakujesz; działa w ekwipunku i w slocie naszyjnika Trinkets).
   Skóra brachiozaura i grzebień parazaurolofa (+ skóra, nić, żelazo) → **Siodło na dinozaura**: użyj go na
@@ -181,6 +205,12 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   (4%, z Grabieżą I/II/III 6/8/10%). Czaszka + skóra + sztabka netherytu (bez kształtu) = hełm, który na głowie
   wygląda jak trójwymiarowa czaszka tyranozaura. Mocniejszy niż netherytowy (pancerz 4, twardość 3,5,
   odporność na odrzut 0,15, trwałość 506), odporny na ogień, naprawiany sztabką netherytu lub czaszką.
+* **Nowe w 1.4.0: Łuk z kości dinozaura** – duże dinozaury (tyranozaur, spinozaur, brachiozaur, triceratops,
+  stegozaur, ankylozaur, parazaurolof) upuszczają **kości dinozaura** zamiast zwykłych kości (welociraptor,
+  pteranodon i megalodon – zwykłe kości). Łuk + 3 kości dinozaura + sztabka netherytu = łuk, który naciąga się
+  w 15 ticków zamiast 20, strzela 1,5× szybciej (obrażenia 9 zamiast 6), ma trwałość 1152, jest odporny na ogień
+  i naprawiany kośćmi dinozaura. **Nieskończoność i Naprawa działają na nim razem** (kowadło lub `/enchant`).
+  1 kość dinozaura = 4 mączki kostne.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się
   wrogich dinozaurów za dnia oraz osobny przełącznik pojawiania się dla każdego gatunku.
 * Na poziomie trudności „Pokojowy” wrogie gatunki się nie pojawiają.

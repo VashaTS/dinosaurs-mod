@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "dinosaurs:dinosaur_bones",
+    "W": "minecraft:bow",
+    "N": "minecraft:netherite_ingot"
+  },
+  "pattern": [
+    " B ",
+    "BWB",
+    " N "
+  ],
+  "result": {
+    "id": "dinosaurs:dinosaur_bone_bow"
+  }
+}

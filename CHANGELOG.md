@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0
+
+* New item: **Dinosaur Bones**. The seven large dinosaurs drop them instead of vanilla bones (T. rex 2-4,
+  Spinosaurus 2-4, Brachiosaurus 2-5, Triceratops / Stegosaurus / Ankylosaurus 1-3, Parasaurolophus 1-2; +1 per Looting level).
+  Velociraptor, Pteranodon and Megalodon keep vanilla bones. 1 Dinosaur Bones = 4 bone meal.
+* New item: **Dinosaur Bone Bow**. Shaped recipe: Bow in the middle, Dinosaur Bones left, right and on top, Netherite Ingot below.
+  Full draw in 15 ticks (bow: 20), arrows 1.5x faster (4.5 vs 3; full-charge damage 9 vs 6), 1152 durability (bow: 384),
+  enchantability 15, fire resistant, all bow enchantments, repaired with Dinosaur Bones. Own pull animation textures and FOV zoom.
+* **Infinity and Mending work together on the Dinosaur Bone Bow** (anvil and `/enchant`). Other bows keep the vanilla rule.
+* Guide book: pages for Dinosaur Bones (with the dinosaurs that drop them) and the bow (stats table against the vanilla bow);
+  dinosaur drop lists updated. English and Polish.
+
 ## 1.3.0
 
 * New rare drop: **T-Rex Skull**. Only when a player kills the T. rex: 4% chance, 6/8/10% with Looting I/II/III.

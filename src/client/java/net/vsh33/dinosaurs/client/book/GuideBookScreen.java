@@ -244,16 +244,17 @@ public class GuideBookScreen extends Screen {
 		int ly = this.topPos + TOP;
 		ly += this.drawTitle(graphics, lx, ly, PAGE_W, title);
 		int bottom = this.topPos + PAGE_BOTTOM;
+		int row = listRow(this.font, title, entries);
 		int i = 0;
-		while (i < entries.size() && ly + rowHeight(this.font, entries.get(i).title()) <= bottom) {
+		while (i < entries.size() && ly + rowHeight(this.font, entries.get(i).title(), row) <= bottom) {
 			Entry entry = entries.get(i++);
-			ly += this.drawLinkRow(graphics, lx, ly, PAGE_W, entry.icon(), entry.title(), Location.entry(entry.id()), mouseX, mouseY, LIST_ROW);
+			ly += this.drawLinkRow(graphics, lx, ly, PAGE_W, entry.icon(), entry.title(), Location.entry(entry.id()), mouseX, mouseY, row);
 		}
 		int rx = this.leftPos + RIGHT;
 		int ry = this.topPos + TOP;
-		while (i < entries.size() && ry + rowHeight(this.font, entries.get(i).title()) <= bottom) {
+		while (i < entries.size() && ry + rowHeight(this.font, entries.get(i).title(), row) <= bottom) {
 			Entry entry = entries.get(i++);
-			ry += this.drawLinkRow(graphics, rx, ry, PAGE_W, entry.icon(), entry.title(), Location.entry(entry.id()), mouseX, mouseY, LIST_ROW);
+			ry += this.drawLinkRow(graphics, rx, ry, PAGE_W, entry.icon(), entry.title(), Location.entry(entry.id()), mouseX, mouseY, row);
 		}
 	}
 
@@ -328,9 +329,18 @@ public class GuideBookScreen extends Screen {
 		if (!entry.droppedBy().isEmpty()) {
 			y += 5;
 			y = this.drawWrapped(graphics, Component.translatable("book.dinosaurs.heading.dropped_by"), lx, y, PAGE_W, INK_SOFT) + 1;
-			for (EntityType<? extends Mob> type : entry.droppedBy()) {
-				Entry dino = this.contents.entryFor(type);
-				y += this.drawLinkRow(graphics, lx, y, PAGE_W, dino.icon(), dino.title(), Location.entry(dino.id()), mouseX, mouseY, LIST_ROW);
+			if (entry.droppedBy().size() > DROP_LIST_MAX) {
+				// Many sources: a grid of spawn-egg slots, each linking to its dinosaur.
+				for (int i = 0; i < entry.droppedBy().size(); i++) {
+					Entry dino = this.contents.entryFor(entry.droppedBy().get(i));
+					this.drawSlot(graphics, lx + (i % DROP_GRID_COLS) * (SLOT + 2), y + (i / DROP_GRID_COLS) * (SLOT + 2), dino.icon(), false, mouseX, mouseY);
+				}
+				y += droppedByH(entry.droppedBy().size());
+			} else {
+				for (EntityType<? extends Mob> type : entry.droppedBy()) {
+					Entry dino = this.contents.entryFor(type);
+					y += this.drawLinkRow(graphics, lx, y, PAGE_W, dino.icon(), dino.title(), Location.entry(dino.id()), mouseX, mouseY, LIST_ROW);
+				}
 			}
 		}
 		if (statsPage) {
@@ -348,24 +358,38 @@ public class GuideBookScreen extends Screen {
 		}
 	}
 
+	/** Up to this many "dropped by" dinosaurs are listed with names; more become a slot grid. */
+	private static final int DROP_LIST_MAX = 3;
+	private static final int DROP_GRID_COLS = (PAGE_W + 2) / (SLOT + 2);
+
+	private static int droppedByH(int count) {
+		if (count > DROP_LIST_MAX) {
+			int rows = (count + DROP_GRID_COLS - 1) / DROP_GRID_COLS;
+			return rows * (SLOT + 2);
+		}
+		return LIST_ROW * count;
+	}
+
 	private static final int STATS_LABEL_W = PAGE_W - 39;
+	private static final int STATS_VALUE_MAX_W = 24;
 	private static final int STATS_HEAD_H = 18;
 
 	/** Armor table: label, this item's value (under its icon) and the netherite helmet's (under its icon). */
 	private void drawStats(GuiGraphicsExtractor graphics, int x, int y, Entry entry) {
 		y += 2;
 		int c2 = x + PAGE_W - 8;
-		int c1 = c2 - 21;
-		graphics.text(this.font, this.fitOneLine(bold(Component.translatable("book.dinosaurs.stats.heading")), STATS_LABEL_W), x, y + 5, INK, false);
+		int c1 = c2 - statsPitch(this.font, entry.stats());
+		int labelW = statsLabelW(this.font, entry.stats());
+		graphics.text(this.font, this.fitOneLine(bold(Component.translatable("book.dinosaurs.stats.heading")), statsHeadingW(this.font, entry.stats())), x, y + 5, INK, false);
 		graphics.item(entry.icon(), c1 - 8, y);
 		this.hotspots.add(new Hotspot(c1 - 8, y, 16, 16, null, entry.icon(), null));
-		graphics.item(GuideBookContents.STATS_REFERENCE, c2 - 8, y);
-		this.hotspots.add(new Hotspot(c2 - 8, y, 16, 16, null, GuideBookContents.STATS_REFERENCE, null));
+		graphics.item(GuideBookContents.statsReference(entry), c2 - 8, y);
+		this.hotspots.add(new Hotspot(c2 - 8, y, 16, 16, null, GuideBookContents.statsReference(entry), null));
 		y += STATS_HEAD_H;
 		graphics.fill(x, y - 1, x + PAGE_W, y, FRAME);
 		y += 1;
 		for (StatRow row : entry.stats()) {
-			List<FormattedCharSequence> lines = this.font.split(row.label(), STATS_LABEL_W);
+			List<FormattedCharSequence> lines = this.font.split(row.label(), labelW);
 			int yy = y;
 			for (FormattedCharSequence line : lines) {
 				graphics.text(this.font, line, x, yy, INK, false);
@@ -373,21 +397,46 @@ public class GuideBookScreen extends Screen {
 			}
 			graphics.text(this.font, row.value(), c1 - this.font.width(row.value()) / 2, y, ON, false);
 			graphics.text(this.font, row.netherite(), c2 - this.font.width(row.netherite()) / 2, y, INK_SOFT, false);
-			y += statRowH(this.font, row);
+			y += statRowH(this.font, row, labelW);
 		}
 	}
 
-	private static int statRowH(Font font, StatRow row) {
-		return Math.max(1, font.split(row.label(), STATS_LABEL_W).size()) * 9 + 1;
+	/** Distance between the two value columns: 21 px, more when a row's two values would touch (e.g. 1152 next to 384). */
+	private static int statsPitch(Font font, List<StatRow> stats) {
+		int pitch = 21;
+		for (StatRow row : stats) {
+			pitch = Math.max(pitch, (font.width(row.value()) + font.width(row.netherite()) + 1) / 2 + 3);
+		}
+		return pitch;
+	}
+
+	/** Label column: up to the widest value in the first value column (never wider than the default). */
+	private static int statsLabelW(Font font, List<StatRow> stats) {
+		int c1 = PAGE_W - 8 - statsPitch(font, stats);
+		int w = 0;
+		for (StatRow row : stats) {
+			w = Math.max(w, font.width(row.value()));
+		}
+		return Math.min(STATS_LABEL_W, c1 - w / 2 - 1);
+	}
+
+	/** The heading only has to clear the first column's icon. */
+	private static int statsHeadingW(Font font, List<StatRow> stats) {
+		return PAGE_W - 8 - statsPitch(font, stats) - 8 - 2;
+	}
+
+	private static int statRowH(Font font, StatRow row, int labelW) {
+		return Math.max(1, font.split(row.label(), labelW).size()) * 9 + 1;
 	}
 
 	private static int statsH(Font font, List<StatRow> stats) {
 		if (stats.isEmpty()) {
 			return 0;
 		}
+		int labelW = statsLabelW(font, stats);
 		int h = 2 + STATS_HEAD_H + 1;
 		for (StatRow row : stats) {
-			h += statRowH(font, row);
+			h += statRowH(font, row, labelW);
 		}
 		return h;
 	}
@@ -481,7 +530,7 @@ public class GuideBookScreen extends Screen {
 
 	/** Icon + link text (wrapped to at most two lines, vertically centred on the icon). */
 	private int drawLinkRow(GuiGraphicsExtractor graphics, int x, int y, int width, ItemStack icon, Component title, Location target, int mouseX, int mouseY, int height) {
-		height = Math.max(height, rowHeight(this.font, title));
+		height = Math.max(height, rowHeight(this.font, title, height));
 		boolean hover = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height - 1;
 		if (hover) {
 			graphics.fill(x - 1, y - 1, x + width, y + height - 1, HOVER_FILL);
@@ -508,8 +557,29 @@ public class GuideBookScreen extends Screen {
 	}
 
 	/** List row height: 22 px for one or two lines of link text, 31 px for three. */
-	private static int rowHeight(Font font, Component title) {
-		return font.split(title, PAGE_W - 18).size() > 2 ? LIST_ROW + 9 : LIST_ROW;
+	private static int rowHeight(Font font, Component title, int row) {
+		return font.split(title, PAGE_W - 18).size() > 2 ? row + 9 : row;
+	}
+
+	/** Compact rows (just the 16 px icon) when the roomy ones would need more than the two pages. */
+	public static final int LIST_ROW_COMPACT = 18;
+
+	private static int listRow(Font font, Component title, List<Entry> entries) {
+		return listPages(font, title, entries, LIST_ROW) <= 2 ? LIST_ROW : LIST_ROW_COMPACT;
+	}
+
+	private static int listPages(Font font, Component title, List<Entry> entries, int row) {
+		int y = titleH(font, title);
+		int page = 0;
+		for (Entry entry : entries) {
+			int h = rowHeight(font, entry.title(), row);
+			if (y + h > PAGE_H) {
+				page++;
+				y = 0;
+			}
+			y += h;
+		}
+		return page + 1;
 	}
 
 	private Component fitOneLine(Component text, int width) {
@@ -737,20 +807,23 @@ public class GuideBookScreen extends Screen {
 			boolean statsPage = !entry.stats().isEmpty();
 			int l = iconTitleH(font, entry.title()) + (statsPage ? 0 : textH(font, entry.body()));
 			if (!entry.droppedBy().isEmpty()) {
-				l += 5 + textH(font, Component.translatable("book.dinosaurs.heading.dropped_by")) + 1 + LIST_ROW * entry.droppedBy().size();
+				l += 5 + textH(font, Component.translatable("book.dinosaurs.heading.dropped_by")) + 1 + droppedByH(entry.droppedBy().size());
 			}
 			l += statsH(font, entry.stats());
+			int labelW = statsLabelW(font, entry.stats());
 			for (StatRow row : entry.stats()) {
-				width(font, errors, lang, entry.id() + ".stats", row.label(), 2, STATS_LABEL_W);
+				width(font, errors, lang, entry.id() + ".stats", row.label(), 2, labelW);
 				for (String word : row.label().getString().split(" ")) {
-					if (font.width(word) > STATS_LABEL_W) {
-						errors.append(' ').append(entry.id()).append(".stats word wider than ").append(STATS_LABEL_W).append("px: ").append(word).append('\n');
+					if (font.width(word) > labelW) {
+						errors.append(' ').append(entry.id()).append(".stats word wider than ").append(labelW).append("px: ").append(word).append('\n');
 					}
 				}
-				width(font, errors, lang, entry.id() + ".stats.value", Component.literal(row.value()), 1, 19);
-				width(font, errors, lang, entry.id() + ".stats.netherite", Component.literal(row.netherite()), 1, 19);
+				width(font, errors, lang, entry.id() + ".stats.value", Component.literal(row.value()), 1, STATS_VALUE_MAX_W);
+				width(font, errors, lang, entry.id() + ".stats.netherite", Component.literal(row.netherite()), 1, STATS_VALUE_MAX_W);
 			}
-			width(font, errors, lang, "stats.heading", bold(Component.translatable("book.dinosaurs.stats.heading")), 1, STATS_LABEL_W);
+			if (!entry.stats().isEmpty()) {
+				width(font, errors, lang, entry.id() + ".stats.heading", bold(Component.translatable("book.dinosaurs.stats.heading")), 1, statsHeadingW(font, entry.stats()));
+			}
 			fit(errors, lang, entry.id() + ".left", l);
 			if (titleLines > 4) {
 				errors.append(' ').append(entry.id()).append(" title has ").append(titleLines).append(" lines\n");
@@ -769,18 +842,10 @@ public class GuideBookScreen extends Screen {
 
 	/** Both pages of a chapter list must hold all its entries. */
 	private static void listFits(Font font, StringBuilder errors, String lang, String name, Component title, List<Entry> entries) {
-		int y = titleH(font, title);
-		int page = 0;
-		for (Entry entry : entries) {
-			int h = rowHeight(font, entry.title());
-			if (y + h > PAGE_H) {
-				page++;
-				y = 0;
-			}
-			y += h;
-		}
-		System.out.println("[guide-book] " + lang + " " + name + " pages=" + (page + 1) + "/2");
-		if (page > 1) {
+		int row = listRow(font, title, entries);
+		int pages = listPages(font, title, entries, row);
+		System.out.println("[guide-book] " + lang + " " + name + " row=" + row + " pages=" + pages + "/2");
+		if (pages > 2) {
 			errors.append(' ').append(name).append(" needs more than two pages\n");
 		}
 	}
