@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:crafting_shaped",
+  "type": "dinosaurs:crafting_shaped_keep_components",
   "category": "equipment",
   "key": {
     "B": "dinosaurs:dinosaur_bones",
@@ -11,6 +11,7 @@
     "BWB",
     " N "
   ],
+  "source": "minecraft:bow",
   "result": {
     "id": "dinosaurs:dinosaur_bone_bow"
   }

@@ -16,6 +16,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.inventory.CraftingMenu;
+import net.minecraft.client.gui.screens.inventory.CraftingScreen;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -136,6 +138,50 @@ public class BowScreenshotTest implements FabricClientGameTest {
 			shot(context, "inventory-tooltip");
 			hover(context, 176, 166, 8 + 18 + 9, 142 + 9);
 			shot(context, "inventory-bones-tooltip");
+			context.runOnClient(mc -> mc.gui.setScreen(null));
+			context.waitTicks(5);
+
+			// Crafting table: an enchanted, named bow upgrades into a bone bow that keeps its enchantments and name.
+			server.runCommand("setblock 1 201 2 minecraft:crafting_table");
+			server.runOnServer(s -> {
+				ServerPlayer player = s.getPlayerList().getPlayers().getFirst();
+				BlockPos pos = new BlockPos(1, 201, 2);
+				player.openMenu(new SimpleMenuProvider((id, inv, p) -> new CraftingMenu(id, inv, ContainerLevelAccess.create(player.level(), pos)),
+						Component.translatable("container.crafting")));
+				ItemStack bow = enchanted(player, Items.BOW, Enchantments.POWER, Enchantments.INFINITY, Enchantments.UNBREAKING);
+				var lookup = player.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+				bow.enchant(lookup.getOrThrow(Enchantments.POWER), 5);
+				bow.enchant(lookup.getOrThrow(Enchantments.UNBREAKING), 3);
+				bow.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal("Old Faithful"));
+				ItemStack[] grid = {ItemStack.EMPTY, new ItemStack(ModItems.DINOSAUR_BONES), ItemStack.EMPTY,
+						new ItemStack(ModItems.DINOSAUR_BONES), bow, new ItemStack(ModItems.DINOSAUR_BONES),
+						ItemStack.EMPTY, new ItemStack(Items.NETHERITE_INGOT), ItemStack.EMPTY};
+				for (int i = 0; i < 9; i++) {
+					player.containerMenu.getSlot(1 + i).set(grid[i]);
+				}
+				player.containerMenu.broadcastChanges();
+			});
+			context.waitForScreen(CraftingScreen.class);
+			context.waitTicks(5);
+			boolean kept = context.computeOnClient(mc -> {
+				ItemStack result = mc.player.containerMenu.getSlot(0).getItem();
+				return result.is(ModItems.DINOSAUR_BONE_BOW) && result.getEnchantments().size() == 3
+						&& "Old Faithful".equals(result.getHoverName().getString());
+			});
+			if (!kept) {
+				throw new AssertionError("crafting table should offer a bone bow with the bow's enchantments and name");
+			}
+			hover(context, 176, 166, 176 + 40, 166 + 20);
+			shot(context, "crafting-enchanted-bow");
+			hover(context, 176, 166, 124 + 9, 35 + 9);
+			shot(context, "crafting-enchanted-bow-tooltip");
+			server.runOnServer(s -> {
+				ServerPlayer player = s.getPlayerList().getPlayers().getFirst();
+				for (int i = 1; i <= 9; i++) {
+					player.containerMenu.getSlot(i).set(ItemStack.EMPTY);
+				}
+				player.containerMenu.broadcastChanges();
+			});
 			context.runOnClient(mc -> mc.gui.setScreen(null));
 			context.waitTicks(5);
 

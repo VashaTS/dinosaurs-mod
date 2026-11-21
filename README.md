@@ -105,6 +105,8 @@ into 4 bone meal. Three of them upgrade a bow:
 Arrows fly 1.5x faster and farther and hit harder; it takes every bow enchantment, is fire resistant and is
 repaired with Dinosaur Bones. **Infinity and Mending can be on it together** – combine them in an anvil or with
 `/enchant`; on every other bow the vanilla rule still applies. Draw animation and FOV zoom work like a vanilla bow.
+Crafting it from an enchanted bow keeps the bow's enchantments, name and repair cost (1.4.1); damage carries over
+as the same fraction of durability.
 
 Advancements: *Dino Whisperer* (get the amulet) and *Three Horns, One Rider* (ride a Triceratops).
 
@@ -210,6 +212,7 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   pteranodon i megalodon – zwykłe kości). Łuk + 3 kości dinozaura + sztabka netherytu = łuk, który naciąga się
   w 15 ticków zamiast 20, strzela 1,5× szybciej (obrażenia 9 zamiast 6), ma trwałość 1152, jest odporny na ogień
   i naprawiany kośćmi dinozaura. **Nieskończoność i Naprawa działają na nim razem** (kowadło lub `/enchant`).
+  Zaklęcia, nazwa i koszt naprawy łuku użytego do wytworzenia zostają (1.4.1).
   1 kość dinozaura = 4 mączki kostne.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się
   wrogich dinozaurów za dnia oraz osobny przełącznik pojawiania się dla każdego gatunku.

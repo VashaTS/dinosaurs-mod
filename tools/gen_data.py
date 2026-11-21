@@ -122,7 +122,7 @@ EXTRA_LANG = {  # key: (English, Polish)
 
 RECIPES = {
     # Bow in the middle, 3 Dinosaur Bones around it, Netherite Ingot below (no vanilla recipe uses this grid).
-    "dinosaur_bone_bow": dict(pattern=[" B ", "BWB", " N "], key={"B": "dinosaurs:dinosaur_bones", "W": "minecraft:bow", "N": "minecraft:netherite_ingot"}, category="equipment", unlock="dinosaurs:dinosaur_bones"),
+    "dinosaur_bone_bow": dict(pattern=[" B ", "BWB", " N "], key={"B": "dinosaurs:dinosaur_bones", "W": "minecraft:bow", "N": "minecraft:netherite_ingot"}, category="equipment", unlock="dinosaurs:dinosaur_bones", keep_components_from="minecraft:bow"),
     "amulet_of_dino_protection": dict(pattern=["SGS", "RTR", " M "], key={"S": "minecraft:string", "G": "minecraft:gold_ingot", "R": "dinosaurs:raptor_claw", "T": "dinosaurs:t_rex_tooth", "M": "dinosaurs:megalodon_tooth"}, category="equipment", unlock="dinosaurs:t_rex_tooth"),
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
 }
@@ -146,7 +146,12 @@ def riding_predicate(modifier_key):
 
 def data_files(modifier_key):
     for rid, r in RECIPES.items():
-        w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shaped", "category": r["category"], "key": r["key"], "pattern": r["pattern"], "result": {"id": f"dinosaurs:{rid}"}})
+        if "keep_components_from" in r:
+            # Shaped, but the result keeps the bow's enchantments, name, repair cost and (scaled) damage.
+            w(f"{D}/recipe/{rid}.json", {"type": "dinosaurs:crafting_shaped_keep_components", "category": r["category"], "key": r["key"], "pattern": r["pattern"],
+                                         "source": r["keep_components_from"], "result": {"id": f"dinosaurs:{rid}"}})
+        else:
+            w(f"{D}/recipe/{rid}.json", {"type": "minecraft:crafting_shaped", "category": r["category"], "key": r["key"], "pattern": r["pattern"], "result": {"id": f"dinosaurs:{rid}"}})
         w(f"{D}/advancement/recipes/equipment/{rid}.json", {
             "parent": "minecraft:recipes/root",
             "criteria": {

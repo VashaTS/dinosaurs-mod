@@ -134,8 +134,8 @@ BOOK_LANG = {
         "Large dinosaurs drop these instead of bones (more with Looting). Craft them into the Bone Bow or Bone Meal.",
         "Duże dinozaury upuszczają je zamiast kości (więcej z Grabieżą). Zrobisz z nich łuk z kości lub mączkę kostną."),
     "book.dinosaurs.item.dinosaur_bone_bow": (
-        "Faster draw, faster arrows that hit harder. Infinity and Mending work together on it! Fire resistant.",
-        "Szybciej naciąga, strzały lecą szybciej i mocniej biją. Nieskończoność i Naprawa działają razem! Ognioodporny."),
+        "Faster draw, faster arrows that hit harder. Infinity and Mending work together on it! Enchantments from the bow are kept.",
+        "Szybciej naciąga, strzały lecą szybciej i mocniej biją. Nieskończoność i Naprawa działają razem! Zaklęcia z łuku zostają."),
     "book.dinosaurs.item.t_rex_skull": (
         "Rare: 4% of T. rexes killed by a player drop one, up to 10% with Looting. Craft it with Leather and a Netherite Ingot into a helmet.",
         "Rzadka: wypada z 4% tyranozaurów zabitych przez gracza, do 10% z Grabieżą. Ze skórą i sztabką netherytu zrobisz z niej hełm."),
