@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "default": "model:0"
+  },
+  "modelConfigs": [
+    {
+      "baseScale": 0.85,
+      "rotationY": 35,
+      "rotationX": 0,
+      "modelMainPartFieldAliases": [
+        "net.vsh33.dinosaurs.client.DinoModel;head"
+      ],
+      "modelPartsFields": [],
+      "renderingFullModel": false,
+      "modelPartsRotationReset": true,
+      "layersAllowed": false
+    }
+  ]
+}
