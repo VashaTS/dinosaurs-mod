@@ -149,6 +149,6 @@ BOOK_LANG = {
         "Smithing template that turns netherite chestplate, leggings and boots into Dinosaur Armor. Used up like the Netherite Upgrade. 7 Dinosaur Bones and a Bone Block copy it.",
         "Szablon kowalski, który zmienia netherytowy napierśnik, nogawice i buty w dinozaurową zbroję. Zużywa się jak netherytowe ulepszenie. 7 kości dinozaura i blok kości go powielą."),
     "book.dinosaurs.item.dinosaur_armor": (
-        "Enchantments stay. Beats netherite as netherite beats diamond. Repair: Dinosaur Bones. Helmet: T-Rex Skull Helmet.",
-        "Zaklęcia zostają. Lepsza od netherytu jak netheryt od diamentu. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura."),
+        "Enchantments stay. Better than netherite in every stat. Repair: Dinosaur Bones. Helmet: T-Rex Skull Helmet.",
+        "Zaklęcia zostają. Lepsza od netherytu we wszystkim. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura."),
 }

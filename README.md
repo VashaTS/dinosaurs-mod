@@ -130,20 +130,20 @@ Then on the smithing table: Dinosaur Upgrade + netherite piece + trophy:
 | Netherite Boots | Raptor Claw (Velociraptor, 0-1) | Dinosaur Boots |
 
 (+1 per Looting level.) Enchantments, name, trim and damage carry over, as with the netherite upgrade. The **T-Rex
-Skull Helmet** is the set's helmet. Each piece is better than netherite by exactly as much as netherite is better
-than diamond:
+Skull Helmet** is the set's helmet. Toughness, knockback resistance, durability and enchantability are better than netherite by exactly as much as
+netherite is better than diamond, and the armor points are raised too:
 
 | Piece | Diamond | Netherite | **Dinosaur** |
 |---|---|---|---|
-| Chestplate armor / durability | 8 / 528 | 8 / 592 | **8 / 656** |
-| Leggings armor / durability | 6 / 495 | 6 / 555 | **6 / 615** |
-| Boots armor / durability | 3 / 429 | 3 / 481 | **3 / 533** |
+| Chestplate armor / durability | 8 / 528 | 8 / 592 | **10 / 656** |
+| Leggings armor / durability | 6 / 495 | 6 / 555 | **8 / 615** |
+| Boots armor / durability | 3 / 429 | 3 / 481 | **4 / 533** |
 | Armor toughness (each) | 2 | 3 | **4** |
 | Knockback resistance (each) | 0 | 0.1 | **0.2** |
 | Enchantability | 10 | 15 | **20** |
 
-(Armor points are the same for diamond and netherite, so they stay the same.) Full set with the skull helmet:
-21 armor, 16 toughness, 80% knockback resistance. Fire resistant, takes all armor enchantments and trims, repaired
+Armor points are also higher than netherite: 10 / 8 / 4 (netherite 8 / 6 / 3). Full set with the skull helmet:
+26 armor, 16 toughness, 80% knockback resistance. Fire resistant, takes all armor enchantments and trims, repaired
 with Dinosaur Bones. When worn it looks bony: ribs and sternum on the chest, vertebrae down the back, bone shoulder
 plates, segmented legs with knee caps and toe claws, with dark netherite between the bones.
 
@@ -259,7 +259,7 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   dinozaura + blok kości = 2 szablony). Szablon + netherytowy napierśnik + ząb megalodona = dinozaurowy napierśnik,
   nogawice + grzebień parazaurolofa = dinozaurowe nogawice, buty + pazur raptora = dinozaurowe buty. Zaklęcia, nazwa,
   wykończenie i zużycie zostają. Każda część jest lepsza od netherytu o tyle, o ile netheryt od diamentu: twardość 4,
-  odporność na odrzut 0,2, trwałość 656 / 615 / 533, zaklinalność 20 (pancerz jak netheryt: 8 / 6 / 3). Hełmem
+  odporność na odrzut 0,2, trwałość 656 / 615 / 533, zaklinalność 20 (pancerz 10 / 8 / 4, netheryt 8 / 6 / 3; cały zestaw z hełmem: 26). Hełmem
   zestawu jest hełm z czaszki tyranozaura (od 1.5.0: twardość 4, odporność na odrzut 0,2, zaklinalność 20).
   Wygląda jak kości (żebra, kręgosłup, rzepki) z ciemnym netherytem między nimi; naprawiana kośćmi dinozaura.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się

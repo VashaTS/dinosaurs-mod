@@ -94,10 +94,11 @@ public final class ModItems {
 	/**
 	 * One step above netherite by the same amount netherite is above diamond (26.x values):
 	 * durability multiplier 33 -> 37 -> 41, toughness 2 -> 3 -> 4, knockback resistance 0 -> 0.1 -> 0.2,
-	 * enchantability 10 -> 15 -> 20; armor points are equal for diamond and netherite, so they stay 3 / 6 / 8 / 3.
+	 * enchantability 10 -> 15 -> 20. Armor points are equal for diamond and netherite; by request they are raised to
+	 * boots 4 / leggings 8 / chestplate 10 (netherite 3 / 6 / 8). Helmet value unused (the T-Rex Skull Helmet is the set's helmet).
 	 */
 	public static final ArmorMaterial DINOSAUR_ARMOR_MATERIAL = new ArmorMaterial(41,
-			Map.of(ArmorType.BOOTS, 3, ArmorType.LEGGINGS, 6, ArmorType.CHESTPLATE, 8, ArmorType.HELMET, 3, ArmorType.BODY, 19), 20,
+			Map.of(ArmorType.BOOTS, 4, ArmorType.LEGGINGS, 8, ArmorType.CHESTPLATE, 10, ArmorType.HELMET, 3, ArmorType.BODY, 19), 20,
 			SoundEvents.ARMOR_EQUIP_NETHERITE, 4.0F, 0.2F, REPAIRS_DINOSAUR_ARMOR,
 			ResourceKey.create(EquipmentAssets.ROOT_ID, Dinosaurs.id("dinosaur")));
 	/** Smithing template: Netherite Upgrade surrounded by 8 Dinosaur Bones (or duplicated with 7 bones + a bone block). */

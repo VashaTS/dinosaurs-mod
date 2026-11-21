@@ -605,7 +605,7 @@ public class DinosaursServerTest {
 
 	/**
 	 * Each piece is above netherite by exactly what netherite is above diamond (toughness, knockback resistance,
-	 * durability multiplier, enchantability; armor points are equal for diamond and netherite and stay equal).
+	 * durability multiplier, enchantability); armor points 10 / 8 / 4 (netherite 8 / 6 / 3).
 	 * Fire resistant, armor tags (enchantments, trims), repaired with Dinosaur Bones, worn with the dinosaur armor layer.
 	 */
 	@GameTest(maxTicks = 40)
@@ -614,7 +614,9 @@ public class DinosaursServerTest {
 		for (Item[] row : ARMOR) {
 			ItemStack ours = new ItemStack(row[0]), neth = new ItemStack(row[1]), dia = new ItemStack(row[3]);
 			double[] o = pieceStats(ours), n = pieceStats(neth), d = pieceStats(dia);
-			for (int i = 0; i < 3; i++) {
+			double armor = row[0] == ModItems.DINOSAUR_CHESTPLATE ? 10 : row[0] == ModItems.DINOSAUR_LEGGINGS ? 8 : 4;
+			helper.assertTrue(o[0] == armor && o[0] > n[0], row[0] + " armor " + o[0] + ", expected " + armor + " (netherite " + n[0] + ")");
+			for (int i = 1; i < 3; i++) {
 				helper.assertTrue(Math.abs(o[i] - (2 * n[i] - d[i])) < 1e-4, row[0] + " stat " + i + ": " + o[i] + ", expected " + (2 * n[i] - d[i]));
 			}
 			helper.assertTrue(o[1] > n[1] && o[2] > n[2], row[0] + " toughness and knockback resistance must beat netherite");
@@ -654,7 +656,7 @@ public class DinosaursServerTest {
 			double toughness = stand.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS);
 			double knockback = stand.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
 			Dinosaurs.LOGGER.info("[test] full set (skull helmet + dinosaur armor): armor {} toughness {} knockback {}", stand.getArmorValue(), toughness, knockback);
-			helper.assertTrue(stand.getArmorValue() == 21, "full set armor 4 + 8 + 6 + 3 = 21, got " + stand.getArmorValue());
+			helper.assertTrue(stand.getArmorValue() == 26, "full set armor 4 + 10 + 8 + 4 = 26, got " + stand.getArmorValue());
 			helper.assertTrue(Math.abs(toughness - 16.0) < 1e-4, "full set toughness 16, got " + toughness);
 			helper.succeed();
 		});
