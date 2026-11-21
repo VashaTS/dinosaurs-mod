@@ -1,0 +1,19 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "dinosaurs:dinosaur"
+      }
+    ],
+    "humanoid_baby": [
+      {
+        "texture": "dinosaurs:dinosaur"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "dinosaurs:dinosaur"
+      }
+    ]
+  }
+}

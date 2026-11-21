@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.5.0
+
+* New: **Dinosaur Armor** (chestplate, leggings, boots), the next step after netherite, made on the smithing table.
+  * **Dinosaur Upgrade** smithing template: Netherite Upgrade surrounded by 8 Dinosaur Bones. Used up like vanilla templates;
+    duplicate it with 7 Dinosaur Bones + a Bone Block (template on top, bone block in the middle) for 2.
+  * Smithing: Dinosaur Upgrade + Netherite Chestplate + Megalodon Tooth, + Netherite Leggings + Parasaurolophus Crest,
+    + Netherite Boots + Raptor Claw. Keeps enchantments, name, trim and damage.
+  * Above netherite by what netherite is above diamond: toughness 4 (3 / 2), knockback resistance 0.2 (0.1 / 0),
+    durability x41 (x37 / x33: 656 / 615 / 533), enchantability 20 (15 / 10); armor points as netherite (8 / 6 / 3).
+    Fire resistant, all armor enchantments and trims, repaired with Dinosaur Bones.
+  * Bony worn textures (ribs, sternum, vertebrae, bone shoulder plates, knee caps, toe claws) with dark netherite accents;
+    item icons; the smithing table shows armor and trophy icons in the empty slots.
+* **T-Rex Skull Helmet** is the set's helmet: toughness 3.5 -> 4, knockback resistance 0.15 -> 0.2, enchantability 15 -> 20
+  (armor 4 and durability 506 unchanged), so it is not below the rest of the set.
+* Guide book: Dinosaur Armor page (stats table against netherite, the three smithing recipes), Dinosaur Upgrade page
+  (both recipes); Raptor Claw, Parasaurolophus Crest, Megalodon Tooth and Dinosaur Bones pages show what they upgrade.
+  Smithing recipes are drawn as a smithing-table row. English and Polish.
+* Drop rates unchanged: Raptor Claw 0-1 (Velociraptor), Parasaurolophus Crest 0-1, Megalodon Tooth 1-3, +1 per Looting level.
+
 ## 1.4.1
 
 * Crafting the **Dinosaur Bone Bow** from an enchanted bow now keeps the bow's enchantments, custom name, repair cost and

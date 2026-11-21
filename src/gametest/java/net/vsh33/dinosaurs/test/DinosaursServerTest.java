@@ -577,6 +577,233 @@ public class DinosaursServerTest {
 		helper.succeed();
 	}
 
+	// ---- 1.5.0: Dinosaur Armor
+
+	private static final Item[][] ARMOR = {
+			{ModItems.DINOSAUR_CHESTPLATE, Items.NETHERITE_CHESTPLATE, ModItems.MEGALODON_TOOTH, Items.DIAMOND_CHESTPLATE},
+			{ModItems.DINOSAUR_LEGGINGS, Items.NETHERITE_LEGGINGS, ModItems.PARASAUROLOPHUS_CREST, Items.DIAMOND_LEGGINGS},
+			{ModItems.DINOSAUR_BOOTS, Items.NETHERITE_BOOTS, ModItems.RAPTOR_CLAW, Items.DIAMOND_BOOTS}};
+
+	private static net.minecraft.world.entity.EquipmentSlot slotOf(Item item) {
+		return new ItemStack(item).get(DataComponents.EQUIPPABLE).slot();
+	}
+
+	/** armor, toughness, knockback resistance of one piece in its own slot. */
+	private static double[] pieceStats(ItemStack stack) {
+		double[] stats = new double[3];
+		stack.forEachModifier(slotOf(stack.getItem()), (attribute, modifier) -> {
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR)) stats[0] += modifier.amount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS)) stats[1] += modifier.amount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE)) stats[2] += modifier.amount();
+		});
+		return stats;
+	}
+
+	private static int enchantability(ItemStack stack) {
+		return stack.get(DataComponents.ENCHANTABLE).value();
+	}
+
+	/**
+	 * Each piece is above netherite by exactly what netherite is above diamond (toughness, knockback resistance,
+	 * durability multiplier, enchantability; armor points are equal for diamond and netherite and stay equal).
+	 * Fire resistant, armor tags (enchantments, trims), repaired with Dinosaur Bones, worn with the dinosaur armor layer.
+	 */
+	@GameTest(maxTicks = 40)
+	public void dinosaurArmorStats(GameTestHelper helper) {
+		StringBuilder log = new StringBuilder();
+		for (Item[] row : ARMOR) {
+			ItemStack ours = new ItemStack(row[0]), neth = new ItemStack(row[1]), dia = new ItemStack(row[3]);
+			double[] o = pieceStats(ours), n = pieceStats(neth), d = pieceStats(dia);
+			for (int i = 0; i < 3; i++) {
+				helper.assertTrue(Math.abs(o[i] - (2 * n[i] - d[i])) < 1e-4, row[0] + " stat " + i + ": " + o[i] + ", expected " + (2 * n[i] - d[i]));
+			}
+			helper.assertTrue(o[1] > n[1] && o[2] > n[2], row[0] + " toughness and knockback resistance must beat netherite");
+			int slotMul = ours.getMaxDamage() / 41;
+			helper.assertTrue(ours.getMaxDamage() == slotMul * 41 && neth.getMaxDamage() == slotMul * 37 && dia.getMaxDamage() == slotMul * 33,
+					row[0] + " durability " + ours.getMaxDamage() + " should be 41/37/33 x " + slotMul);
+			helper.assertTrue(enchantability(ours) - enchantability(neth) == enchantability(neth) - enchantability(dia),
+					row[0] + " enchantability " + enchantability(ours));
+			helper.assertTrue(ours.has(DataComponents.DAMAGE_RESISTANT), row[0] + " must be fire resistant");
+			helper.assertTrue(ours.is(net.minecraft.tags.ItemTags.TRIMMABLE_ARMOR), row[0] + " must be trimmable armor");
+			var repairable = ours.get(DataComponents.REPAIRABLE);
+			helper.assertTrue(repairable != null && repairable.isValidRepairItem(new ItemStack(ModItems.DINOSAUR_BONES))
+					&& !repairable.isValidRepairItem(new ItemStack(Items.NETHERITE_INGOT)), row[0] + " repaired with dinosaur bones");
+			var equippable = ours.get(DataComponents.EQUIPPABLE);
+			helper.assertTrue(equippable.slot() == slotOf(row[1]) && equippable.assetId().orElseThrow().identifier().equals(Dinosaurs.id("dinosaur")),
+					row[0] + " worn layer dinosaurs:dinosaur in " + slotOf(row[1]));
+			log.append(String.format(" %s %.0f/%.1f/%.1f %d ench %d (netherite %.0f/%.1f/%.1f %d %d, diamond %.0f/%.1f/%.1f %d %d)",
+					BuiltInRegistries.ITEM.getKey(row[0]).getPath(), o[0], o[1], o[2], ours.getMaxDamage(), enchantability(ours),
+					n[0], n[1], n[2], neth.getMaxDamage(), enchantability(neth), d[0], d[1], d[2], dia.getMaxDamage(), enchantability(dia)));
+		}
+		helper.assertTrue(new ItemStack(ModItems.DINOSAUR_CHESTPLATE).is(net.minecraft.tags.ItemTags.CHEST_ARMOR_ENCHANTABLE)
+				&& new ItemStack(ModItems.DINOSAUR_LEGGINGS).is(net.minecraft.tags.ItemTags.LEG_ARMOR_ENCHANTABLE)
+				&& new ItemStack(ModItems.DINOSAUR_BOOTS).is(net.minecraft.tags.ItemTags.FOOT_ARMOR_ENCHANTABLE), "armor enchantment tags");
+		// The set's helmet (T-Rex Skull Helmet) is at least the new tier in every stat.
+		ItemStack helmet = new ItemStack(ModItems.T_REX_SKULL_HELMET);
+		double[] h = headStats(helmet);
+		helper.assertTrue(h[0] >= 3 && h[1] >= 4 && h[2] >= 0.2 - 1e-6 && helmet.getMaxDamage() >= 11 * 41 && enchantability(helmet) >= 20,
+				"skull helmet should match the dinosaur tier: " + h[0] + "/" + h[1] + "/" + h[2] + " " + helmet.getMaxDamage() + " " + enchantability(helmet));
+		Dinosaurs.LOGGER.info("[test] dinosaur armor:{}", log);
+		// Full set worn by an armor stand: 3 + 8 + 6 + 3... armor stand with skull helmet + the three pieces.
+		var stand = helper.spawn(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, new BlockPos(2, 1, 2));
+		stand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, helmet.copy());
+		for (Item[] row : ARMOR) {
+			stand.setItemSlot(slotOf(row[0]), new ItemStack(row[0]));
+		}
+		helper.runAfterDelay(3, () -> {
+			double toughness = stand.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS);
+			double knockback = stand.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
+			Dinosaurs.LOGGER.info("[test] full set (skull helmet + dinosaur armor): armor {} toughness {} knockback {}", stand.getArmorValue(), toughness, knockback);
+			helper.assertTrue(stand.getArmorValue() == 21, "full set armor 4 + 8 + 6 + 3 = 21, got " + stand.getArmorValue());
+			helper.assertTrue(Math.abs(toughness - 16.0) < 1e-4, "full set toughness 16, got " + toughness);
+			helper.succeed();
+		});
+	}
+
+	/** Template recipes: Netherite Upgrade + 8 Dinosaur Bones, and the duplication (2 out); nothing else uses those grids. */
+	@GameTest
+	public void dinosaurUpgradeRecipes(GameTestHelper helper) {
+		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
+		ItemStack nt = new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
+		ItemStack dt = new ItemStack(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE);
+		CraftingInput make = CraftingInput.of(3, 3, List.of(b, b, b, b, nt, b, b, b, b));
+		List<String> matches = craftingMatches(helper, make);
+		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_upgrade_smithing_template")), "template grid matches " + matches);
+		var level = helper.getLevel();
+		ItemStack out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, make, level).orElseThrow().value().assemble(make);
+		helper.assertTrue(out.is(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE) && out.getCount() == 1, "one template, got " + out);
+		CraftingInput copy = CraftingInput.of(3, 3, List.of(b, dt, b, b, new ItemStack(Items.BONE_BLOCK), b, b, b, b));
+		matches = craftingMatches(helper, copy);
+		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_upgrade_smithing_template_duplication")), "duplication grid matches " + matches);
+		out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, copy, level).orElseThrow().value().assemble(copy);
+		helper.assertTrue(out.is(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE) && out.getCount() == 2, "duplication gives 2, got " + out);
+		// Vanilla bones instead of dinosaur bones: nothing.
+		ItemStack bone = new ItemStack(Items.BONE);
+		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(bone, bone, bone, bone, nt, bone, bone, bone, bone))).isEmpty(), "vanilla bones must not work");
+		for (String id : new String[]{"dinosaur_upgrade_smithing_template", "dinosaur_upgrade_smithing_template_duplication",
+				"dinosaur_chestplate_smithing", "dinosaur_leggings_smithing", "dinosaur_boots_smithing"}) {
+			helper.assertTrue(level.recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id(id))).isPresent(), "missing recipe " + id);
+		}
+		for (String id : new String[]{"recipes/misc/dinosaur_upgrade_smithing_template", "recipes/misc/dinosaur_upgrade_smithing_template_duplication",
+				"recipes/equipment/dinosaur_chestplate_smithing", "recipes/equipment/dinosaur_leggings_smithing", "recipes/equipment/dinosaur_boots_smithing"}) {
+			helper.assertTrue(level.getServer().getAdvancements().get(Dinosaurs.id(id)) != null, "missing advancement " + id);
+		}
+		helper.succeed();
+	}
+
+	private static List<String> smithingMatches(GameTestHelper helper, net.minecraft.world.item.crafting.SmithingRecipeInput input) {
+		var level = helper.getLevel();
+		List<String> matches = new ArrayList<>();
+		for (RecipeHolder<?> holder : level.getServer().getRecipeManager().getRecipes()) {
+			if (holder.value().getType() != RecipeType.SMITHING) {
+				continue;
+			}
+			@SuppressWarnings("unchecked")
+			Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput> recipe = (Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput>) holder.value();
+			if (recipe.matches(input, level)) {
+				matches.add(holder.id().identifier().toString());
+			}
+		}
+		return matches;
+	}
+
+	/**
+	 * Smithing table: Dinosaur Upgrade + netherite piece + its trophy -> the dinosaur piece, keeping enchantments, name,
+	 * trim and damage (like the netherite upgrade). Wrong trophy, a diamond piece or the netherite template: no match.
+	 */
+	@GameTest
+	public void dinosaurArmorSmithing(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+		ItemStack template = new ItemStack(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE);
+		StringBuilder log = new StringBuilder();
+		for (int r = 0; r < ARMOR.length; r++) {
+			Item[] row = ARMOR[r];
+			ItemStack base = new ItemStack(row[1]);
+			base.enchant(enchants.getOrThrow(Enchantments.PROTECTION), 4);
+			base.enchant(enchants.getOrThrow(Enchantments.MENDING), 1);
+			base.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Rex Guard " + r));
+			base.setDamageValue(57);
+			var input = new net.minecraft.world.item.crafting.SmithingRecipeInput(template, base, new ItemStack(row[2]));
+			List<String> matches = smithingMatches(helper, input);
+			String id = "dinosaurs:" + BuiltInRegistries.ITEM.getKey(row[0]).getPath() + "_smithing";
+			helper.assertTrue(matches.equals(List.of(id)), row[0] + " smithing matches " + matches);
+			@SuppressWarnings("unchecked")
+			Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput> recipe = (Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput>)
+					level.getServer().getRecipeManager().byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id(id.substring(10)))).orElseThrow().value();
+			ItemStack out = recipe.assemble(input);
+			helper.assertTrue(out.is(row[0]) && out.getCount() == 1, "result " + out);
+			helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.PROTECTION), out) == 4
+					&& EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.MENDING), out) == 1, "enchantments kept: " + out.getEnchantments());
+			helper.assertTrue(out.getHoverName().getString().equals("Rex Guard " + r), "name kept: " + out.getHoverName().getString());
+			helper.assertTrue(out.getDamageValue() == 57, "damage kept: " + out.getDamageValue());
+			log.append(' ').append(out.getHoverName().getString()).append('=').append(BuiltInRegistries.ITEM.getKey(out.getItem())).append(' ').append(out.getEnchantments());
+			// Wrong trophy (the next piece's), the diamond piece, or the vanilla netherite template: nothing.
+			Item wrong = ARMOR[(r + 1) % ARMOR.length][2];
+			helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(template, base, new ItemStack(wrong))).isEmpty(),
+					row[1] + " + " + wrong + " must not match");
+			helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(template, new ItemStack(row[3]), new ItemStack(row[2]))).isEmpty(),
+					row[3] + " must not be upgraded directly");
+			helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), base,
+					new ItemStack(row[2]))).isEmpty(), "netherite template + trophy must not match");
+		}
+		// No helmet recipe: the T-Rex Skull Helmet is the set's helmet.
+		helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(template, new ItemStack(Items.NETHERITE_HELMET),
+				new ItemStack(ModItems.T_REX_TOOTH))).isEmpty(), "no dinosaur helmet upgrade");
+		Dinosaurs.LOGGER.info("[test] dinosaur smithing:{}", log);
+		helper.succeed();
+	}
+
+	/**
+	 * The three trophies used by the armor still drop as before (no Looting): Raptor Claw 0-1 from the Velociraptor,
+	 * Parasaurolophus Crest 0-1, Megalodon Tooth 1-3; Looting III raises the maximum by 3.
+	 */
+	@GameTest(maxTicks = 100)
+	public void armorTrophyLoot(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		Player player = survivalPlayer(helper);
+		Object[][] cases = {{ModEntities.VELOCIRAPTOR, ModItems.RAPTOR_CLAW, 0, 1}, {ModEntities.PARASAUROLOPHUS, ModItems.PARASAUROLOPHUS_CREST, 0, 1},
+				{ModEntities.MEGALODON, ModItems.MEGALODON_TOOTH, 1, 3}};
+		ItemStack sword = new ItemStack(Items.NETHERITE_SWORD);
+		sword.enchant(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.LOOTING), 3);
+		StringBuilder log = new StringBuilder();
+		int x = 1;
+		for (Object[] c : cases) {
+			@SuppressWarnings("unchecked")
+			EntityType<? extends Mob> type = (EntityType<? extends Mob>) c[0];
+			Item item = (Item) c[1];
+			var table = level.getServer().reloadableRegistries().getLootTable(type.getDefaultLootTable().orElseThrow());
+			Mob mob = helper.spawn(type, new BlockPos(x, 1, 4));
+			int[] plain = roll(table, level, mob, player, item, 400);
+			player.setItemInHand(InteractionHand.MAIN_HAND, sword.copy());
+			int[] looted = roll(table, level, mob, player, item, 400);
+			player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+			String name = BuiltInRegistries.ENTITY_TYPE.getKey(type).getPath();
+			log.append(String.format(" %s %s %d-%d (avg %.2f), Looting III %d-%d (avg %.2f);", name, BuiltInRegistries.ITEM.getKey(item).getPath(),
+					plain[0], plain[1], plain[2] / 400.0, looted[0], looted[1], looted[2] / 400.0));
+			helper.assertTrue(plain[0] == (int) c[2] && plain[1] == (int) c[3], name + " " + item + " " + plain[0] + "-" + plain[1]);
+			helper.assertTrue(looted[1] == (int) c[3] + 3, name + " Looting III max " + looted[1]);
+			mob.discard();
+			x += 2;
+		}
+		Dinosaurs.LOGGER.info("[test] armor trophies per kill:{}", log);
+		helper.succeed();
+	}
+
+	private static int[] roll(net.minecraft.world.level.storage.loot.LootTable table, ServerLevel level, Mob mob, Player player, Item item, int rolls) {
+		int min = Integer.MAX_VALUE, max = 0, total = 0;
+		for (int i = 0; i < rolls; i++) {
+			int count = 0;
+			for (ItemStack stack : table.getRandomItems(lootParams(level, mob, player))) {
+				if (stack.is(item)) count += stack.getCount();
+			}
+			min = Math.min(min, count);
+			max = Math.max(max, count);
+			total += count;
+		}
+		return new int[]{min, max, total};
+	}
+
 	/** Same lookup the crafting table does: the matching recipe's assemble() on a 3x3 grid. */
 	private static ItemStack craftBoneBow(GameTestHelper helper, ItemStack bow) {
 		ServerLevel level = helper.getLevel();

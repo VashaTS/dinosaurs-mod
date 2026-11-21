@@ -55,8 +55,14 @@ public final class GuideBookContents {
 		}
 	}
 
-	/** 3×3 grid; each slot lists alternatives that the book cycles through (tag ingredients). */
-	public record RecipeGrid(boolean shaped, List<List<ItemStack>> slots, ItemStack result) {
+	/**
+	 * 3×3 grid; each slot lists alternatives that the book cycles through (tag ingredients).
+	 * Smithing recipes have three slots (template, base, addition) drawn in one row.
+	 */
+	public record RecipeGrid(boolean shaped, List<List<ItemStack>> slots, ItemStack result, boolean smithing) {
+		public RecipeGrid(boolean shaped, List<List<ItemStack>> slots, ItemStack result) {
+			this(shaped, slots, result, false);
+		}
 	}
 
 	/**
@@ -65,9 +71,14 @@ public final class GuideBookContents {
 	 */
 	public record Entry(String id, ItemStack icon, Component title, Component body, EntityType<? extends Mob> entity,
 			Component habitat, List<ItemStack> drops, List<RecipeGrid> recipes, List<EntityType<? extends Mob>> droppedBy,
-			List<StatRow> stats) {
+			List<StatRow> stats, List<Item> covers) {
 		public boolean isDino() {
 			return entity != null;
+		}
+
+		/** Items whose slots open this entry: its icon, plus e.g. all three Dinosaur Armor pieces. */
+		public boolean covers(ItemStack stack) {
+			return !stack.isEmpty() && (icon.getItem() == stack.getItem() || covers.contains(stack.getItem()));
 		}
 	}
 
@@ -80,9 +91,15 @@ public final class GuideBookContents {
 	/** Item the bow stats table compares against. */
 	public static final ItemStack BOW_REFERENCE = new ItemStack(Items.BOW);
 
+	/** Item the Dinosaur Armor stats table compares against. */
+	public static final ItemStack ARMOR_REFERENCE = new ItemStack(Items.NETHERITE_CHESTPLATE);
+
 	/** The vanilla item an entry's stats table is compared against (second value column). */
 	public static ItemStack statsReference(Entry entry) {
-		return entry.icon().is(ModItems.DINOSAUR_BONE_BOW) ? BOW_REFERENCE : STATS_REFERENCE;
+		if (entry.icon().is(ModItems.DINOSAUR_BONE_BOW)) {
+			return BOW_REFERENCE;
+		}
+		return entry.icon().is(ModItems.DINOSAUR_CHESTPLATE) ? ARMOR_REFERENCE : STATS_REFERENCE;
 	}
 
 	public record Category(String id, Location target, ItemStack icon, Component title) {
@@ -141,6 +158,17 @@ public final class GuideBookContents {
 				ModItems.DINOSAUR_BONES, Items.BOW, ModItems.DINOSAUR_BONES,
 				null, Items.NETHERITE_INGOT, null);
 		RecipeGrid boneMeal = shapeless(new ItemStack(Items.BONE_MEAL, 4), List.of(new ItemStack(ModItems.DINOSAUR_BONES)));
+		Item b = ModItems.DINOSAUR_BONES;
+		Item t = ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE;
+		RecipeGrid upgrade = shaped(new ItemStack(t), b, b, b, b, Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, b, b, b, b);
+		RecipeGrid upgradeCopy = shaped(new ItemStack(t, 2), b, t, b, b, Items.BONE_BLOCK, b, b, b, b);
+		RecipeGrid chestplate = smithing(ModItems.DINOSAUR_CHESTPLATE, Items.NETHERITE_CHESTPLATE, ModItems.MEGALODON_TOOTH);
+		RecipeGrid leggings = smithing(ModItems.DINOSAUR_LEGGINGS, Items.NETHERITE_LEGGINGS, ModItems.PARASAUROLOPHUS_CREST);
+		RecipeGrid boots = smithing(ModItems.DINOSAUR_BOOTS, Items.NETHERITE_BOOTS, ModItems.RAPTOR_CLAW);
+		ItemStack armorIcon = new ItemStack(ModItems.DINOSAUR_CHESTPLATE);
+		Entry armor = new Entry("dinosaur_armor", armorIcon, Component.translatable("book.dinosaurs.title.dinosaur_armor"),
+				Component.translatable("book.dinosaurs.item.dinosaur_armor"), null, null, List.of(), List.of(chestplate, leggings, boots),
+				List.of(), armorStats(), List.of(ModItems.DINOSAUR_LEGGINGS, ModItems.DINOSAUR_BOOTS));
 		RecipeGrid leather = shapeless(new ItemStack(Items.LEATHER, 2), List.of(new ItemStack(ModItems.BRACHIOSAURUS_HIDE)));
 
 		List<Entry> items = List.of(
@@ -148,14 +176,17 @@ public final class GuideBookContents {
 				item("amulet_of_dino_protection", ModItems.AMULET_OF_DINO_PROTECTION, List.of(amulet), List.of()),
 				item("dinosaur_saddle", ModItems.DINOSAUR_SADDLE, List.of(saddle), List.of()),
 				item("t_rex_skull_helmet", ModItems.T_REX_SKULL_HELMET, List.of(helmet), List.of(), helmetStats()),
+				armor,
+				item("dinosaur_upgrade_smithing_template", t, List.of(upgrade, upgradeCopy), List.of()),
 				item("dinosaur_bone_bow", ModItems.DINOSAUR_BONE_BOW, List.of(boneBow), List.of(), bowStats()),
-				item("dinosaur_bones", ModItems.DINOSAUR_BONES, List.of(boneBow, boneMeal), BONE_DROPPERS),
+				// Bone meal (1 -> 4) is named in the text; three grids do not fit on one page.
+				item("dinosaur_bones", ModItems.DINOSAUR_BONES, List.of(boneBow, upgrade), BONE_DROPPERS),
 				item("t_rex_tooth", ModItems.T_REX_TOOTH, List.of(amulet), List.of(ModEntities.T_REX)),
 				item("t_rex_skull", ModItems.T_REX_SKULL, List.of(helmet), List.of(ModEntities.T_REX)),
-				item("raptor_claw", ModItems.RAPTOR_CLAW, List.of(amulet), List.of(ModEntities.VELOCIRAPTOR)),
-				item("megalodon_tooth", ModItems.MEGALODON_TOOTH, List.of(amulet), List.of(ModEntities.MEGALODON)),
+				item("raptor_claw", ModItems.RAPTOR_CLAW, List.of(amulet, boots), List.of(ModEntities.VELOCIRAPTOR)),
+				item("megalodon_tooth", ModItems.MEGALODON_TOOTH, List.of(amulet, chestplate), List.of(ModEntities.MEGALODON)),
 				item("brachiosaurus_hide", ModItems.BRACHIOSAURUS_HIDE, List.of(saddle, leather), List.of(ModEntities.BRACHIOSAURUS)),
-				item("parasaurolophus_crest", ModItems.PARASAUROLOPHUS_CREST, List.of(saddle), List.of(ModEntities.PARASAUROLOPHUS)));
+				item("parasaurolophus_crest", ModItems.PARASAUROLOPHUS_CREST, List.of(saddle, leggings), List.of(ModEntities.PARASAUROLOPHUS)));
 
 		List<Category> categories = List.of(
 				new Category("dinosaurs", Location.dinoList(), new ItemStack(ModItems.TAB_ICON),
@@ -230,7 +261,7 @@ public final class GuideBookContents {
 	/** Entry describing this item or species (for clickable slots and drop icons), or null. */
 	public Entry entryFor(ItemStack stack) {
 		for (Entry entry : itemEntries) {
-			if (!stack.isEmpty() && entry.icon().getItem() == stack.getItem()) {
+			if (entry.covers(stack)) {
 				return entry;
 			}
 		}
@@ -273,7 +304,7 @@ public final class GuideBookContents {
 	private static Entry dino(String id, EntityType<? extends Mob> type, ItemStack... drops) {
 		return new Entry(id, new ItemStack(ModItems.spawnEgg(type)), type.getDescription(),
 				Component.translatable("book.dinosaurs.dino." + id), type,
-				Component.translatable("book.dinosaurs.habitat." + id), List.of(drops), List.of(), List.of(), List.of());
+				Component.translatable("book.dinosaurs.habitat." + id), List.of(drops), List.of(), List.of(), List.of(), List.of());
 	}
 
 	private static Entry item(String id, Item item, List<RecipeGrid> recipes, List<EntityType<? extends Mob>> droppedBy) {
@@ -283,7 +314,7 @@ public final class GuideBookContents {
 	private static Entry item(String id, Item item, List<RecipeGrid> recipes, List<EntityType<? extends Mob>> droppedBy, List<StatRow> stats) {
 		ItemStack icon = new ItemStack(item);
 		return new Entry(id, icon, icon.getHoverName(), Component.translatable("book.dinosaurs.item." + id), null, null,
-				List.of(), recipes, droppedBy, stats);
+				List.of(), recipes, droppedBy, stats, List.of());
 	}
 
 	/**
@@ -291,15 +322,30 @@ public final class GuideBookContents {
 	 * Knockback resistance is shown x10, as in the vanilla tooltip (netherite: +1).
 	 */
 	public static List<StatRow> helmetStats() {
-		ItemStack ours = new ItemStack(ModItems.T_REX_SKULL_HELMET);
+		return armorTable(new ItemStack(ModItems.T_REX_SKULL_HELMET), STATS_REFERENCE, EquipmentSlot.HEAD);
+	}
+
+	/** Dinosaur Chestplate vs. netherite chestplate (the other pieces differ the same way, see the entry text). */
+	public static List<StatRow> armorStats() {
+		return armorTable(new ItemStack(ModItems.DINOSAUR_CHESTPLATE), ARMOR_REFERENCE, EquipmentSlot.CHEST);
+	}
+
+	private static List<StatRow> armorTable(ItemStack ours, ItemStack reference, EquipmentSlot slot) {
 		return List.of(
-				new StatRow(Component.translatable("book.dinosaurs.stats.armor"), num(attr(ours, Attributes.ARMOR)), num(attr(STATS_REFERENCE, Attributes.ARMOR))),
-				new StatRow(Component.translatable("book.dinosaurs.stats.toughness"), num(attr(ours, Attributes.ARMOR_TOUGHNESS)),
-						num(attr(STATS_REFERENCE, Attributes.ARMOR_TOUGHNESS))),
-				new StatRow(Component.translatable("book.dinosaurs.stats.knockback"), num(10 * attr(ours, Attributes.KNOCKBACK_RESISTANCE)),
-						num(10 * attr(STATS_REFERENCE, Attributes.KNOCKBACK_RESISTANCE))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.armor"), num(attr(ours, Attributes.ARMOR, slot)), num(attr(reference, Attributes.ARMOR, slot))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.toughness"), num(attr(ours, Attributes.ARMOR_TOUGHNESS, slot)),
+						num(attr(reference, Attributes.ARMOR_TOUGHNESS, slot))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.knockback"), num(10 * attr(ours, Attributes.KNOCKBACK_RESISTANCE, slot)),
+						num(10 * attr(reference, Attributes.KNOCKBACK_RESISTANCE, slot))),
 				new StatRow(Component.translatable("book.dinosaurs.stats.durability"), Integer.toString(ours.getMaxDamage()),
-						Integer.toString(STATS_REFERENCE.getMaxDamage())));
+						Integer.toString(reference.getMaxDamage())),
+				new StatRow(Component.translatable("book.dinosaurs.stats.enchanting"), Integer.toString(enchantability(ours)),
+						Integer.toString(enchantability(reference))));
+	}
+
+	private static int enchantability(ItemStack stack) {
+		var enchantable = stack.get(net.minecraft.core.component.DataComponents.ENCHANTABLE);
+		return enchantable == null ? 0 : enchantable.value();
 	}
 
 	/** Large dinosaurs whose bones are Dinosaur Bones (must match DINO_BONES in tools/gen_data.py). */
@@ -319,9 +365,9 @@ public final class GuideBookContents {
 						Integer.toString(BOW_REFERENCE.getMaxDamage())));
 	}
 
-	private static double attr(ItemStack stack, Holder<Attribute> attribute) {
+	private static double attr(ItemStack stack, Holder<Attribute> attribute, EquipmentSlot slot) {
 		double[] total = {0};
-		stack.forEachModifier(EquipmentSlot.HEAD, (holder, modifier) -> {
+		stack.forEachModifier(slot, (holder, modifier) -> {
 			if (holder.equals(attribute) && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
 				total[0] += modifier.amount();
 			}
@@ -341,6 +387,12 @@ public final class GuideBookContents {
 			slots.add(item == null ? List.of() : List.of(new ItemStack(item)));
 		}
 		return new RecipeGrid(true, List.copyOf(slots), result);
+	}
+
+	/** Smithing table: template, base, addition -> result. */
+	private static RecipeGrid smithing(Item result, Item base, Item addition) {
+		return new RecipeGrid(true, List.of(List.of(new ItemStack(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE)), List.of(new ItemStack(base)),
+				List.of(new ItemStack(addition))), new ItemStack(result), true);
 	}
 
 	@SafeVarargs

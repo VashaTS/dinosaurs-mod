@@ -350,12 +350,43 @@ public class GuideBookScreen extends Screen {
 
 		int rx = this.leftPos + RIGHT;
 		int ry = this.topPos + TOP;
-		for (RecipeGrid grid : entry.recipes()) {
-			ry += this.drawRecipe(graphics, rx, ry, grid, recipeHeader(entry, grid), mouseX, mouseY) + 8;
+		for (int i = 0; i < entry.recipes().size(); i++) {
+			RecipeGrid grid = entry.recipes().get(i);
+			boolean header = showHeader(entry, i);
+			ry += recipeGap(entry, i);
+			ry += this.drawRecipe(graphics, rx, ry, grid, header ? recipeHeader(entry, grid) : null, mouseX, mouseY);
 		}
 		if (statsPage) {
-			this.drawWrapped(graphics, entry.body(), rx, ry - 2, PAGE_W, INK);
+			this.drawWrapped(graphics, entry.body(), rx, ry + 6, PAGE_W, INK);
 		}
+	}
+
+	/** A run of smithing recipes under the same heading (the three armor pieces) shares one heading. */
+	private static boolean showHeader(Entry entry, int i) {
+		if (i == 0) {
+			return true;
+		}
+		RecipeGrid grid = entry.recipes().get(i);
+		RecipeGrid prev = entry.recipes().get(i - 1);
+		return !(grid.smithing() && prev.smithing() && recipeHeader(entry, grid).equals(recipeHeader(entry, prev)));
+	}
+
+	private static int recipeGap(Entry entry, int i) {
+		return i == 0 ? 0 : (showHeader(entry, i) ? 8 : 2);
+	}
+
+	private static int recipeH(Font font, Entry entry, int i) {
+		RecipeGrid grid = entry.recipes().get(i);
+		return (showHeader(entry, i) ? textH(font, bold(recipeHeader(entry, grid))) + 3 : 0) + (grid.smithing() ? SLOT : RECIPE_H);
+	}
+
+	/** Height of the right page's recipe column (without the text under it). */
+	private static int recipesH(Font font, Entry entry) {
+		int h = 0;
+		for (int i = 0; i < entry.recipes().size(); i++) {
+			h += recipeGap(entry, i) + recipeH(font, entry, i);
+		}
+		return h;
 	}
 
 	/** Up to this many "dropped by" dinosaurs are listed with names; more become a slot grid. */
@@ -442,8 +473,11 @@ public class GuideBookScreen extends Screen {
 	}
 
 	private static Component recipeHeader(Entry entry, RecipeGrid grid) {
-		if (grid.result().getItem() != entry.icon().getItem()) {
+		if (!entry.covers(grid.result())) {
 			return Component.translatable("book.dinosaurs.heading.used_in");
+		}
+		if (grid.smithing()) {
+			return Component.translatable("book.dinosaurs.heading.smithing");
 		}
 		return Component.translatable(grid.shaped() ? "book.dinosaurs.heading.crafting" : "book.dinosaurs.heading.shapeless");
 	}
@@ -637,8 +671,20 @@ public class GuideBookScreen extends Screen {
 	}
 
 	private int drawRecipe(GuiGraphicsExtractor graphics, int x, int y, RecipeGrid grid, Component header, int mouseX, int mouseY) {
-		int gridY = this.drawWrapped(graphics, header.copy().withStyle(ChatFormatting.BOLD), x, y, PAGE_W, INK) + 3;
+		int gridY = header == null ? y : this.drawWrapped(graphics, header.copy().withStyle(ChatFormatting.BOLD), x, y, PAGE_W, INK) + 3;
 		long tick = System.currentTimeMillis() / 1000L;
+		if (grid.smithing()) {
+			// Smithing table row: template, base, addition, arrow, result (102 px).
+			for (int i = 0; i < 3; i++) {
+				List<ItemStack> options = grid.slots().get(i);
+				ItemStack stack = options.isEmpty() ? ItemStack.EMPTY : options.get((int) (tick % options.size()));
+				this.drawSlot(graphics, x + i * SLOT, gridY, stack, false, mouseX, mouseY);
+			}
+			int arrowX = x + 3 * SLOT + 4;
+			graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, arrowX, gridY + (SLOT - ARROW_H) / 2, ARROW_U, ARROW_V, ARROW_W, ARROW_H, TEX, TEX);
+			this.drawSlot(graphics, arrowX + ARROW_W + 4, gridY, grid.result(), true, mouseX, mouseY);
+			return gridY + SLOT - y;
+		}
 		for (int row = 0; row < 3; row++) {
 			for (int col = 0; col < 3; col++) {
 				List<ItemStack> options = grid.slots().get(row * 3 + col);
@@ -783,7 +829,7 @@ public class GuideBookScreen extends Screen {
 		}
 		fit(errors, lang, "settings.right", titleH(font, Component.translatable("book.dinosaurs.settings.spawning"))
 				+ textH(font, Component.translatable("book.dinosaurs.settings.legend")) + 3 + 10 * contents.dinoEntries().size());
-		for (String key : new String[]{"heading.crafting", "heading.shapeless", "heading.used_in", "heading.drops", "heading.book_recipe"}) {
+		for (String key : new String[]{"heading.crafting", "heading.shapeless", "heading.used_in", "heading.drops", "heading.book_recipe", "heading.smithing"}) {
 			width(font, errors, lang, key, bold(Component.translatable("book.dinosaurs." + key)), 1);
 		}
 		listFits(font, errors, lang, "list.dinosaurs", Component.translatable("book.dinosaurs.category.dinosaurs"), contents.dinoEntries());
@@ -828,11 +874,7 @@ public class GuideBookScreen extends Screen {
 			if (titleLines > 4) {
 				errors.append(' ').append(entry.id()).append(" title has ").append(titleLines).append(" lines\n");
 			}
-			int r = 0;
-			for (RecipeGrid grid : entry.recipes()) {
-				r += textH(font, bold(recipeHeader(entry, grid))) + 3 + RECIPE_H + 8;
-			}
-			fit(errors, lang, entry.id() + ".right", r - 8 + (statsPage ? 6 + textH(font, entry.body()) : 0));
+			fit(errors, lang, entry.id() + ".right", recipesH(font, entry) + (statsPage ? 6 + textH(font, entry.body()) : 0));
 			widest(font, errors, lang, entry.id(), entry.body());
 		}
 		if (!errors.isEmpty()) {
