@@ -3,7 +3,7 @@
 	"id": "dinosaurs",
 	"version": "${version}",
 	"name": "Dinosaurs",
-	"description": "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection from predator drops, a Dinosaur Saddle to ride a Triceratops, and an illustrated Dinosaur Field Guide. English and Polish translations.",
+	"description": "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection from predator drops, a Dinosaur Saddle to ride a Triceratops, a T-Rex Skull Helmet, a Dinosaur Bone Bow and an illustrated Dinosaur Field Guide. English and Polish translations.",
 	"authors": [
 		"Vasha"
 	],
@@ -26,6 +26,13 @@
 			"net.vsh33.dinosaurs.client.compat.ModMenuIntegration"
 		]
 	},
+	"mixins": [
+		"dinosaurs.mixins.json",
+		{
+			"config": "dinosaurs.client.mixins.json",
+			"environment": "client"
+		}
+	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.2",

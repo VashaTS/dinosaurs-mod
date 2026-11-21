@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "net.vsh33.dinosaurs.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"AnvilMenuMixin",
+		"EnchantCommandMixin",
+		"EnchantmentMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

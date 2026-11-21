@@ -49,7 +49,24 @@ RARE_DROPS = {
 }
 
 # Items with a hand-made 3D model (written by gen_skull.py), not a flat item/generated one.
-CUSTOM_MODELS = {"t_rex_skull", "t_rex_skull_helmet"}
+CUSTOM_MODELS = {"t_rex_skull", "t_rex_skull_helmet", "dinosaur_bone_bow"}
+
+# Large dinosaurs drop Dinosaur Bones (min, max; + up to 1 per Looting level) instead of vanilla bones.
+# Velociraptor and Pteranodon keep vanilla bones; the Megalodon is a shark (a cartilage skeleton) and keeps vanilla bones too.
+DINO_BONES = {
+    "t_rex": (2, 4), "spinosaurus": (2, 4), "brachiosaurus": (2, 5), "triceratops": (1, 3),
+    "stegosaurus": (1, 3), "ankylosaurus": (1, 3), "parasaurolophus": (1, 2),
+}
+
+def bow_item_definition():
+    """Like vanilla items/bow.json; use_duration scaled to the 15-tick draw (1/15 per tick)."""
+    m = lambda name: {"type": "minecraft:model", "model": f"dinosaurs:item/{name}"}
+    return {"model": {"type": "minecraft:condition", "property": "minecraft:using_item",
+                      "on_false": m("dinosaur_bone_bow"),
+                      "on_true": {"type": "minecraft:range_dispatch", "property": "minecraft:use_duration", "scale": round(1 / 15, 6),
+                                  "entries": [{"threshold": 0.65, "model": m("dinosaur_bone_bow_pulling_1")},
+                                              {"threshold": 0.9, "model": m("dinosaur_bone_bow_pulling_2")}],
+                                  "fallback": m("dinosaur_bone_bow_pulling_0")}}}
 
 def rare_pool(item, base, looting, per_level, modifier_key):
     chance = {"enchanted_chance": {"type": "minecraft:linear", "base": looting, "per_level_above_first": per_level},
@@ -72,6 +89,8 @@ ITEMS = {  # id: (English, Polish)
     "guide_book": ("Dinosaur Field Guide", "Przewodnik po dinozaurach"),
     "t_rex_skull": ("T-Rex Skull", "Czaszka tyranozaura"),
     "t_rex_skull_helmet": ("T-Rex Skull Helmet", "Hełm z czaszki tyranozaura"),
+    "dinosaur_bones": ("Dinosaur Bones", "Kości dinozaura"),
+    "dinosaur_bone_bow": ("Dinosaur Bone Bow", "Łuk z kości dinozaura"),
     "tab_icon": ("Dinosaurs", "Dinozaury"),
 }
 
@@ -79,6 +98,8 @@ EXTRA_LANG = {  # key: (English, Polish)
     "item.dinosaurs.amulet_of_dino_protection.desc": ("Hostile dinosaurs ignore you until you attack them", "Wrogie dinozaury ignorują cię, dopóki ich nie zaatakujesz"),
     "item.dinosaurs.dinosaur_saddle.desc": ("Use on a Triceratops to ride it", "Użyj na triceratopsie, aby na nim jeździć"),
     "item.dinosaurs.t_rex_skull.desc": ("Rare T. rex trophy. Craft it into a helmet", "Rzadkie trofeum z tyranozaura. Zrób z niej hełm"),
+    "item.dinosaurs.dinosaur_bones.desc": ("From large dinosaurs. Bone bow, or 4 bone meal", "Z dużych dinozaurów. Na łuk lub 4 mączki kostne"),
+    "item.dinosaurs.dinosaur_bone_bow.desc": ("Draws faster, hits harder. Infinity + Mending OK", "Szybciej naciąga, mocniej bije. Nieskończoność + Naprawa"),
     "item.dinosaurs.t_rex_skull_helmet.desc": ("Stronger than netherite. Fire resistant", "Mocniejszy niż netheryt. Odporny na ogień"),
     "config.dinosaurs.title": ("Dinosaurs", "Dinozaury"),
     "config.dinosaurs.category.spawning": ("Spawning", "Pojawianie się"),
@@ -95,16 +116,19 @@ EXTRA_LANG = {  # key: (English, Polish)
     "advancements.dinosaurs.ride_triceratops.title": ("Three Horns, One Rider", "Trzy rogi, jeden jeździec"),
     "advancements.dinosaurs.ride_triceratops.description": ("Ride a saddled Triceratops", "Pojedź na osiodłanym triceratopsie"),
     "modmenu.descriptionTranslation.dinosaurs": (
-        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops and a T-Rex Skull Helmet.",
-        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, i hełm z czaszki tyranozaura."),
+        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops, a T-Rex Skull Helmet and a Dinosaur Bone Bow.",
+        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, hełm z czaszki tyranozaura i łuk z kości dinozaura."),
 }
 
 RECIPES = {
+    # Bow in the middle, 3 Dinosaur Bones around it, Netherite Ingot below (no vanilla recipe uses this grid).
+    "dinosaur_bone_bow": dict(pattern=[" B ", "BWB", " N "], key={"B": "dinosaurs:dinosaur_bones", "W": "minecraft:bow", "N": "minecraft:netherite_ingot"}, category="equipment", unlock="dinosaurs:dinosaur_bones"),
     "amulet_of_dino_protection": dict(pattern=["SGS", "RTR", " M "], key={"S": "minecraft:string", "G": "minecraft:gold_ingot", "R": "dinosaurs:raptor_claw", "T": "dinosaurs:t_rex_tooth", "M": "dinosaurs:megalodon_tooth"}, category="equipment", unlock="dinosaurs:t_rex_tooth"),
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
 }
 
 SHAPELESS = {  # id: (ingredients, result, count, unlock item or #tag[, category])
+    "bone_meal_from_dinosaur_bones": (["dinosaurs:dinosaur_bones"], "minecraft:bone_meal", 4, "dinosaurs:dinosaur_bones"),
     "leather_from_brachiosaurus_hide": (["dinosaurs:brachiosaurus_hide"], "minecraft:leather", 2, "dinosaurs:brachiosaurus_hide"),
     # Book + Leather alone is left free for other mods' guide books; the dinosaur trophy makes this one unique.
     "guide_book": (["minecraft:book", "minecraft:leather", "#dinosaurs:guide_book_trophies"], "dinosaurs:guide_book", 1, "#dinosaurs:guide_book_trophies"),
@@ -149,6 +173,9 @@ def data_files(modifier_key):
     # The skull helmet: repaired with netherite or another skull, enchantable like any helmet.
     w(f"{D}/tags/item/repairs_t_rex_skull_helmet.json", {"replace": False, "values": ["minecraft:netherite_ingot", "dinosaurs:t_rex_skull"]})
     w(os.path.join(ROOT, "src/main/resources/data/minecraft/tags/item/head_armor.json"), {"replace": False, "values": ["dinosaurs:t_rex_skull_helmet"]})
+    # The bone bow takes every bow enchantment (Power, Punch, Flame, Infinity) and Unbreaking / Mending.
+    for tag in ("enchantable/bow", "enchantable/durability"):
+        w(os.path.join(ROOT, f"src/main/resources/data/minecraft/tags/item/{tag}.json"), {"replace": False, "values": ["dinosaurs:dinosaur_bone_bow"]})
     w(f"{D}/advancement/amulet.json", {
         "parent": "minecraft:adventure/root",
         "criteria": {"amulet": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": "dinosaurs:amulet_of_dino_protection"}]}}},
@@ -174,7 +201,10 @@ def main(modifier_key):
         pl[f"entity.dinosaurs.{mid}"] = p
         en[f"item.dinosaurs.{mid}_spawn_egg"] = f"{e} Spawn Egg"
         pl[f"item.dinosaurs.{mid}_spawn_egg"] = f"Jajo przywołania: {p}"
-        pools = [{"rolls": 1, "entries": [item_entry("minecraft:bone", lo, hi, modifier_key)]}]
+        if mid in DINO_BONES:
+            pools = [{"rolls": 1, "entries": [item_entry("dinosaurs:dinosaur_bones", *DINO_BONES[mid], modifier_key)]}]
+        else:
+            pools = [{"rolls": 1, "entries": [item_entry("minecraft:bone", lo, hi, modifier_key)]}]
         if bm:
             pools.append({"rolls": 1, "entries": [item_entry("minecraft:bone_meal", 0, bm, modifier_key)]})
         if mid in DROPS:
@@ -188,6 +218,12 @@ def main(modifier_key):
     for iid, (e, p) in ITEMS.items():
         en[f"item.dinosaurs.{iid}"] = e
         pl[f"item.dinosaurs.{iid}"] = p
+        if iid == "dinosaur_bone_bow":
+            w(f"{A}/items/{iid}.json", bow_item_definition())
+            w(f"{A}/models/item/{iid}.json", {"parent": "minecraft:item/bow", "textures": {"layer0": f"dinosaurs:item/{iid}"}})
+            for i in range(3):
+                w(f"{A}/models/item/{iid}_pulling_{i}.json", {"parent": "minecraft:item/bow", "textures": {"layer0": f"dinosaurs:item/{iid}_pulling_{i}"}})
+            continue
         w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}"}})
         if iid not in CUSTOM_MODELS:
             w(f"{A}/models/item/{iid}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"dinosaurs:item/{iid}"}})

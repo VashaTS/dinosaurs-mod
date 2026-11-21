@@ -38,6 +38,10 @@ BOOK_LANG = {
     "book.dinosaurs.stats.toughness": ("Armor Toughness", "Twardość pancerza"),
     "book.dinosaurs.stats.knockback": ("Knockback Resistance", "Odporność na odrzut"),
     "book.dinosaurs.stats.durability": ("Durability", "Trwałość"),
+    "book.dinosaurs.stats.arrow_damage": ("Arrow Damage", "Obrażenia strzały"),
+    "book.dinosaurs.stats.arrow_speed": ("Arrow Speed", "Prędkość strzały"),
+    "book.dinosaurs.stats.draw_ticks": ("Draw (ticks)", "Naciąganie (ticki)"),
+    "book.dinosaurs.stats.enchantability": ("Enchantability", "Zaklinalność"),
 
     # ---- Dinosaurs: behaviour (left page) and where to find them (right page)
     "book.dinosaurs.dino.t_rex": (
@@ -126,6 +130,12 @@ BOOK_LANG = {
     "book.dinosaurs.item.parasaurolophus_crest": (
         "Up to 1 from a Parasaurolophus, more with Looting. Part of the saddle.",
         "Do 1 z parazaurolofa, więcej z Grabieżą. Składnik siodła."),
+    "book.dinosaurs.item.dinosaur_bones": (
+        "Large dinosaurs drop these instead of bones (more with Looting). Craft them into the Bone Bow or Bone Meal.",
+        "Duże dinozaury upuszczają je zamiast kości (więcej z Grabieżą). Zrobisz z nich łuk z kości lub mączkę kostną."),
+    "book.dinosaurs.item.dinosaur_bone_bow": (
+        "Faster draw, faster arrows that hit harder. Infinity and Mending work together on it! Fire resistant.",
+        "Szybciej naciąga, strzały lecą szybciej i mocniej biją. Nieskończoność i Naprawa działają razem! Ognioodporny."),
     "book.dinosaurs.item.t_rex_skull": (
         "Rare: 4% of T. rexes killed by a player drop one, up to 10% with Looting. Craft it with Leather and a Netherite Ingot into a helmet.",
         "Rzadka: wypada z 4% tyranozaurów zabitych przez gracza, do 10% z Grabieżą. Ze skórą i sztabką netherytu zrobisz z niej hełm."),
