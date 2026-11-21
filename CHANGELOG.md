@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1
+
+* Crafting the **Dinosaur Bone Bow** from an enchanted bow now keeps the bow's enchantments, custom name, repair cost and
+  other data. Damage carries over as the same fraction of durability (e.g. 100/384 damaged becomes 300/1152), so crafting never repairs.
+  Same shaped recipe (new recipe type `dinosaurs:crafting_shaped_keep_components`); the crafting result shows the enchanted bow.
+* Guide book bow page: "Enchantments from the bow are kept". English and Polish.
+
 ## 1.4.0
 
 * New item: **Dinosaur Bones**. The seven large dinosaurs drop them instead of vanilla bones (T. rex 2-4,

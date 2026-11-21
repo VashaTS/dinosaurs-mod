@@ -112,7 +112,7 @@
   "book.dinosaurs.item.brachiosaurus_hide": "1-3 from a Brachiosaurus, more with Looting. Makes the saddle, or 2 Leather.",
   "book.dinosaurs.item.parasaurolophus_crest": "Up to 1 from a Parasaurolophus, more with Looting. Part of the saddle.",
   "book.dinosaurs.item.dinosaur_bones": "Large dinosaurs drop these instead of bones (more with Looting). Craft them into the Bone Bow or Bone Meal.",
-  "book.dinosaurs.item.dinosaur_bone_bow": "Faster draw, faster arrows that hit harder. Infinity and Mending work together on it! Fire resistant.",
+  "book.dinosaurs.item.dinosaur_bone_bow": "Faster draw, faster arrows that hit harder. Infinity and Mending work together on it! Enchantments from the bow are kept.",
   "book.dinosaurs.item.t_rex_skull": "Rare: 4% of T. rexes killed by a player drop one, up to 10% with Looting. Craft it with Leather and a Netherite Ingot into a helmet.",
   "book.dinosaurs.item.t_rex_skull_helmet": "Wear a T. rex skull on your head. Fire resistant like netherite. Repair it with a Netherite Ingot or a T-Rex Skull."
 }

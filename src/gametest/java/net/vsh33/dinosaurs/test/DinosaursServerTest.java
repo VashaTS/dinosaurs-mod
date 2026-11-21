@@ -538,4 +538,54 @@ public class DinosaursServerTest {
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.LAST_DAMAGE_PLAYER, player)
 				.create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.ENTITY);
 	}
+
+	/** 1.4.1: crafting the bone bow from an enchanted, named, damaged bow keeps its data; a plain bow gives a plain bone bow. */
+	@GameTest
+	public void boneBowKeepsEnchantments(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+		ItemStack bow = new ItemStack(Items.BOW);
+		bow.enchant(enchants.getOrThrow(Enchantments.POWER), 5);
+		bow.enchant(enchants.getOrThrow(Enchantments.INFINITY), 1);
+		bow.enchant(enchants.getOrThrow(Enchantments.UNBREAKING), 3);
+		bow.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Old Faithful"));
+		bow.set(DataComponents.REPAIR_COST, 5);
+		bow.setDamageValue(100);
+
+		ItemStack out = craftBoneBow(helper, bow);
+		helper.assertTrue(out.is(ModItems.DINOSAUR_BONE_BOW), "result " + out);
+		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.POWER), out) == 5, "Power V kept: " + out.getEnchantments());
+		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.INFINITY), out) == 1, "Infinity kept: " + out.getEnchantments());
+		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.UNBREAKING), out) == 3, "Unbreaking III kept: " + out.getEnchantments());
+		helper.assertTrue(out.getEnchantments().size() == 3, "exactly 3 enchantments: " + out.getEnchantments());
+		helper.assertTrue("Old Faithful".equals(out.getHoverName().getString()), "name kept: " + out.getHoverName().getString());
+		helper.assertTrue(out.getOrDefault(DataComponents.REPAIR_COST, 0) == 5, "repair cost kept: " + out.get(DataComponents.REPAIR_COST));
+		helper.assertTrue(out.getMaxDamage() == 1152, "max durability is the bone bow's: " + out.getMaxDamage());
+		// 100/384 damaged -> 300/1152: the same fraction of durability, never a free repair.
+		helper.assertTrue(out.getDamageValue() == 300, "damage scaled 100/384 -> 300/1152, got " + out.getDamageValue());
+		helper.assertTrue(out.has(DataComponents.DAMAGE_RESISTANT), "still fire resistant");
+		helper.assertTrue(bow.getDamageValue() == 100 && bow.is(Items.BOW), "input stack untouched");
+
+		ItemStack plain = craftBoneBow(helper, new ItemStack(Items.BOW));
+		helper.assertTrue(ItemStack.isSameItemSameComponents(plain, new ItemStack(ModItems.DINOSAUR_BONE_BOW)), "plain bow -> plain bone bow, got " + plain.getComponentsPatch());
+
+		ItemStack nearlyBroken = new ItemStack(Items.BOW);
+		nearlyBroken.setDamageValue(383);
+		ItemStack worn = craftBoneBow(helper, nearlyBroken);
+		helper.assertTrue(worn.getDamageValue() == 1149, "1/384 left -> 3/1152 left: " + worn.getDamageValue());
+		Dinosaurs.LOGGER.info("[test] bone bow from enchanted bow: {} {} damage {}/{}", out.getHoverName().getString(), out.getEnchantments(), out.getDamageValue(), out.getMaxDamage());
+		helper.succeed();
+	}
+
+	/** Same lookup the crafting table does: the matching recipe's assemble() on a 3x3 grid. */
+	private static ItemStack craftBoneBow(GameTestHelper helper, ItemStack bow) {
+		ServerLevel level = helper.getLevel();
+		ItemStack e = ItemStack.EMPTY;
+		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
+		ItemStack n = new ItemStack(Items.NETHERITE_INGOT);
+		CraftingInput input = CraftingInput.of(3, 3, List.of(e, b, e, b, bow, b, e, n, e));
+		var holder = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow();
+		helper.assertTrue(holder.id().identifier().equals(Dinosaurs.id("dinosaur_bone_bow")), "matched " + holder.id());
+		return holder.value().assemble(input);
+	}
 }

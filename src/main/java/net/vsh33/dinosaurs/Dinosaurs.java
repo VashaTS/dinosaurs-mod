@@ -20,6 +20,7 @@ public class Dinosaurs implements ModInitializer {
 	public void onInitialize() {
 		ModEntities.initialize();
 		ModItems.initialize();
+		net.vsh33.dinosaurs.recipe.KeepComponentsShapedRecipe.register();
 		DinoConfig.load();
 		LOGGER.info("Dinosaurs loaded: {} species", ModEntities.ALL.size());
 	}
