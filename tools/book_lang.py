@@ -47,6 +47,7 @@ BOOK_LANG = {
     "book.dinosaurs.stats.enchanting": ("Enchanting", "Zaklinanie"),
     "book.dinosaurs.stats.attack_damage": ("Damage", "Obrażenia"),
     "book.dinosaurs.stats.attack_speed": ("Speed", "Szybkość"),
+    "book.dinosaurs.stats.reach": ("Reach", "Zasięg"),
 
     # ---- Dinosaurs: behaviour (left page) and where to find them (right page)
     "book.dinosaurs.dino.t_rex": (
@@ -151,8 +152,8 @@ BOOK_LANG = {
         "Smithing template that turns netherite chestplate, leggings and boots into Dinosaur Armor. Used up like the Netherite Upgrade. 7 Dinosaur Bones and a Bone Block copy it.",
         "Szablon kowalski, który zmienia netherytowy napierśnik, nogawice i buty w dinozaurową zbroję. Zużywa się jak netherytowe ulepszenie. 7 kości dinozaura i blok kości go powielą."),
     "book.dinosaurs.item.dinosaur_claw": (
-        "A sword with a sickle claw: hits harder than netherite, sweeps, takes sword enchantments. Fire resistant. Repair: Dinosaur Bones.",
-        "Miecz z sierpowatym pazurem: bije mocniej niż netheryt, tnie zamaszyście, zaklęcia miecza. Nie płonie. Naprawa: kości dinozaura."),
+        "A clawed gauntlet: hits harder than a netherite sword, but its reach is 0.5 shorter. Sword enchantments. Fire resistant. Repair: Dinosaur Bones.",
+        "Szponiasta rękawica: bije mocniej niż netherytowy miecz, ale zasięg ma o 0,5 krótszy. Zaklęcia miecza. Nie płonie. Naprawa: kości dinozaura."),
     "book.dinosaurs.item.dinosaur_armor": (
         "Enchantments stay. Better than netherite in every stat. Repair: Dinosaur Bones. Helmet: T-Rex Skull Helmet.",
         "Zaklęcia zostają. Lepsza od netherytu we wszystkim. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura."),

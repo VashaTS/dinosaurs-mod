@@ -379,7 +379,8 @@ public final class GuideBookContents {
 
 	/**
 	 * Dinosaur Claw vs. netherite sword, from the items' attribute modifiers: damage and speed as the tooltip shows them
-	 * (player base 1 damage and 4 attacks per second plus the item's modifiers).
+	 * (player base 1 damage and 4 attacks per second plus the item's modifiers), and reach (entity interaction range,
+	 * base 3 blocks, plus the item's modifier: the claw is a fist weapon, 0.5 shorter).
 	 */
 	public static List<StatRow> clawStats() {
 		ItemStack ours = new ItemStack(ModItems.DINOSAUR_CLAW);
@@ -389,6 +390,8 @@ public final class GuideBookContents {
 						num(1 + attr(CLAW_REFERENCE, Attributes.ATTACK_DAMAGE, hand))),
 				new StatRow(Component.translatable("book.dinosaurs.stats.attack_speed"), num(4 + attr(ours, Attributes.ATTACK_SPEED, hand)),
 						num(4 + attr(CLAW_REFERENCE, Attributes.ATTACK_SPEED, hand))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.reach"), num(3 + attr(ours, Attributes.ENTITY_INTERACTION_RANGE, hand)),
+						num(3 + attr(CLAW_REFERENCE, Attributes.ENTITY_INTERACTION_RANGE, hand))),
 				new StatRow(Component.translatable("book.dinosaurs.stats.durability"), Integer.toString(ours.getMaxDamage()),
 						Integer.toString(CLAW_REFERENCE.getMaxDamage())),
 				new StatRow(Component.translatable("book.dinosaurs.stats.enchanting"), Integer.toString(enchantability(ours)),

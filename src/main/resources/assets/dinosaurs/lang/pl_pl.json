@@ -44,7 +44,7 @@
   "item.dinosaurs.dinosaur_bones.desc": "Z dużych dinozaurów. Na łuk lub 4 mączki kostne",
   "item.dinosaurs.dinosaur_bone_bow.desc": "Szybciej naciąga, mocniej bije. Nieskończoność + Naprawa",
   "item.dinosaurs.t_rex_skull_helmet.desc": "Mocniejszy niż netheryt. Odporny na ogień",
-  "item.dinosaurs.dinosaur_claw.desc": "Bije mocniej niż netheryt. Odporny na ogień",
+  "item.dinosaurs.dinosaur_claw.desc": "Szponiasta rękawica: mocny cios, krótszy zasięg",
   "item.dinosaurs.dinosaur_armor.desc": "Mocniejsza niż netheryt. Odporna na ogień",
   "item.dinosaurs.smithing_template.dinosaur_upgrade.applies_to": "Netherytowa zbroja",
   "item.dinosaurs.smithing_template.dinosaur_upgrade.ingredients": "Trofea z dinozaurów",
@@ -99,6 +99,7 @@
   "book.dinosaurs.stats.enchanting": "Zaklinanie",
   "book.dinosaurs.stats.attack_damage": "Obrażenia",
   "book.dinosaurs.stats.attack_speed": "Szybkość",
+  "book.dinosaurs.stats.reach": "Zasięg",
   "book.dinosaurs.dino.t_rex": "Wrogi. Król drapieżników: ogromny, wytrzymały i bije bardzo mocno. Atakuje graczy od razu.",
   "book.dinosaurs.habitat.t_rex": "Równiny, Słonecznikowe równiny, Lasy i Gęsty las. Zawsze sam i rzadki: najwyżej jeden na 64 bloki. Potrzebuje otwartego nieba. Nie na poziomie Pokojowym.",
   "book.dinosaurs.dino.velociraptor": "Wrogi. Mały i bardzo szybki. Poluje w stadzie: uderz jednego, a ruszy na ciebie cała grupa.",
@@ -132,6 +133,6 @@
   "book.dinosaurs.item.t_rex_skull": "Rzadka: wypada z 4% tyranozaurów zabitych przez gracza, do 10% z Grabieżą. Ze skórą i sztabką netherytu zrobisz z niej hełm.",
   "book.dinosaurs.item.t_rex_skull_helmet": "Noś czaszkę tyranozaura na głowie. Odporny na ogień jak netheryt. Napraw go sztabką netherytu lub czaszką tyranozaura.",
   "book.dinosaurs.item.dinosaur_upgrade_smithing_template": "Szablon kowalski, który zmienia netherytowy napierśnik, nogawice i buty w dinozaurową zbroję. Zużywa się jak netherytowe ulepszenie. 7 kości dinozaura i blok kości go powielą.",
-  "book.dinosaurs.item.dinosaur_claw": "Miecz z sierpowatym pazurem: bije mocniej niż netheryt, tnie zamaszyście, zaklęcia miecza. Nie płonie. Naprawa: kości dinozaura.",
+  "book.dinosaurs.item.dinosaur_claw": "Szponiasta rękawica: bije mocniej niż netherytowy miecz, ale zasięg ma o 0,5 krótszy. Zaklęcia miecza. Nie płonie. Naprawa: kości dinozaura.",
   "book.dinosaurs.item.dinosaur_armor": "Zaklęcia zostają. Lepsza od netherytu we wszystkim. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura."
 }

@@ -34,8 +34,8 @@ public class GuideBookScreenshotTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
-		if (XaeroRadarScreenshotTest.ONLY) {
-			return; // -PxaeroJar run: only the minimap test
+		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY) {
+			return; // -PxaeroJar / -PclawOnly run: only that test
 		}
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
 			TestServerContext server = world.getServer();

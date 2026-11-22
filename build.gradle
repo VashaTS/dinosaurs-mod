@@ -100,6 +100,16 @@ publishing {
 	}
 }
 
+// -PclawOnly=true: run only the Dinosaur Claw screenshot test. -PclawShots=dir: where its screenshots go (default /workspace/dino-claw).
+tasks.matching { it.name == "runClientGameTest" }.configureEach {
+	if (project.findProperty("clawOnly")) {
+		systemProperty "dinosaurs.clawOnly", "true"
+	}
+	if (project.findProperty("clawShots")) {
+		systemProperty "dinosaurs.clawShots", project.property("clawShots")
+	}
+}
+
 if (project.findProperty("xaeroJar")) {
 	def xaeroCfg = file("build/run/clientGameTest/config/xaero/minimap/profiles/default.cfg")
 	// -PxaeroRadar=always: icons and names always on (no Tab needed). Default: Xaero's defaults (icons while Tab is held).

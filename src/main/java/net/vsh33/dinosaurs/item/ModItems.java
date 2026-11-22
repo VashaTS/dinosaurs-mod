@@ -16,6 +16,11 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -89,19 +94,37 @@ public final class ModItems {
 			.fireResistant()
 			.rarity(Rarity.EPIC));
 
-	// Dinosaur Claw (1.6.0): a sword one step above netherite. Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot,
-	// Dinosaur Bones, Netherite Ingot / stick.
+	// Dinosaur Claw (1.6.0): a clawed netherite gauntlet worn on the fist, a melee weapon one step above the netherite
+	// sword. Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / stick.
 	/** Repair ingredient of the Dinosaur Claw (#dinosaurs:repairs_dinosaur_claw: Dinosaur Bones). */
 	public static final TagKey<Item> REPAIRS_DINOSAUR_CLAW = TagKey.create(Registries.ITEM, Dinosaurs.id("repairs_dinosaur_claw"));
 	/**
 	 * Above netherite by what netherite is above diamond (diamond 1561 / 3 / 10, netherite 2031 / 4 / 15):
-	 * durability 2501, attack damage bonus 6 (so the sword does 10, netherite 8), enchantability 20. Mines like netherite.
+	 * durability 2501, attack damage bonus 6, enchantability 20. Mines like netherite.
 	 */
 	public static final ToolMaterial DINOSAUR_TOOL_MATERIAL = new ToolMaterial(BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 2501, 9.0F, 6.0F, 20,
 			REPAIRS_DINOSAUR_CLAW);
-	/** Sword stats like vanilla swords (base 3, speed -2.4 -> 1.6): 10 attack damage. In #minecraft:swords (sweeping, sword enchantments). */
+	/** Attack damage of the claw (player base 1 + modifier 10); the netherite sword does 8. */
+	public static final double DINOSAUR_CLAW_DAMAGE = 11.0;
+	/** Reach change while the claw is in the main hand: a fist weapon, so 0.5 blocks shorter than a sword (3 -> 2.5). */
+	public static final double DINOSAUR_CLAW_REACH = -0.5;
+	public static final Identifier DINOSAUR_CLAW_REACH_ID = Dinosaurs.id("dinosaur_claw_reach");
+	/**
+	 * Sword components (sweeping via #minecraft:swords, sword enchantments, cobwebs) with its own attributes:
+	 * 11 attack damage, speed 1.6 like swords, and entity interaction range -0.5 in the main hand. Vanilla uses the
+	 * entity interaction range as the attack reach of any weapon without an attack_range component.
+	 */
 	public static final Item DINOSAUR_CLAW = register("dinosaur_claw", Item::new, new Item.Properties()
-			.sword(DINOSAUR_TOOL_MATERIAL, 3.0F, -2.4F).fireResistant().rarity(Rarity.EPIC));
+			.sword(DINOSAUR_TOOL_MATERIAL, 3.0F, -2.4F)
+			.attributes(ItemAttributeModifiers.builder()
+					.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, DINOSAUR_CLAW_DAMAGE - 1.0,
+							AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
+					.add(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID, -2.4,
+							AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
+					.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(DINOSAUR_CLAW_REACH_ID, DINOSAUR_CLAW_REACH,
+							AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
+					.build())
+			.fireResistant().rarity(Rarity.EPIC));
 
 	// Dinosaur Armor: netherite chestplate / leggings / boots upgraded on the smithing table with the Dinosaur Upgrade
 	// template and a trophy (Megalodon Tooth / Parasaurolophus Crest / Raptor Claw). The T-Rex Skull Helmet is the set's helmet.

@@ -24,6 +24,8 @@ import net.vsh33.dinosaurs.item.ModItems;
  * on an armor stand, the inventory tooltip and the crafting table. Written to /workspace/dino-claw/ (dinosaurs.clawShots).
  */
 public class ClawScreenshotTest implements FabricClientGameTest {
+	/** -PclawOnly=true: only this test runs (quick look at the claw models); the other screenshot tests skip. */
+	static final boolean ONLY = Boolean.getBoolean("dinosaurs.clawOnly");
 	private static final Path OUT = Path.of(System.getProperty("dinosaurs.clawShots", "/workspace/dino-claw"));
 
 	private static void shot(ClientGameTestContext context, String name) {
@@ -60,6 +62,12 @@ public class ClawScreenshotTest implements FabricClientGameTest {
 			context.waitTicks(40);
 
 			shot(context, "first-person");
+			// The left hand uses the mirrored right-hand transform: claw in the off hand, netherite sword in the main hand.
+			server.runCommand("item replace entity @p weapon.mainhand with minecraft:netherite_sword");
+			server.runCommand("item replace entity @p weapon.offhand with dinosaurs:dinosaur_claw");
+			shot(context, "first-person-offhand");
+			server.runCommand("item replace entity @p weapon.mainhand with dinosaurs:dinosaur_claw");
+			server.runCommand("item replace entity @p weapon.offhand with minecraft:netherite_sword");
 			// Third person front (claw in the right hand, netherite sword in the left), zoomed in.
 			context.getInput().pressKey(options -> options.keyToggleGui);
 			int fov = context.computeOnClient(mc -> mc.options.fov().get());
@@ -78,11 +86,12 @@ public class ClawScreenshotTest implements FabricClientGameTest {
 				mc.options.fov().set(fov);
 			});
 
-			// Armor stands: Dinosaur Claw (left) and netherite sword (right) for scale.
-			String nbt = "{ShowArms:1b,NoGravity:1b,Rotation:[180f,0f],equipment:{mainhand:{id:\"%s\",count:1}}}";
-			server.runCommand("summon minecraft:armor_stand -0.5 201 3.5 " + String.format(nbt, "dinosaurs:dinosaur_claw"));
-			server.runCommand("summon minecraft:armor_stand 1.5 201 3.5 " + String.format(nbt, "minecraft:netherite_sword"));
-			server.runCommand("tp @p 0.5 201.4 0.2 facing 0.5 201.6 3.5");
+			// Armor stands: the claw from the front and from the side (right arm toward the camera), a netherite sword for scale.
+			String nbt = "{ShowArms:1b,NoGravity:1b,Rotation:[%sf,0f],equipment:{mainhand:{id:\"%s\",count:1}}}";
+			server.runCommand("summon minecraft:armor_stand -0.7 201 3.0 " + String.format(nbt, "180", "minecraft:netherite_sword"));
+			server.runCommand("summon minecraft:armor_stand 0.5 201 3.0 " + String.format(nbt, "180", "dinosaurs:dinosaur_claw"));
+			server.runCommand("summon minecraft:armor_stand 1.9 201 3.0 " + String.format(nbt, "90", "dinosaurs:dinosaur_claw"));
+			server.runCommand("tp @p 0.6 201 -0.6 0 12");
 			shot(context, "stands-claw-vs-netherite-sword");
 			context.getInput().pressKey(options -> options.keyToggleGui);
 			server.runCommand("kill @e[type=armor_stand]");

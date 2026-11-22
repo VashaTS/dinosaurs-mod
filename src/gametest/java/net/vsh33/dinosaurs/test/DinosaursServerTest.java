@@ -857,7 +857,8 @@ public class DinosaursServerTest {
 		return total[0];
 	}
 
-	/** Sword stats above the netherite sword; a sword for sweeping and enchantments; fire resistant; repaired with Dinosaur Bones. */
+	/** 11 damage vs the netherite sword's 8, same speed, more durability and enchantability, reach modifier -0.5; a sword for
+	 * sweeping and enchantments; fire resistant; repaired with Dinosaur Bones. */
 	@GameTest
 	public void dinosaurClawStats(GameTestHelper helper) {
 		var damage = net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE;
@@ -866,11 +867,13 @@ public class DinosaursServerTest {
 		ItemStack sword = new ItemStack(Items.NETHERITE_SWORD);
 		double clawDamage = 1 + handModifier(claw, damage), swordDamage = 1 + handModifier(sword, damage);
 		double clawSpeed = 4 + handModifier(claw, speed), swordSpeed = 4 + handModifier(sword, speed);
-		helper.assertTrue(clawDamage == 10 && swordDamage == 8, "damage " + clawDamage + " (netherite sword " + swordDamage + ")");
+		helper.assertTrue(clawDamage == 11 && swordDamage == 8, "damage " + clawDamage + " (netherite sword " + swordDamage + ")");
 		helper.assertTrue(Math.abs(clawSpeed - 1.6) < 1e-4 && Math.abs(clawSpeed - swordSpeed) < 1e-4, "speed " + clawSpeed + " (netherite " + swordSpeed + ")");
 		helper.assertTrue(claw.getMaxDamage() == 2501 && claw.getMaxDamage() > sword.getMaxDamage(), "durability " + claw.getMaxDamage());
 		var enchantable = claw.get(DataComponents.ENCHANTABLE);
 		helper.assertTrue(enchantable != null && enchantable.value() == 20, "enchantability " + enchantable);
+		helper.assertTrue(Math.abs(handModifier(claw, net.minecraft.world.entity.ai.attributes.Attributes.ENTITY_INTERACTION_RANGE) + 0.5) < 1e-6
+				&& handModifier(sword, net.minecraft.world.entity.ai.attributes.Attributes.ENTITY_INTERACTION_RANGE) == 0, "claw reach modifier -0.5");
 		helper.assertTrue(claw.has(DataComponents.DAMAGE_RESISTANT), "fire resistant");
 		helper.assertTrue(claw.is(net.minecraft.tags.ItemTags.SWORDS), "in #minecraft:swords (sweeping attack)");
 		helper.assertTrue(claw.has(DataComponents.WEAPON) && claw.has(DataComponents.TOOL), "weapon and sword tool (cobwebs) components");
@@ -886,7 +889,7 @@ public class DinosaursServerTest {
 		helper.assertTrue(fixed.is(ModItems.DINOSAUR_CLAW) && fixed.getDamageValue() < 2000, "bones repair the claw: " + fixed + " damage " + fixed.getDamageValue());
 		ItemStack none = anvil(helper, worn.copy(), new ItemStack(Items.NETHERITE_INGOT));
 		helper.assertTrue(none.isEmpty(), "netherite ingot must not repair the claw: " + none);
-		// A real hit: a zombie takes 10 (netherite sword: 8) from a fully charged player attack.
+		// A real hit: a zombie takes 11 (netherite sword: 8) from a fully charged player attack.
 		ServerLevel level = helper.getLevel();
 		double[] dealt = new double[2];
 		int i = 0;
@@ -903,5 +906,44 @@ public class DinosaursServerTest {
 		Dinosaurs.LOGGER.info("[test] dinosaur claw: damage {} speed {} durability {} ench {} (netherite sword {} / {} / {} / 15); hit {} vs {}",
 				clawDamage, clawSpeed, claw.getMaxDamage(), enchantable.value(), swordDamage, swordSpeed, sword.getMaxDamage(), dealt[0], dealt[1]);
 		helper.succeed();
+	}
+
+	/**
+	 * Reach: holding the claw in the main hand lowers the player's entity interaction range from 3 to 2.5 (vanilla uses it
+	 * as the attack reach of weapons without an attack_range component). A target 2.75 blocks from the eyes can be hit
+	 * with a netherite sword but not with the claw; at 2.25 both reach. In the off hand the claw changes nothing.
+	 */
+	@GameTest
+	public void dinosaurClawReach(GameTestHelper helper) {
+		Player clawPlayer = survivalPlayer(helper), swordPlayer = survivalPlayer(helper), offhandPlayer = survivalPlayer(helper);
+		ItemStack claw = new ItemStack(ModItems.DINOSAUR_CLAW), sword = new ItemStack(Items.NETHERITE_SWORD);
+		clawPlayer.setItemInHand(InteractionHand.MAIN_HAND, claw.copy());
+		swordPlayer.setItemInHand(InteractionHand.MAIN_HAND, sword.copy());
+		offhandPlayer.setItemInHand(InteractionHand.OFF_HAND, claw.copy());
+		// Mock players are not ticked by the level; one tick applies the held item's attribute modifiers, like in game.
+		for (Player p : List.of(clawPlayer, swordPlayer, offhandPlayer)) {
+			p.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+			p.tick();
+		}
+		helper.runAfterDelay(1, () -> {
+			double clawRange = clawPlayer.entityInteractionRange(), swordRange = swordPlayer.entityInteractionRange();
+			helper.assertTrue(Math.abs(clawRange - 2.5) < 1e-6, "claw reach " + clawRange);
+			helper.assertTrue(Math.abs(swordRange - 3.0) < 1e-6, "netherite sword reach " + swordRange);
+			helper.assertTrue(Math.abs(offhandPlayer.entityInteractionRange() - 3.0) < 1e-6, "claw in the off hand: reach " + offhandPlayer.entityInteractionRange());
+			for (double gap : new double[]{2.25, 2.75}) {
+				boolean clawHits = clawPlayer.isWithinAttackRange(clawPlayer.getMainHandItem(), target(clawPlayer, gap), 0);
+				boolean swordHits = swordPlayer.isWithinAttackRange(swordPlayer.getMainHandItem(), target(swordPlayer, gap), 0);
+				helper.assertTrue(swordHits, "netherite sword should reach " + gap);
+				helper.assertTrue(clawHits == (gap < 2.5), "claw at " + gap + ": " + clawHits);
+			}
+			Dinosaurs.LOGGER.info("[test] dinosaur claw reach {} (netherite sword {}); 2.75 blocks: claw misses, sword hits", clawRange, swordRange);
+			helper.succeed();
+		});
+	}
+
+	/** A 0.6-wide box whose near face is {@code gap} blocks in front of the player's eyes (eye height level). */
+	private static net.minecraft.world.phys.AABB target(Player player, double gap) {
+		Vec3 eye = player.getEyePosition();
+		return new net.minecraft.world.phys.AABB(eye.x + gap, eye.y - 0.5, eye.z - 0.3, eye.x + gap + 0.6, eye.y + 0.5, eye.z + 0.3);
 	}
 }

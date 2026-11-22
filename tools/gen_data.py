@@ -50,7 +50,8 @@ RARE_DROPS = {
 
 # Items with a hand-made 3D model (written by gen_skull.py), not a flat item/generated one.
 CUSTOM_MODELS = {"t_rex_skull", "t_rex_skull_helmet", "dinosaur_bone_bow"}
-HANDHELD = {"dinosaur_claw"}  # held like a sword
+# Worn on the fist: flat icon in the GUI, on the ground and in item frames, the 3D gauntlet (tools/gen_claw.py) in the hands.
+WORN_ON_FIST = {"dinosaur_claw"}
 
 # Large dinosaurs drop Dinosaur Bones (min, max; + up to 1 per Looting level) instead of vanilla bones.
 # Velociraptor and Pteranodon keep vanilla bones; the Megalodon is a shark (a cartilage skeleton) and keeps vanilla bones too.
@@ -107,7 +108,7 @@ EXTRA_LANG = {  # key: (English, Polish)
     "item.dinosaurs.dinosaur_bones.desc": ("From large dinosaurs. Bone bow, or 4 bone meal", "Z dużych dinozaurów. Na łuk lub 4 mączki kostne"),
     "item.dinosaurs.dinosaur_bone_bow.desc": ("Draws faster, hits harder. Infinity + Mending OK", "Szybciej naciąga, mocniej bije. Nieskończoność + Naprawa"),
     "item.dinosaurs.t_rex_skull_helmet.desc": ("Stronger than netherite. Fire resistant", "Mocniejszy niż netheryt. Odporny na ogień"),
-    "item.dinosaurs.dinosaur_claw.desc": ("Hits harder than netherite. Fire resistant", "Bije mocniej niż netheryt. Odporny na ogień"),
+    "item.dinosaurs.dinosaur_claw.desc": ("Clawed gauntlet: hits hard, shorter reach", "Szponiasta rękawica: mocny cios, krótszy zasięg"),
     "item.dinosaurs.dinosaur_armor.desc": ("Stronger than netherite. Fire resistant", "Mocniejsza niż netheryt. Odporna na ogień"),
     "item.dinosaurs.smithing_template.dinosaur_upgrade.applies_to": ("Netherite Armor", "Netherytowa zbroja"),
     "item.dinosaurs.smithing_template.dinosaur_upgrade.ingredients": ("Dinosaur Trophies", "Trofea z dinozaurów"),
@@ -130,7 +131,7 @@ EXTRA_LANG = {  # key: (English, Polish)
     "advancements.dinosaurs.ride_triceratops.title": ("Three Horns, One Rider", "Trzy rogi, jeden jeździec"),
     "advancements.dinosaurs.ride_triceratops.description": ("Ride a saddled Triceratops", "Pojedź na osiodłanym triceratopsie"),
     "modmenu.descriptionTranslation.dinosaurs": (
-        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops, a T-Rex Skull Helmet, a Dinosaur Bone Bow, Dinosaur Armor and the Dinosaur Claw sword.",
+        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops, a T-Rex Skull Helmet, a Dinosaur Bone Bow, Dinosaur Armor and the Dinosaur Claw gauntlet.",
         "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, hełm z czaszki tyranozaura, łuk z kości dinozaura, dinozaurową zbroję i miecz: dinozaurowy pazur."),
 }
 
@@ -139,7 +140,7 @@ RECIPES = {
     "dinosaur_bone_bow": dict(pattern=[" B ", "BWB", " N "], key={"B": "dinosaurs:dinosaur_bones", "W": "minecraft:bow", "N": "minecraft:netherite_ingot"}, category="equipment", unlock="dinosaurs:dinosaur_bones", keep_components_from="minecraft:bow"),
     "amulet_of_dino_protection": dict(pattern=["SGS", "RTR", " M "], key={"S": "minecraft:string", "G": "minecraft:gold_ingot", "R": "dinosaurs:raptor_claw", "T": "dinosaurs:t_rex_tooth", "M": "dinosaurs:megalodon_tooth"}, category="equipment", unlock="dinosaurs:t_rex_tooth"),
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
-    # Dinosaur Claw sword: Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / stick.
+    # Dinosaur Claw gauntlet: Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / stick.
     "dinosaur_claw": dict(pattern=["CTC", "NBN", " S "], key={"C": "dinosaurs:raptor_claw", "T": "dinosaurs:t_rex_tooth", "N": "minecraft:netherite_ingot", "B": "dinosaurs:dinosaur_bones", "S": "minecraft:stick"}, category="equipment", unlock="dinosaurs:raptor_claw"),
     # Netherite Upgrade surrounded by 8 Dinosaur Bones -> Dinosaur Upgrade.
     "dinosaur_upgrade_smithing_template": dict(pattern=["BBB", "BTB", "BBB"], key={"B": "dinosaurs:dinosaur_bones", "T": "minecraft:netherite_upgrade_smithing_template"}, category="misc", unlock="dinosaurs:dinosaur_bones"),
@@ -209,7 +210,7 @@ def data_files(modifier_key):
             "rewards": {"recipes": [f"dinosaurs:{name}"]},
         })
     w(f"{D}/tags/item/repairs_dinosaur_armor.json", {"replace": False, "values": ["dinosaurs:dinosaur_bones"]})
-    # Dinosaur Claw: a sword (sweeping, every sword enchantment), repaired with Dinosaur Bones.
+    # Dinosaur Claw: a clawed gauntlet that fights like a sword (sweeping, every sword enchantment), repaired with Dinosaur Bones.
     w(f"{D}/tags/item/repairs_dinosaur_claw.json", {"replace": False, "values": ["dinosaurs:dinosaur_bones"]})
     w(os.path.join(ROOT, "src/main/resources/data/minecraft/tags/item/swords.json"), {"replace": False, "values": ["dinosaurs:dinosaur_claw"]})
     for tag, item in (("chest_armor", "dinosaur_chestplate"), ("leg_armor", "dinosaur_leggings"), ("foot_armor", "dinosaur_boots")):
@@ -304,10 +305,15 @@ def main(modifier_key):
             for i in range(3):
                 w(f"{A}/models/item/{iid}_pulling_{i}.json", {"parent": "minecraft:item/bow", "textures": {"layer0": f"dinosaurs:item/{iid}_pulling_{i}"}})
             continue
-        w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}"}})
+        if iid in WORN_ON_FIST:
+            m = lambda name: {"type": "minecraft:model", "model": f"dinosaurs:item/{name}"}
+            w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:select", "property": "minecraft:display_context",
+                                                  "cases": [{"when": ["gui", "ground", "fixed", "on_shelf"], "model": m(iid)}],
+                                                  "fallback": m(f"{iid}_held")}})
+        else:
+            w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}"}})
         if iid not in CUSTOM_MODELS:
-            parent = "minecraft:item/handheld" if iid in HANDHELD else "minecraft:item/generated"
-            w(f"{A}/models/item/{iid}.json", {"parent": parent, "textures": {"layer0": f"dinosaurs:item/{iid}"}})
+            w(f"{A}/models/item/{iid}.json", {"parent": "minecraft:item/generated", "textures": {"layer0": f"dinosaurs:item/{iid}"}})
     for k, (e, p) in list(EXTRA_LANG.items()) + list(BOOK_LANG.items()):
         en[k] = e
         pl[k] = p

@@ -2,14 +2,18 @@
 
 ## 1.6.0
 
-* New weapon: **Dinosaur Claw**, a sword with a curved bone claw blade on a netherite guard and grip.
+* New weapon: **Dinosaur Claw**, a clawed gauntlet: a netherite and leather glove with bone knuckle plates and three
+  sharp claws sticking out of the knuckles. Flat icon in the inventory; in the hands a 3D model worn on the fist
+  (first and third person, either hand).
   * Shaped recipe: Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / Stick (bottom middle).
-  * **10 attack damage** (netherite sword 8), attack speed 1.6 (same), durability 2501 (netherite 2031), enchantability 20 (15):
-    above netherite by what netherite is above diamond, with a bigger damage step.
-  * A sword in every way (`#minecraft:swords`): sweeping attack, all sword enchantments, cuts cobwebs. Fire resistant,
-    repaired with Dinosaur Bones. Held like a sword (handheld model).
-* Guide book: Dinosaur Claw page with its stats against the netherite sword and the recipe; the Raptor Claw and T-Rex Tooth
-  pages show the recipe, the Dinosaur Bones page mentions it. English and Polish.
+  * **11 attack damage** (netherite sword 8), attack speed 1.6 (same), durability 2501 (netherite 2031), enchantability 20 (15).
+  * **Shorter reach**: 2.5 blocks instead of 3 while in the main hand (`entity_interaction_range` -0.5, which vanilla
+    uses as the attack reach of weapons without an `attack_range` component). Shown in the tooltip.
+  * Fights like a sword (`#minecraft:swords`): sweeping attack, all sword enchantments, cuts cobwebs. Fire resistant,
+    repaired with Dinosaur Bones.
+* Guide book: Dinosaur Claw page with its stats (damage, speed, reach, durability, enchanting) against the netherite
+  sword and the recipe; the Raptor Claw and T-Rex Tooth pages show the recipe, the Dinosaur Bones page mentions it.
+  English and Polish.
 
 ## 1.5.1
 
