@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.0
+
+* New weapon: **Dinosaur Claw**, a sword with a curved bone claw blade on a netherite guard and grip.
+  * Shaped recipe: Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / Stick (bottom middle).
+  * **10 attack damage** (netherite sword 8), attack speed 1.6 (same), durability 2501 (netherite 2031), enchantability 20 (15):
+    above netherite by what netherite is above diamond, with a bigger damage step.
+  * A sword in every way (`#minecraft:swords`): sweeping attack, all sword enchantments, cuts cobwebs. Fire resistant,
+    repaired with Dinosaur Bones. Held like a sword (handheld model).
+* Guide book: Dinosaur Claw page with its stats against the netherite sword and the recipe; the Raptor Claw and T-Rex Tooth
+  pages show the recipe, the Dinosaur Bones page mentions it. English and Polish.
+
 ## 1.5.1
 
 * **Xaero's Minimap / Better PvP**: every dinosaur (including the Megalodon and the Pteranodon) now has a head icon on

@@ -15,6 +15,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
@@ -86,6 +88,20 @@ public final class ModItems {
 			.repairable(DINOSAUR_BONES)
 			.fireResistant()
 			.rarity(Rarity.EPIC));
+
+	// Dinosaur Claw (1.6.0): a sword one step above netherite. Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot,
+	// Dinosaur Bones, Netherite Ingot / stick.
+	/** Repair ingredient of the Dinosaur Claw (#dinosaurs:repairs_dinosaur_claw: Dinosaur Bones). */
+	public static final TagKey<Item> REPAIRS_DINOSAUR_CLAW = TagKey.create(Registries.ITEM, Dinosaurs.id("repairs_dinosaur_claw"));
+	/**
+	 * Above netherite by what netherite is above diamond (diamond 1561 / 3 / 10, netherite 2031 / 4 / 15):
+	 * durability 2501, attack damage bonus 6 (so the sword does 10, netherite 8), enchantability 20. Mines like netherite.
+	 */
+	public static final ToolMaterial DINOSAUR_TOOL_MATERIAL = new ToolMaterial(BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 2501, 9.0F, 6.0F, 20,
+			REPAIRS_DINOSAUR_CLAW);
+	/** Sword stats like vanilla swords (base 3, speed -2.4 -> 1.6): 10 attack damage. In #minecraft:swords (sweeping, sword enchantments). */
+	public static final Item DINOSAUR_CLAW = register("dinosaur_claw", Item::new, new Item.Properties()
+			.sword(DINOSAUR_TOOL_MATERIAL, 3.0F, -2.4F).fireResistant().rarity(Rarity.EPIC));
 
 	// Dinosaur Armor: netherite chestplate / leggings / boots upgraded on the smithing table with the Dinosaur Upgrade
 	// template and a trophy (Megalodon Tooth / Parasaurolophus Crest / Raptor Claw). The T-Rex Skull Helmet is the set's helmet.
