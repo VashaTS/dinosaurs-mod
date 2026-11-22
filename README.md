@@ -147,6 +147,28 @@ Armor points are also higher than netherite: 10 / 8 / 4 (netherite 8 / 6 / 3). F
 with Dinosaur Bones. When worn it looks bony: ribs and sternum on the chest, vertebrae down the back, bone shoulder
 plates, segmented legs with knee caps and toe claws, with dark netherite between the bones.
 
+### Dinosaur Claw (1.6.0)
+
+A sword with a curved bone claw for a blade, on a netherite guard and grip. Shaped recipe:
+
+```
+  C  T  C     C = Raptor Claw (Velociraptor), T = T-Rex Tooth (Tyrannosaurus Rex)
+  N  B  N     N = Netherite Ingot, B = Dinosaur Bones
+     S        S = Stick
+```
+
+It beats the netherite sword by what netherite beats diamond (durability, enchantability), and hits harder:
+
+| | Diamond Sword | Netherite Sword | **Dinosaur Claw** |
+|---|---|---|---|
+| Attack damage | 7 | 8 | **10** |
+| Attack speed | 1.6 | 1.6 | **1.6** |
+| Durability | 1561 | 2031 | **2501** |
+| Enchantability | 10 | 15 | **20** |
+
+A real sword (`#minecraft:swords`): sweeping attack, every sword enchantment (Sharpness, Sweeping Edge, Looting,
+Fire Aspect...), cuts cobwebs. Fire resistant, repaired with Dinosaur Bones.
+
 Advancements: *Dino Whisperer* (get the amulet) and *Three Horns, One Rider* (ride a Triceratops).
 
 ## Configuration
@@ -215,8 +237,9 @@ python3 tools/gen_items.py          # regenerates the item textures and the Tric
 python3 tools/gen_bow.py /path/to/vanilla/textures/item   # Dinosaur Bones and Bone Bow textures
 python3 tools/gen_skull.py          # regenerates the 3D T-Rex Skull / helmet models and their textures
 python3 tools/gen_armor.py          # Dinosaur Armor worn layers, item icons, the upgrade template and smithing slot icons
-./gradlew runGameTest               # server game tests (amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot, dinosaur armor stats / smithing / template recipes / trophy loot); add -PwithTrinkets=true
-SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, armor, helmet, bone bow and mob screenshots
+python3 tools/gen_claw.py           # Dinosaur Claw item texture
+./gradlew runGameTest               # server game tests (dinosaur claw recipe / stats, amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot, dinosaur armor stats / smithing / template recipes / trophy loot); add -PwithTrinkets=true
+SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, claw, armor, helmet, bone bow and mob screenshots
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest -PxaeroJar=/path/to/xaerominimap-fabric-26.3-26.6.2.jar [-PxaeroRadar=always]
                                     # Xaero's Minimap radar screenshots only (icons with Tab held, or always on with names)
 ```
@@ -267,6 +290,10 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   odporność na odrzut 0,2, trwałość 656 / 615 / 533, zaklinalność 20 (pancerz 10 / 8 / 4, netheryt 8 / 6 / 3; cały zestaw z hełmem: 26). Hełmem
   zestawu jest hełm z czaszki tyranozaura (od 1.5.0: twardość 4, odporność na odrzut 0,2, zaklinalność 20).
   Wygląda jak kości (żebra, kręgosłup, rzepki) z ciemnym netherytem między nimi; naprawiana kośćmi dinozaura.
+* **Nowe w 1.6.0: Dinozaurowy pazur** – miecz z zakrzywionego pazura z kości na netherytowej rękojeści.
+  Receptura: pazur raptora, ząb tyranozaura, pazur raptora / sztabka netherytu, kości dinozaura, sztabka netherytu /
+  patyk na dole w środku. Obrażenia 10 (netherytowy miecz 8), szybkość 1,6, trwałość 2501, zaklinalność 20. Atak
+  zamaszysty i wszystkie zaklęcia miecza, odporny na ogień, naprawiany kośćmi dinozaura.
 * **Nowe w 1.5.1: ikony na minimapie Xaero** (Xaero's Minimap / Better PvP) – każdy dinozaur, także megalodon
   i pteranodon, ma na radarze ikonę głowy jak zwykłe moby, zamiast nazwy. Same pliki zasobów, bez zależności.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się

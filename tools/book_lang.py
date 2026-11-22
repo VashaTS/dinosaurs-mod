@@ -45,6 +45,8 @@ BOOK_LANG = {
     "book.dinosaurs.stats.draw_ticks": ("Draw (ticks)", "Naciąganie (ticki)"),
     "book.dinosaurs.stats.enchantability": ("Enchantability", "Zaklinalność"),
     "book.dinosaurs.stats.enchanting": ("Enchanting", "Zaklinanie"),
+    "book.dinosaurs.stats.attack_damage": ("Damage", "Obrażenia"),
+    "book.dinosaurs.stats.attack_speed": ("Speed", "Szybkość"),
 
     # ---- Dinosaurs: behaviour (left page) and where to find them (right page)
     "book.dinosaurs.dino.t_rex": (
@@ -119,11 +121,11 @@ BOOK_LANG = {
         "Use it on a Triceratops, then right-click to ride and steer. Sneak with an empty hand to take it off.",
         "Użyj na triceratopsie, potem PPM, by jeździć i sterować. Kucnij z pustą ręką, by je zdjąć."),
     "book.dinosaurs.item.t_rex_tooth": (
-        "1-2 from every Tyrannosaurus Rex, more with Looting. Part of the amulet.",
-        "1-2 z każdego tyranozaura, więcej z Grabieżą. Składnik amuletu."),
+        "1-2 from every Tyrannosaurus Rex, more with Looting. Part of the amulet and of the Dinosaur Claw.",
+        "1-2 z każdego tyranozaura, więcej z Grabieżą. Składnik amuletu i dinozaurowego pazura."),
     "book.dinosaurs.item.raptor_claw": (
-        "Up to 1 from a Velociraptor, more with Looting. The amulet needs 2. Also turns netherite boots into Dinosaur Boots.",
-        "Do 1 z welociraptora, więcej z Grabieżą. Amulet potrzebuje 2. Zmienia też netherytowe buty w dinozaurowe."),
+        "Up to 1 from a Velociraptor, more with Looting. The amulet and the Dinosaur Claw need 2. Also makes Dinosaur Boots.",
+        "Do 1 z welociraptora, więcej z Grabieżą. Amulet i dinozaurowy pazur potrzebują 2. Daje też dinozaurowe buty."),
     "book.dinosaurs.item.megalodon_tooth": (
         "1-3 from a Megalodon, more with Looting. Part of the amulet and of the Dinosaur Chestplate.",
         "1-3 z megalodona, więcej z Grabieżą. Składnik amuletu i dinozaurowego napierśnika."),
@@ -134,8 +136,8 @@ BOOK_LANG = {
         "Up to 1 from a Parasaurolophus, more with Looting. Part of the saddle and of the Dinosaur Leggings.",
         "Do 1 z parazaurolofa, więcej z Grabieżą. Składnik siodła i dinozaurowych nogawic."),
     "book.dinosaurs.item.dinosaur_bones": (
-        "Large dinosaurs drop these instead of bones, more with Looting. For the Bone Bow, the Upgrade or 4 Bone Meal.",
-        "Duże dinozaury upuszczają je zamiast kości, więcej z Grabieżą. Na łuk, ulepszenie lub 4 mączki kostne."),
+        "Large dinosaurs drop these instead of bones, more with Looting. For the Bone Bow, the Claw, the Upgrade or 4 Bone Meal.",
+        "Duże dinozaury upuszczają je zamiast kości, więcej z Grabieżą. Na łuk, pazur, ulepszenie lub 4 mączki kostne."),
     "book.dinosaurs.item.dinosaur_bone_bow": (
         "Faster draw, faster arrows that hit harder. Infinity and Mending work together on it! Enchantments from the bow are kept.",
         "Szybciej naciąga, strzały lecą szybciej i mocniej biją. Nieskończoność i Naprawa działają razem! Zaklęcia z łuku zostają."),
@@ -148,6 +150,9 @@ BOOK_LANG = {
     "book.dinosaurs.item.dinosaur_upgrade_smithing_template": (
         "Smithing template that turns netherite chestplate, leggings and boots into Dinosaur Armor. Used up like the Netherite Upgrade. 7 Dinosaur Bones and a Bone Block copy it.",
         "Szablon kowalski, który zmienia netherytowy napierśnik, nogawice i buty w dinozaurową zbroję. Zużywa się jak netherytowe ulepszenie. 7 kości dinozaura i blok kości go powielą."),
+    "book.dinosaurs.item.dinosaur_claw": (
+        "A sword with a sickle claw: hits harder than netherite, sweeps, takes sword enchantments. Fire resistant. Repair: Dinosaur Bones.",
+        "Miecz z sierpowatym pazurem: bije mocniej niż netheryt, tnie zamaszyście, zaklęcia miecza. Nie płonie. Naprawa: kości dinozaura."),
     "book.dinosaurs.item.dinosaur_armor": (
         "Enchantments stay. Better than netherite in every stat. Repair: Dinosaur Bones. Helmet: T-Rex Skull Helmet.",
         "Zaklęcia zostają. Lepsza od netherytu we wszystkim. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura."),

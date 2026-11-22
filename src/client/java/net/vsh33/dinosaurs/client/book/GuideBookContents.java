@@ -94,10 +94,16 @@ public final class GuideBookContents {
 	/** Item the Dinosaur Armor stats table compares against. */
 	public static final ItemStack ARMOR_REFERENCE = new ItemStack(Items.NETHERITE_CHESTPLATE);
 
+	/** Item the Dinosaur Claw stats table compares against. */
+	public static final ItemStack CLAW_REFERENCE = new ItemStack(Items.NETHERITE_SWORD);
+
 	/** The vanilla item an entry's stats table is compared against (second value column). */
 	public static ItemStack statsReference(Entry entry) {
 		if (entry.icon().is(ModItems.DINOSAUR_BONE_BOW)) {
 			return BOW_REFERENCE;
+		}
+		if (entry.icon().is(ModItems.DINOSAUR_CLAW)) {
+			return CLAW_REFERENCE;
 		}
 		return entry.icon().is(ModItems.DINOSAUR_CHESTPLATE) ? ARMOR_REFERENCE : STATS_REFERENCE;
 	}
@@ -157,6 +163,10 @@ public final class GuideBookContents {
 				null, ModItems.DINOSAUR_BONES, null,
 				ModItems.DINOSAUR_BONES, Items.BOW, ModItems.DINOSAUR_BONES,
 				null, Items.NETHERITE_INGOT, null);
+		RecipeGrid claw = shaped(new ItemStack(ModItems.DINOSAUR_CLAW),
+				ModItems.RAPTOR_CLAW, ModItems.T_REX_TOOTH, ModItems.RAPTOR_CLAW,
+				Items.NETHERITE_INGOT, ModItems.DINOSAUR_BONES, Items.NETHERITE_INGOT,
+				null, Items.STICK, null);
 		RecipeGrid boneMeal = shapeless(new ItemStack(Items.BONE_MEAL, 4), List.of(new ItemStack(ModItems.DINOSAUR_BONES)));
 		Item b = ModItems.DINOSAUR_BONES;
 		Item t = ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE;
@@ -179,11 +189,13 @@ public final class GuideBookContents {
 				armor,
 				item("dinosaur_upgrade_smithing_template", t, List.of(upgrade, upgradeCopy), List.of()),
 				item("dinosaur_bone_bow", ModItems.DINOSAUR_BONE_BOW, List.of(boneBow), List.of(), bowStats()),
+				item("dinosaur_claw", ModItems.DINOSAUR_CLAW, List.of(claw), List.of(), clawStats()),
 				// Bone meal (1 -> 4) is named in the text; three grids do not fit on one page.
 				item("dinosaur_bones", ModItems.DINOSAUR_BONES, List.of(boneBow, upgrade), BONE_DROPPERS),
-				item("t_rex_tooth", ModItems.T_REX_TOOTH, List.of(amulet), List.of(ModEntities.T_REX)),
+				item("t_rex_tooth", ModItems.T_REX_TOOTH, List.of(amulet, claw), List.of(ModEntities.T_REX)),
 				item("t_rex_skull", ModItems.T_REX_SKULL, List.of(helmet), List.of(ModEntities.T_REX)),
-				item("raptor_claw", ModItems.RAPTOR_CLAW, List.of(amulet, boots), List.of(ModEntities.VELOCIRAPTOR)),
+				// Three grids do not fit; the Dinosaur Boots (smithing) are named in the text.
+				item("raptor_claw", ModItems.RAPTOR_CLAW, List.of(amulet, claw), List.of(ModEntities.VELOCIRAPTOR)),
 				item("megalodon_tooth", ModItems.MEGALODON_TOOTH, List.of(amulet, chestplate), List.of(ModEntities.MEGALODON)),
 				item("brachiosaurus_hide", ModItems.BRACHIOSAURUS_HIDE, List.of(saddle, leather), List.of(ModEntities.BRACHIOSAURUS)),
 				item("parasaurolophus_crest", ModItems.PARASAUROLOPHUS_CREST, List.of(saddle, leggings), List.of(ModEntities.PARASAUROLOPHUS)));
@@ -363,6 +375,24 @@ public final class GuideBookContents {
 				new StatRow(Component.translatable("book.dinosaurs.stats.draw_ticks"), Integer.toString(DinosaurBoneBowItem.DRAW_TICKS), "20"),
 				new StatRow(Component.translatable("book.dinosaurs.stats.durability"), Integer.toString(ours.getMaxDamage()),
 						Integer.toString(BOW_REFERENCE.getMaxDamage())));
+	}
+
+	/**
+	 * Dinosaur Claw vs. netherite sword, from the items' attribute modifiers: damage and speed as the tooltip shows them
+	 * (player base 1 damage and 4 attacks per second plus the item's modifiers).
+	 */
+	public static List<StatRow> clawStats() {
+		ItemStack ours = new ItemStack(ModItems.DINOSAUR_CLAW);
+		EquipmentSlot hand = EquipmentSlot.MAINHAND;
+		return List.of(
+				new StatRow(Component.translatable("book.dinosaurs.stats.attack_damage"), num(1 + attr(ours, Attributes.ATTACK_DAMAGE, hand)),
+						num(1 + attr(CLAW_REFERENCE, Attributes.ATTACK_DAMAGE, hand))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.attack_speed"), num(4 + attr(ours, Attributes.ATTACK_SPEED, hand)),
+						num(4 + attr(CLAW_REFERENCE, Attributes.ATTACK_SPEED, hand))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.durability"), Integer.toString(ours.getMaxDamage()),
+						Integer.toString(CLAW_REFERENCE.getMaxDamage())),
+				new StatRow(Component.translatable("book.dinosaurs.stats.enchanting"), Integer.toString(enchantability(ours)),
+						Integer.toString(enchantability(CLAW_REFERENCE))));
 	}
 
 	private static double attr(ItemStack stack, Holder<Attribute> attribute, EquipmentSlot slot) {

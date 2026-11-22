@@ -817,4 +817,91 @@ public class DinosaursServerTest {
 		helper.assertTrue(holder.id().identifier().equals(Dinosaurs.id("dinosaur_bone_bow")), "matched " + holder.id());
 		return holder.value().assemble(input);
 	}
+
+	// ---- 1.6.0: Dinosaur Claw
+
+	/** Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / stick: ONLY the claw. */
+	@GameTest
+	public void dinosaurClawRecipe(GameTestHelper helper) {
+		ItemStack e = ItemStack.EMPTY;
+		ItemStack c = new ItemStack(ModItems.RAPTOR_CLAW);
+		ItemStack t = new ItemStack(ModItems.T_REX_TOOTH);
+		ItemStack n = new ItemStack(Items.NETHERITE_INGOT);
+		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
+		ItemStack s = new ItemStack(Items.STICK);
+		CraftingInput full = CraftingInput.of(3, 3, List.of(c, t, c, n, b, n, e, s, e));
+		List<String> matches = craftingMatches(helper, full);
+		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_claw")), "claw grid matches " + matches);
+		ItemStack out = ((CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
+				.byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id("dinosaur_claw"))).orElseThrow().value()).assemble(full);
+		helper.assertTrue(out.is(ModItems.DINOSAUR_CLAW) && out.getCount() == 1, "result " + out);
+		// Near misses make nothing: Megalodon Tooth for the T-Rex Tooth, vanilla bones, no stick, no netherite.
+		ItemStack m = new ItemStack(ModItems.MEGALODON_TOOTH);
+		ItemStack vb = new ItemStack(Items.BONE);
+		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, m, c, n, b, n, e, s, e))).isEmpty(), "megalodon tooth must not craft the claw");
+		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, t, c, n, vb, n, e, s, e))).isEmpty(), "vanilla bone must not craft the claw");
+		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, t, c, n, b, n, e, e, e))).isEmpty(), "no stick must not craft");
+		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, t, c, e, b, e, e, s, e))).isEmpty(), "no netherite must not craft");
+		helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id("recipes/equipment/dinosaur_claw")) != null,
+				"missing recipe advancement");
+		helper.succeed();
+	}
+
+	private static double handModifier(ItemStack stack, Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute) {
+		double[] total = {0};
+		stack.forEachModifier(net.minecraft.world.entity.EquipmentSlot.MAINHAND, (holder, modifier) -> {
+			if (holder.equals(attribute)) {
+				total[0] += modifier.amount();
+			}
+		});
+		return total[0];
+	}
+
+	/** Sword stats above the netherite sword; a sword for sweeping and enchantments; fire resistant; repaired with Dinosaur Bones. */
+	@GameTest
+	public void dinosaurClawStats(GameTestHelper helper) {
+		var damage = net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE;
+		var speed = net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED;
+		ItemStack claw = new ItemStack(ModItems.DINOSAUR_CLAW);
+		ItemStack sword = new ItemStack(Items.NETHERITE_SWORD);
+		double clawDamage = 1 + handModifier(claw, damage), swordDamage = 1 + handModifier(sword, damage);
+		double clawSpeed = 4 + handModifier(claw, speed), swordSpeed = 4 + handModifier(sword, speed);
+		helper.assertTrue(clawDamage == 10 && swordDamage == 8, "damage " + clawDamage + " (netherite sword " + swordDamage + ")");
+		helper.assertTrue(Math.abs(clawSpeed - 1.6) < 1e-4 && Math.abs(clawSpeed - swordSpeed) < 1e-4, "speed " + clawSpeed + " (netherite " + swordSpeed + ")");
+		helper.assertTrue(claw.getMaxDamage() == 2501 && claw.getMaxDamage() > sword.getMaxDamage(), "durability " + claw.getMaxDamage());
+		var enchantable = claw.get(DataComponents.ENCHANTABLE);
+		helper.assertTrue(enchantable != null && enchantable.value() == 20, "enchantability " + enchantable);
+		helper.assertTrue(claw.has(DataComponents.DAMAGE_RESISTANT), "fire resistant");
+		helper.assertTrue(claw.is(net.minecraft.tags.ItemTags.SWORDS), "in #minecraft:swords (sweeping attack)");
+		helper.assertTrue(claw.has(DataComponents.WEAPON) && claw.has(DataComponents.TOOL), "weapon and sword tool (cobwebs) components");
+		var enchants = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+		for (var key : List.of(Enchantments.SHARPNESS, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS, Enchantments.SWEEPING_EDGE,
+				Enchantments.LOOTING, Enchantments.FIRE_ASPECT, Enchantments.KNOCKBACK, Enchantments.UNBREAKING, Enchantments.MENDING)) {
+			helper.assertTrue(enchants.getOrThrow(key).value().canEnchant(claw), "should take " + key.identifier());
+		}
+		// Repair: Dinosaur Bones yes, netherite ingot no (anvil).
+		ItemStack worn = claw.copy();
+		worn.setDamageValue(2000);
+		ItemStack fixed = anvil(helper, worn, new ItemStack(ModItems.DINOSAUR_BONES));
+		helper.assertTrue(fixed.is(ModItems.DINOSAUR_CLAW) && fixed.getDamageValue() < 2000, "bones repair the claw: " + fixed + " damage " + fixed.getDamageValue());
+		ItemStack none = anvil(helper, worn.copy(), new ItemStack(Items.NETHERITE_INGOT));
+		helper.assertTrue(none.isEmpty(), "netherite ingot must not repair the claw: " + none);
+		// A real hit: a zombie takes 10 (netherite sword: 8) from a fully charged player attack.
+		ServerLevel level = helper.getLevel();
+		double[] dealt = new double[2];
+		int i = 0;
+		for (ItemStack weapon : List.of(claw, sword)) {
+			net.minecraft.world.entity.monster.zombie.Zombie zombie = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(1 + 2 * i, 1, 1));
+			float before = zombie.getHealth();
+			Player player = survivalPlayer(helper);
+			player.setItemInHand(InteractionHand.MAIN_HAND, weapon.copy());
+			float attack = (float) (1 + handModifier(weapon, damage));
+			zombie.hurtServer(level, level.damageSources().playerAttack(player), attack);
+			dealt[i++] = before - zombie.getHealth();
+		}
+		helper.assertTrue(dealt[0] > dealt[1], "claw hit " + dealt[0] + " vs netherite sword " + dealt[1]);
+		Dinosaurs.LOGGER.info("[test] dinosaur claw: damage {} speed {} durability {} ench {} (netherite sword {} / {} / {} / 15); hit {} vs {}",
+				clawDamage, clawSpeed, claw.getMaxDamage(), enchantable.value(), swordDamage, swordSpeed, sword.getMaxDamage(), dealt[0], dealt[1]);
+		helper.succeed();
+	}
 }
