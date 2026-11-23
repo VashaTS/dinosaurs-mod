@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:dinosaur_boots_smithing"
+        "recipe": "dinosaurs:dinosaur_boots_smithing"
       }
     }
   },

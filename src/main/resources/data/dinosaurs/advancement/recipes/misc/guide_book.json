@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:guide_book"
+        "recipe": "dinosaurs:guide_book"
       }
     }
   },

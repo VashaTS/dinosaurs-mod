@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:dino_collar"
+        "recipe": "dinosaurs:dino_collar"
       }
     }
   },

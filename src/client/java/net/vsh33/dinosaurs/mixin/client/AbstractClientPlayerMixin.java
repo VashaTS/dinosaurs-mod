@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 /** FOV zoom while drawing the Dinosaur Bone Bow, like the vanilla bow, reaching full zoom at its 15-tick draw. */
 @Mixin(AbstractClientPlayer.class)
 public abstract class AbstractClientPlayerMixin {
-	@WrapOperation(method = "getFieldOfViewModifier", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;is(Ljava/lang/Object;)Z"))
-	private boolean dinosaurs$boneBowZoom(ItemStack stack, Object item, Operation<Boolean> original) {
+	@WrapOperation(method = "getFieldOfViewModifier", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;is(Lnet/minecraft/world/item/Item;)Z"))
+	private boolean dinosaurs$boneBowZoom(ItemStack stack, Item item, Operation<Boolean> original) {
 		return original.call(stack, item) || (item == Items.BOW && stack.is(ModItems.DINOSAUR_BONE_BOW));
 	}
 

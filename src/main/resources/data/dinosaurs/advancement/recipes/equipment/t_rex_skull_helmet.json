@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:t_rex_skull_helmet"
+        "recipe": "dinosaurs:t_rex_skull_helmet"
       }
     }
   },

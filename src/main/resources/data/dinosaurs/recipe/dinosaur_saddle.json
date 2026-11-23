@@ -2,11 +2,21 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "H": "dinosaurs:brachiosaurus_hide",
-    "L": "minecraft:leather",
-    "S": "minecraft:string",
-    "C": "dinosaurs:parasaurolophus_crest",
-    "I": "minecraft:iron_ingot"
+    "H": {
+      "item": "dinosaurs:brachiosaurus_hide"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "S": {
+      "item": "minecraft:string"
+    },
+    "C": {
+      "item": "dinosaurs:parasaurolophus_crest"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
   },
   "pattern": [
     "HLH",

@@ -2,7 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "dinosaurs:brachiosaurus_hide"
+    {
+      "item": "dinosaurs:brachiosaurus_hide"
+    }
   ],
   "result": {
     "id": "minecraft:leather",

@@ -7,9 +7,9 @@
         {
           "type": "minecraft:item",
           "name": "dinosaurs:dinosaur_bones",
-          "modifier": [
+          "functions": [
             {
-              "type": "minecraft:set_count",
+              "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
                 "min": 2,
@@ -17,7 +17,7 @@
               }
             },
             {
-              "type": "minecraft:enchanted_count_increase",
+              "function": "minecraft:enchanted_count_increase",
               "count": {
                 "type": "minecraft:uniform",
                 "min": 0.0,
@@ -35,9 +35,9 @@
         {
           "type": "minecraft:item",
           "name": "minecraft:bone_meal",
-          "modifier": [
+          "functions": [
             {
-              "type": "minecraft:set_count",
+              "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
                 "min": 0,
@@ -45,7 +45,7 @@
               }
             },
             {
-              "type": "minecraft:enchanted_count_increase",
+              "function": "minecraft:enchanted_count_increase",
               "count": {
                 "type": "minecraft:uniform",
                 "min": 0.0,
@@ -63,9 +63,9 @@
         {
           "type": "minecraft:item",
           "name": "dinosaurs:t_rex_tooth",
-          "modifier": [
+          "functions": [
             {
-              "type": "minecraft:set_count",
+              "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
                 "min": 1,
@@ -73,7 +73,7 @@
               }
             },
             {
-              "type": "minecraft:enchanted_count_increase",
+              "function": "minecraft:enchanted_count_increase",
               "count": {
                 "type": "minecraft:uniform",
                 "min": 0.0,
@@ -87,28 +87,30 @@
     },
     {
       "rolls": 1,
-      "condition": {
-        "type": "minecraft:all_of",
-        "terms": [
-          {
-            "type": "minecraft:killed_by_player"
-          },
-          {
-            "type": "minecraft:random_chance_with_enchanted_bonus",
-            "enchanted_chance": {
-              "type": "minecraft:linear",
-              "base": 0.06,
-              "per_level_above_first": 0.02
-            },
-            "enchantment": "minecraft:looting",
-            "unenchanted_chance": 0.04
-          }
-        ]
-      },
       "entries": [
         {
           "type": "minecraft:item",
           "name": "dinosaurs:t_rex_skull"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:all_of",
+          "terms": [
+            {
+              "condition": "minecraft:killed_by_player"
+            },
+            {
+              "condition": "minecraft:random_chance_with_enchanted_bonus",
+              "enchanted_chance": {
+                "type": "minecraft:linear",
+                "base": 0.06,
+                "per_level_above_first": 0.02
+              },
+              "enchantment": "minecraft:looting",
+              "unenchanted_chance": 0.04
+            }
+          ]
         }
       ]
     }

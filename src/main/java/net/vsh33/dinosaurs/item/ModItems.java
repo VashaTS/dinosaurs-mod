@@ -3,9 +3,17 @@ package net.vsh33.dinosaurs.item;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import java.util.EnumMap;
+import net.minecraft.Util;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.crafting.Ingredient;
 import java.util.function.Function;
-import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -15,8 +23,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.ToolMaterial;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -26,10 +33,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.item.equipment.ArmorMaterial;
-import net.minecraft.world.item.equipment.ArmorType;
-import net.minecraft.world.item.equipment.EquipmentAssets;
-import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
@@ -70,23 +73,12 @@ public final class ModItems {
 	public static final TagKey<Item> REPAIRS_T_REX_SKULL_HELMET = TagKey.create(Registries.ITEM, Dinosaurs.id("repairs_t_rex_skull_helmet"));
 	/**
 	 * Helmet stats, above netherite (3 armor, 3 toughness, 0.1 knockback resistance, 37 x 11 = 407 durability,
-	 * enchantability 15) and at least the Dinosaur Armor tier it completes (1.5.0: toughness 4, knockback resistance 0.2,
-	 * enchantability 20 like the armor; it keeps its 4 armor and 46 x 11 = 506 durability). Only the helmet exists;
-	 * the asset id is never rendered.
+	 * enchantability 15) and at least the Dinosaur Armor tier it completes: 4 armor, toughness 4, knockback resistance 0.2,
+	 * enchantability 20, 46 x 11 = 506 durability. Not an ArmorItem, so the head layer draws the 3D item model on the head.
 	 */
-	public static final ArmorMaterial T_REX_SKULL_MATERIAL = new ArmorMaterial(46, Map.of(ArmorType.HELMET, 4), 20,
-			SoundEvents.ARMOR_EQUIP_NETHERITE, 4.0F, 0.2F, REPAIRS_T_REX_SKULL_HELMET,
-			ResourceKey.create(EquipmentAssets.ROOT_ID, Dinosaurs.id("t_rex_skull")));
-	/**
-	 * Worn helmet. Its Equippable has no equipment asset, so instead of a flat armor layer the game draws the
-	 * 3D item model on the head (CustomHeadLayer, like a carved pumpkin): players, armor stands, zombies...
-	 */
-	public static final Item T_REX_SKULL_HELMET = register("t_rex_skull_helmet", Item::new, new Item.Properties()
-			.durability(ArmorType.HELMET.getDurability(T_REX_SKULL_MATERIAL.durability()))
-			.attributes(T_REX_SKULL_MATERIAL.createAttributes(ArmorType.HELMET))
-			.enchantable(T_REX_SKULL_MATERIAL.enchantmentValue())
-			.component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).setEquipSound(T_REX_SKULL_MATERIAL.equipSound()).build())
-			.repairable(REPAIRS_T_REX_SKULL_HELMET)
+	public static final Item T_REX_SKULL_HELMET = register("t_rex_skull_helmet", TRexSkullHelmetItem::new, new Item.Properties()
+			.durability(ArmorItem.Type.HELMET.getDurability(46))
+			.attributes(TRexSkullHelmetItem.createAttributes())
 			.fireResistant()
 			.rarity(Rarity.EPIC));
 
@@ -95,8 +87,6 @@ public final class ModItems {
 	/** Faster draw, 1.5x arrow speed and damage, 3x durability; Infinity + Mending allowed together (see BoneBowEnchantments). */
 	public static final Item DINOSAUR_BONE_BOW = register("dinosaur_bone_bow", DinosaurBoneBowItem::new, new Item.Properties()
 			.durability(DinosaurBoneBowItem.DURABILITY)
-			.enchantable(DinosaurBoneBowItem.ENCHANTABILITY)
-			.repairable(DINOSAUR_BONES)
 			.fireResistant()
 			.rarity(Rarity.EPIC));
 
@@ -108,20 +98,21 @@ public final class ModItems {
 	 * Above netherite by what netherite is above diamond (diamond 1561 / 3 / 10, netherite 2031 / 4 / 15):
 	 * durability 2501, attack damage bonus 6, enchantability 20. Mines like netherite.
 	 */
-	public static final ToolMaterial DINOSAUR_TOOL_MATERIAL = new ToolMaterial(BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 2501, 9.0F, 6.0F, 20,
-			REPAIRS_DINOSAUR_CLAW);
+	public static final Tier DINOSAUR_TOOL_MATERIAL = new Tier() {
+		@Override public int getUses() { return 2501; }
+		@Override public float getSpeed() { return 9.0F; }
+		@Override public float getAttackDamageBonus() { return 6.0F; }
+		@Override public TagKey<net.minecraft.world.level.block.Block> getIncorrectBlocksForDrops() { return BlockTags.INCORRECT_FOR_NETHERITE_TOOL; }
+		@Override public int getEnchantmentValue() { return 20; }
+		@Override public Ingredient getRepairIngredient() { return Ingredient.of(REPAIRS_DINOSAUR_CLAW); }
+	};
 	/** Attack damage of the claw (player base 1 + modifier 10); the netherite sword does 8. */
 	public static final double DINOSAUR_CLAW_DAMAGE = 11.0;
 	/** Reach change while the claw is in the main hand: a fist weapon, so 0.5 blocks shorter than a sword (3 -> 2.5). */
 	public static final double DINOSAUR_CLAW_REACH = -0.5;
-	public static final Identifier DINOSAUR_CLAW_REACH_ID = Dinosaurs.id("dinosaur_claw_reach");
-	/**
-	 * Sword components (sweeping via #minecraft:swords, sword enchantments, cobwebs) with its own attributes:
-	 * 11 attack damage, speed 1.6 like swords, and entity interaction range -0.5 in the main hand. Vanilla uses the
-	 * entity interaction range as the attack reach of any weapon without an attack_range component.
-	 */
-	public static final Item DINOSAUR_CLAW = register("dinosaur_claw", Item::new, new Item.Properties()
-			.sword(DINOSAUR_TOOL_MATERIAL, 3.0F, -2.4F)
+	public static final ResourceLocation DINOSAUR_CLAW_REACH_ID = Dinosaurs.id("dinosaur_claw_reach");
+	/** A sword (sweeping, sword enchantments, cobwebs) with 11 attack damage, speed 1.6 and entity interaction range -0.5. */
+	public static final Item DINOSAUR_CLAW = register("dinosaur_claw", p -> new SwordItem(DINOSAUR_TOOL_MATERIAL, p), new Item.Properties()
 			.attributes(ItemAttributeModifiers.builder()
 					.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, DINOSAUR_CLAW_DAMAGE - 1.0,
 							AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
@@ -142,19 +133,29 @@ public final class ModItems {
 	 * enchantability 10 -> 15 -> 20. Armor points are equal for diamond and netherite; by request they are raised to
 	 * boots 4 / leggings 8 / chestplate 10 (netherite 3 / 6 / 8). Helmet value unused (the T-Rex Skull Helmet is the set's helmet).
 	 */
-	public static final ArmorMaterial DINOSAUR_ARMOR_MATERIAL = new ArmorMaterial(41,
-			Map.of(ArmorType.BOOTS, 4, ArmorType.LEGGINGS, 8, ArmorType.CHESTPLATE, 10, ArmorType.HELMET, 3, ArmorType.BODY, 19), 20,
-			SoundEvents.ARMOR_EQUIP_NETHERITE, 4.0F, 0.2F, REPAIRS_DINOSAUR_ARMOR,
-			ResourceKey.create(EquipmentAssets.ROOT_ID, Dinosaurs.id("dinosaur")));
+	public static final Holder<ArmorMaterial> DINOSAUR_ARMOR_MATERIAL = Registry.registerForHolder(BuiltInRegistries.ARMOR_MATERIAL,
+			Dinosaurs.id("dinosaur"), new ArmorMaterial(
+					Util.make(new EnumMap<>(ArmorItem.Type.class), m -> {
+						m.put(ArmorItem.Type.BOOTS, 4);
+						m.put(ArmorItem.Type.LEGGINGS, 8);
+						m.put(ArmorItem.Type.CHESTPLATE, 10);
+						m.put(ArmorItem.Type.HELMET, 3);
+						m.put(ArmorItem.Type.BODY, 19);
+					}), 20, SoundEvents.ARMOR_EQUIP_NETHERITE, () -> Ingredient.of(REPAIRS_DINOSAUR_ARMOR),
+					List.of(new ArmorMaterial.Layer(Dinosaurs.id("dinosaur"))), 4.0F, 0.2F));
+	/** Durability multiplier of the Dinosaur Armor (netherite 37). */
+	public static final int DINOSAUR_ARMOR_DURABILITY = 41;
 	/** Smithing template: Netherite Upgrade surrounded by 8 Dinosaur Bones (or duplicated with 7 bones + a bone block). */
 	public static final Item DINOSAUR_UPGRADE_SMITHING_TEMPLATE = register("dinosaur_upgrade_smithing_template",
 			DinosaurUpgradeTemplate::create, new Item.Properties().rarity(Rarity.RARE));
-	public static final Item DINOSAUR_CHESTPLATE = register("dinosaur_chestplate", Item::new, new Item.Properties()
-			.humanoidArmor(DINOSAUR_ARMOR_MATERIAL, ArmorType.CHESTPLATE).fireResistant().rarity(Rarity.EPIC));
-	public static final Item DINOSAUR_LEGGINGS = register("dinosaur_leggings", Item::new, new Item.Properties()
-			.humanoidArmor(DINOSAUR_ARMOR_MATERIAL, ArmorType.LEGGINGS).fireResistant().rarity(Rarity.EPIC));
-	public static final Item DINOSAUR_BOOTS = register("dinosaur_boots", Item::new, new Item.Properties()
-			.humanoidArmor(DINOSAUR_ARMOR_MATERIAL, ArmorType.BOOTS).fireResistant().rarity(Rarity.EPIC));
+	public static final Item DINOSAUR_CHESTPLATE = registerArmor("dinosaur_chestplate", ArmorItem.Type.CHESTPLATE);
+	public static final Item DINOSAUR_LEGGINGS = registerArmor("dinosaur_leggings", ArmorItem.Type.LEGGINGS);
+	public static final Item DINOSAUR_BOOTS = registerArmor("dinosaur_boots", ArmorItem.Type.BOOTS);
+
+	private static Item registerArmor(String name, ArmorItem.Type type) {
+		return register(name, p -> new ArmorItem(DINOSAUR_ARMOR_MATERIAL, type, p), new Item.Properties()
+				.durability(type.getDurability(DINOSAUR_ARMOR_DURABILITY)).fireResistant().rarity(Rarity.EPIC));
+	}
 
 	/** Illustrated field guide (Book + Leather + any dinosaur trophy). */
 	public static final Item GUIDE_BOOK = register("guide_book", GuideBookItem::new, new Item.Properties().stacksTo(16));
@@ -165,26 +166,24 @@ public final class ModItems {
 	public static final ResourceKey<CreativeModeTab> TAB_KEY = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Dinosaurs.id("dinosaurs"));
 
 	private static Item register(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
-		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Dinosaurs.id(name));
-		Item item = Registry.register(BuiltInRegistries.ITEM, key, factory.apply(properties.setId(key)));
+		Item item = Registry.register(BuiltInRegistries.ITEM, Dinosaurs.id(name), factory.apply(properties));
 		ITEMS.add(item);
 		return item;
 	}
 
 	private static Item registerHidden(String name) {
-		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Dinosaurs.id(name));
-		return Registry.register(BuiltInRegistries.ITEM, key, new Item(new Item.Properties().setId(key)));
+		return Registry.register(BuiltInRegistries.ITEM, Dinosaurs.id(name), new Item(new Item.Properties()));
 	}
 
 	public static void initialize() {
 		for (EntityType<? extends Mob> type : ModEntities.ALL) {
 			String name = BuiltInRegistries.ENTITY_TYPE.getKey(type).getPath() + "_spawn_egg";
-			ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Dinosaurs.id(name));
-			Item egg = new SpawnEggItem(new Item.Properties().spawnEgg(type).setId(key));
-			SPAWN_EGGS.add(Registry.register(BuiltInRegistries.ITEM, key, egg));
+			// The egg models use their own textures (no tint layers), so the colours are unused.
+			Item egg = new SpawnEggItem(type, 0xFFFFFF, 0xFFFFFF, new Item.Properties());
+			SPAWN_EGGS.add(Registry.register(BuiltInRegistries.ITEM, Dinosaurs.id(name), egg));
 		}
 
-		CreativeModeTab tab = FabricCreativeModeTab.builder()
+		CreativeModeTab tab = FabricItemGroup.builder()
 				.icon(() -> new ItemStack(TAB_ICON))
 				.title(Component.translatable("itemGroup.dinosaurs.dinosaurs"))
 				.displayItems((params, output) -> {
@@ -194,7 +193,7 @@ public final class ModItems {
 				.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB_KEY, tab);
 
-		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(output -> SPAWN_EGGS.forEach(output::accept));
+		ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.SPAWN_EGGS).register(output -> SPAWN_EGGS.forEach(output::accept));
 	}
 
 	/** Spawn egg of a species (registered in {@link #initialize()}, same order as {@link ModEntities#ALL}). */

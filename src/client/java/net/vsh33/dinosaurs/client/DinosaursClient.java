@@ -2,7 +2,11 @@ package net.vsh33.dinosaurs.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
+import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
+import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
+import net.minecraft.resources.ResourceLocation;
+import net.vsh33.dinosaurs.item.DinosaurBoneBowItem;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.world.entity.EntityType;
@@ -21,9 +25,19 @@ import java.util.function.Supplier;
 public class DinosaursClient implements ClientModInitializer {
 	private static final ModelLayerLocation T_REX_COLLAR = new ModelLayerLocation(Dinosaurs.id("t_rex"), "collar");
 
+	/** The 3D clawed gauntlet, shown in hand (the item model itself is the flat icon). */
+	public static final ResourceLocation CLAW_HELD_ID = Dinosaurs.id("item/dinosaur_claw_held");
+
 	@Override
 	public void onInitializeClient() {
-		ModelLayerRegistry.registerModelLayer(T_REX_COLLAR, DinoCollarModel::createTRexCollar);
+		ModelLoadingPlugin.register(context -> context.addModels(CLAW_HELD_ID));
+		// Bone Bow draw animation (item model overrides): "pulling" while drawn, "pull" 0..1 over its 15-tick draw.
+		FabricModelPredicateProviderRegistry.register(ModItems.DINOSAUR_BONE_BOW, Dinosaurs.id("pulling"),
+				(stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1.0F : 0.0F);
+		FabricModelPredicateProviderRegistry.register(ModItems.DINOSAUR_BONE_BOW, Dinosaurs.id("pull"),
+				(stack, level, entity, seed) -> entity == null || entity.getUseItem() != stack ? 0.0F
+						: (stack.getUseDuration(entity) - entity.getUseItemRemainingTicks()) / (float) DinosaurBoneBowItem.DRAW_TICKS);
+		EntityModelLayerRegistry.registerModelLayer(T_REX_COLLAR, DinoCollarModel::createTRexCollar);
 		//        type                          layer                                  scale  shadow walk  swimmer
 		register(ModEntities.T_REX, "t_rex", DinoModelLayers::createTRex, 2.0F, 1.2F, 0.6F, false);
 		register(ModEntities.VELOCIRAPTOR, "velociraptor", DinoModelLayers::createVelociraptor, 0.8F, 0.4F, 1.0F, false);
@@ -37,7 +51,7 @@ public class DinosaursClient implements ClientModInitializer {
 		register(ModEntities.PTERANODON, "pteranodon", DinoModelLayers::createPteranodon, 1.4F, 0.5F, 1.0F, false);
 
 		// The guide book item lives in the common source set; the screen is client-only.
-		GuideBookScreens.setOpener(() -> Minecraft.getInstance().gui.setScreen(new GuideBookScreen()));
+		GuideBookScreens.setOpener(() -> Minecraft.getInstance().setScreen(new GuideBookScreen()));
 
 		// One-line descriptions under the new items' names.
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
@@ -67,7 +81,7 @@ public class DinosaursClient implements ClientModInitializer {
 
 	private static void register(EntityType<? extends Mob> type, String name, Supplier<LayerDefinition> layer, float scale, float shadow, float walk, boolean swimmer) {
 		ModelLayerLocation location = new ModelLayerLocation(Dinosaurs.id(name), "main");
-		ModelLayerRegistry.registerModelLayer(location, layer::get);
+		EntityModelLayerRegistry.registerModelLayer(location, layer::get);
 		EntityRendererRegistry.<Mob>register(type, context -> {
 			DinoRenderer renderer = new DinoRenderer(context,
 					new DinoModel(context.bakeLayer(location), walk, swimmer),

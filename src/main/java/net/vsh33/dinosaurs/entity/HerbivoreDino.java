@@ -57,10 +57,10 @@ public class HerbivoreDino extends PathfinderMob implements AttackAnimated {
 	}
 
 	@Override
-	public boolean doHurtTarget(ServerLevel level, Entity target) {
-		boolean hit = super.doHurtTarget(level, target);
+	public boolean doHurtTarget(Entity target) {
+		boolean hit = super.doHurtTarget(target);
 		if (hit) {
-			level.broadcastEntityEvent(this, ATTACK_EVENT);
+			this.level().broadcastEntityEvent(this, ATTACK_EVENT);
 		}
 		return hit;
 	}

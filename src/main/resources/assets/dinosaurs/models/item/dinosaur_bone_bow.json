@@ -2,5 +2,27 @@
   "parent": "minecraft:item/bow",
   "textures": {
     "layer0": "dinosaurs:item/dinosaur_bone_bow"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "dinosaurs:pulling": 1
+      },
+      "model": "dinosaurs:item/dinosaur_bone_bow_pulling_0"
+    },
+    {
+      "predicate": {
+        "dinosaurs:pulling": 1,
+        "dinosaurs:pull": 0.65
+      },
+      "model": "dinosaurs:item/dinosaur_bone_bow_pulling_1"
+    },
+    {
+      "predicate": {
+        "dinosaurs:pulling": 1,
+        "dinosaurs:pull": 0.9
+      },
+      "model": "dinosaurs:item/dinosaur_bone_bow_pulling_2"
+    }
+  ]
 }

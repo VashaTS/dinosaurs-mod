@@ -160,7 +160,7 @@ public final class GuideBookContents {
 		RecipeGrid collar = shaped(new ItemStack(ModItems.DINO_COLLAR),
 				ModItems.T_REX_TOOTH, ModItems.T_REX_TOOTH, ModItems.T_REX_TOOTH,
 				Items.LEATHER, ModItems.DINOSAUR_BONES, Items.LEATHER,
-				null, Items.IRON_CHAIN, null);
+				null, Items.CHAIN, null);
 		RecipeGrid helmet = shapeless(new ItemStack(ModItems.T_REX_SKULL_HELMET), List.of(new ItemStack(ModItems.T_REX_SKULL)),
 				List.of(new ItemStack(Items.LEATHER)), List.of(new ItemStack(Items.NETHERITE_INGOT)));
 		RecipeGrid boneBow = shaped(new ItemStack(ModItems.DINOSAUR_BONE_BOW),
@@ -361,8 +361,7 @@ public final class GuideBookContents {
 	}
 
 	private static int enchantability(ItemStack stack) {
-		var enchantable = stack.get(net.minecraft.core.component.DataComponents.ENCHANTABLE);
-		return enchantable == null ? 0 : enchantable.value();
+		return stack.getItem().getEnchantmentValue();
 	}
 
 	/** Large dinosaurs whose bones are Dinosaur Bones (must match DINO_BONES in tools/gen_data.py). */

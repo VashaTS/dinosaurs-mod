@@ -2,11 +2,21 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "S": "minecraft:string",
-    "G": "minecraft:gold_ingot",
-    "R": "dinosaurs:raptor_claw",
-    "T": "dinosaurs:t_rex_tooth",
-    "M": "dinosaurs:megalodon_tooth"
+    "S": {
+      "item": "minecraft:string"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "R": {
+      "item": "dinosaurs:raptor_claw"
+    },
+    "T": {
+      "item": "dinosaurs:t_rex_tooth"
+    },
+    "M": {
+      "item": "dinosaurs:megalodon_tooth"
+    }
   },
   "pattern": [
     "SGS",

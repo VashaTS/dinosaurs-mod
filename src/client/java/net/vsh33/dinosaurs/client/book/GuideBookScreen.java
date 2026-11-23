@@ -7,23 +7,17 @@ import java.util.Map;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -45,7 +39,7 @@ import org.joml.Vector3f;
  * 3D picture of every dinosaur (drag to rotate) and crafting grids drawn with real items.
  */
 public class GuideBookScreen extends Screen {
-	public static final Identifier TEXTURE = Dinosaurs.id("textures/gui/guidebook.png");
+	public static final ResourceLocation TEXTURE = Dinosaurs.id("textures/gui/guidebook.png");
 	public static final int BOOK_W = 256;
 	public static final int BOOK_H = 192;
 	public static final int TEX = 256;
@@ -200,14 +194,15 @@ public class GuideBookScreen extends Screen {
 	}
 
 	@Override
-	public boolean isInGameUi() {
-		return true;
+	public void render(final GuiGraphics graphics, final int mouseX, final int mouseY, final float a) {
+		super.render(graphics, mouseX, mouseY, a);
+		this.applyHoverTooltip(graphics, mouseX, mouseY);
 	}
 
 	@Override
-	public void extractBackground(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final float a) {
-		super.extractBackground(graphics, mouseX, mouseY, a);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, this.leftPos, this.topPos, 0.0F, 0.0F, BOOK_W, BOOK_H, TEX, TEX);
+	public void renderBackground(final GuiGraphics graphics, final int mouseX, final int mouseY, final float a) {
+		this.renderTransparentBackground(graphics);
+		graphics.blit(TEXTURE, this.leftPos, this.topPos, 0.0F, 0.0F, BOOK_W, BOOK_H, TEX, TEX);
 		this.hotspots.clear();
 		this.picX1 = this.picX0;
 		switch (this.location.section()) {
@@ -218,10 +213,9 @@ public class GuideBookScreen extends Screen {
 			case ENTRY -> this.drawEntry(graphics, mouseX, mouseY);
 		}
 		this.drawNavIcons(graphics, mouseX, mouseY);
-		this.applyHoverTooltip(graphics, mouseX, mouseY);
 	}
 
-	private void drawIndex(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	private void drawIndex(GuiGraphics graphics, int mouseX, int mouseY) {
 		int lx = this.leftPos + LEFT;
 		int ly = this.topPos + TOP;
 		int y = ly + this.drawTitle(graphics, lx, ly, PAGE_W, Component.translatable("book.dinosaurs.title_heading"));
@@ -239,7 +233,7 @@ public class GuideBookScreen extends Screen {
 		this.drawWrapped(graphics, Component.translatable("book.dinosaurs.index_hint"), rx, ry, PAGE_W, INK_SOFT);
 	}
 
-	private void drawList(GuiGraphicsExtractor graphics, int mouseX, int mouseY, Component title, List<Entry> entries) {
+	private void drawList(GuiGraphics graphics, int mouseX, int mouseY, Component title, List<Entry> entries) {
 		int lx = this.leftPos + LEFT;
 		int ly = this.topPos + TOP;
 		ly += this.drawTitle(graphics, lx, ly, PAGE_W, title);
@@ -258,7 +252,7 @@ public class GuideBookScreen extends Screen {
 		}
 	}
 
-	private void drawSettings(GuiGraphicsExtractor graphics) {
+	private void drawSettings(GuiGraphics graphics) {
 		DinoConfig config = DinoConfig.get();
 		int lx = this.leftPos + LEFT;
 		int ly = this.topPos + TOP;
@@ -276,7 +270,7 @@ public class GuideBookScreen extends Screen {
 		for (Entry entry : this.contents.dinoEntries()) {
 			boolean on = config.isSpawnEnabled(entry.entity());
 			Component name = on ? entry.title() : entry.title().copy().withStyle(ChatFormatting.STRIKETHROUGH);
-			graphics.text(this.font, this.fitOneLine(name, PAGE_W), rx, ry, on ? ON : OFF, false);
+			graphics.drawString(this.font, this.fitOneLine(name, PAGE_W), rx, ry, on ? ON : OFF, false);
 			ry += 10;
 		}
 	}
@@ -285,7 +279,7 @@ public class GuideBookScreen extends Screen {
 		return Component.translatable(on ? "book.dinosaurs.status.on" : "book.dinosaurs.status.off");
 	}
 
-	private void drawEntry(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	private void drawEntry(GuiGraphics graphics, int mouseX, int mouseY) {
 		Entry entry = this.contents.entry(this.location.entryId());
 		if (entry == null) {
 			return;
@@ -297,7 +291,7 @@ public class GuideBookScreen extends Screen {
 		}
 	}
 
-	private void drawDino(GuiGraphicsExtractor graphics, Entry entry, int mouseX, int mouseY) {
+	private void drawDino(GuiGraphics graphics, Entry entry, int mouseX, int mouseY) {
 		int lx = this.leftPos + LEFT;
 		int ly = this.topPos + TOP;
 		ly += this.drawTitle(graphics, lx, ly, PAGE_W, entry.title());
@@ -318,7 +312,7 @@ public class GuideBookScreen extends Screen {
 		}
 	}
 
-	private void drawItem(GuiGraphicsExtractor graphics, Entry entry, int mouseX, int mouseY) {
+	private void drawItem(GuiGraphics graphics, Entry entry, int mouseX, int mouseY) {
 		int lx = this.leftPos + LEFT;
 		int ly = this.topPos + TOP;
 		int y = ly + this.drawIconTitle(graphics, lx, ly, entry.icon(), entry.title());
@@ -406,15 +400,15 @@ public class GuideBookScreen extends Screen {
 	private static final int STATS_HEAD_H = 18;
 
 	/** Armor table: label, this item's value (under its icon) and the netherite helmet's (under its icon). */
-	private void drawStats(GuiGraphicsExtractor graphics, int x, int y, Entry entry) {
+	private void drawStats(GuiGraphics graphics, int x, int y, Entry entry) {
 		y += 2;
 		int c2 = x + PAGE_W - 8;
 		int c1 = c2 - statsPitch(this.font, entry.stats());
 		int labelW = statsLabelW(this.font, entry.stats());
-		graphics.text(this.font, this.fitOneLine(bold(Component.translatable("book.dinosaurs.stats.heading")), statsHeadingW(this.font, entry.stats())), x, y + 5, INK, false);
-		graphics.item(entry.icon(), c1 - 8, y);
+		graphics.drawString(this.font, this.fitOneLine(bold(Component.translatable("book.dinosaurs.stats.heading")), statsHeadingW(this.font, entry.stats())), x, y + 5, INK, false);
+		graphics.renderItem(entry.icon(), c1 - 8, y);
 		this.hotspots.add(new Hotspot(c1 - 8, y, 16, 16, null, entry.icon(), null));
-		graphics.item(GuideBookContents.statsReference(entry), c2 - 8, y);
+		graphics.renderItem(GuideBookContents.statsReference(entry), c2 - 8, y);
 		this.hotspots.add(new Hotspot(c2 - 8, y, 16, 16, null, GuideBookContents.statsReference(entry), null));
 		y += STATS_HEAD_H;
 		graphics.fill(x, y - 1, x + PAGE_W, y, FRAME);
@@ -423,11 +417,11 @@ public class GuideBookScreen extends Screen {
 			List<FormattedCharSequence> lines = this.font.split(row.label(), labelW);
 			int yy = y;
 			for (FormattedCharSequence line : lines) {
-				graphics.text(this.font, line, x, yy, INK, false);
+				graphics.drawString(this.font, line, x, yy, INK, false);
 				yy += 9;
 			}
-			graphics.text(this.font, row.value(), c1 - this.font.width(row.value()) / 2, y, ON, false);
-			graphics.text(this.font, row.netherite(), c2 - this.font.width(row.netherite()) / 2, y, INK_SOFT, false);
+			graphics.drawString(this.font, row.value(), c1 - this.font.width(row.value()) / 2, y, ON, false);
+			graphics.drawString(this.font, row.netherite(), c2 - this.font.width(row.netherite()) / 2, y, INK_SOFT, false);
 			y += statRowH(this.font, row, labelW);
 		}
 	}
@@ -490,7 +484,7 @@ public class GuideBookScreen extends Screen {
 			return null;
 		}
 		return this.previews.computeIfAbsent(type, t -> {
-			Mob mob = type.create(mc.level, EntitySpawnReason.LOAD);
+			Mob mob = type.create(mc.level);
 			if (mob != null) {
 				// Never added to the level; a negative id keeps it clear of real entities.
 				mob.setId(-1000 - ModEntities.ALL.indexOf(type));
@@ -499,7 +493,7 @@ public class GuideBookScreen extends Screen {
 		});
 	}
 
-	private void drawPicture(GuiGraphicsExtractor graphics, EntityType<? extends Mob> type, int x, int y, int w, int h, int mouseX, int mouseY) {
+	private void drawPicture(GuiGraphics graphics, EntityType<? extends Mob> type, int x, int y, int w, int h, int mouseX, int mouseY) {
 		// Frame, sky gradient and a strip of grass (or water for the Megalodon).
 		graphics.fill(x, y, x + w, y + h, FRAME_DARK);
 		boolean water = type == ModEntities.MEGALODON;
@@ -520,50 +514,45 @@ public class GuideBookScreen extends Screen {
 		renderEntity(graphics, mob, GuideBookContents.framing(type), this.yaw, x + 1, y + 1, x + w - 1, y + h - 1);
 	}
 
-	private static void renderEntity(GuiGraphicsExtractor graphics, LivingEntity entity, Framing framing, float yaw, int x0, int y0, int x1, int y1) {
-		EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-		EntityRenderer<? super LivingEntity, ?> renderer = dispatcher.getRenderer(entity);
-		EntityRenderState state = renderer.createRenderState(entity, 1.0F);
-		state.shadowPieces.clear();
-		state.outlineColor = 0;
+	private static void renderEntity(GuiGraphics graphics, LivingEntity entity, Framing framing, float yaw, int x0, int y0, int x1, int y1) {
 		Quaternionf camera = new Quaternionf().rotateX(-12.0F * (float) (Math.PI / 180.0));
 		Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI).mul(camera);
-		if (state instanceof LivingEntityRenderState living) {
-			living.bodyRot = 180.0F + yaw;
-			living.yRot = 0.0F;
-			living.xRot = 0.0F;
-			living.boundingBoxWidth = living.boundingBoxWidth / living.scale;
-			living.boundingBoxHeight = living.boundingBoxHeight / living.scale;
-			living.scale = 1.0F;
-		}
-		float ty = state.boundingBoxHeight / 2.0F;
+		entity.yBodyRot = entity.yBodyRotO = 180.0F + yaw;
+		entity.setYRot(180.0F + yaw);
+		entity.yRotO = entity.getYRot();
+		entity.yHeadRot = entity.yHeadRotO = entity.yBodyRot;
+		entity.setXRot(0.0F);
+		entity.xRotO = 0.0F;
+		float ty = entity.getBbHeight() / entity.getScale() / 2.0F;
 		if (framing.grounded()) {
 			// Feet on the grass strip: the origin sits (ground - centre) pixels below the box centre.
 			ty = ((y1 - 5) - (y0 + y1) / 2.0F) / framing.size();
 		}
 		Vector3f translation = new Vector3f(framing.offsetX(), ty, 0.0F);
-		graphics.entity(state, framing.size(), translation, rotation, camera, x0, y0, x1, y1);
+		graphics.enableScissor(x0, y0, x1, y1);
+		InventoryScreen.renderEntityInInventory(graphics, (x0 + x1) / 2.0F, (y0 + y1) / 2.0F, framing.size(), translation, rotation, camera, entity);
+		graphics.disableScissor();
 	}
 
 	@Override
-	public boolean mouseDragged(final MouseButtonEvent event, final double dx, final double dy) {
+	public boolean mouseDragged(final double mouseX, final double mouseY, final int button, final double dx, final double dy) {
 		if (this.draggingPicture) {
 			this.yaw += (float) dx * 2.0F;
 			return true;
 		}
-		return super.mouseDragged(event, dx, dy);
+		return super.mouseDragged(mouseX, mouseY, button, dx, dy);
 	}
 
 	@Override
-	public boolean mouseReleased(final MouseButtonEvent event) {
+	public boolean mouseReleased(final double mouseX, final double mouseY, final int button) {
 		this.draggingPicture = false;
-		return super.mouseReleased(event);
+		return super.mouseReleased(mouseX, mouseY, button);
 	}
 
 	// ---- widgets
 
 	/** Icon + link text (wrapped to at most two lines, vertically centred on the icon). */
-	private int drawLinkRow(GuiGraphicsExtractor graphics, int x, int y, int width, ItemStack icon, Component title, Location target, int mouseX, int mouseY, int height) {
+	private int drawLinkRow(GuiGraphics graphics, int x, int y, int width, ItemStack icon, Component title, Location target, int mouseX, int mouseY, int height) {
 		height = Math.max(height, rowHeight(this.font, title, height));
 		boolean hover = mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height - 1;
 		if (hover) {
@@ -571,7 +560,7 @@ public class GuideBookScreen extends Screen {
 		}
 		int iconY = y + (height - 2 - 16) / 2;
 
-		graphics.item(icon, x, iconY);
+		graphics.renderItem(icon, x, iconY);
 		int textX = x + 18;
 		int textW = width - 18;
 		Component label = hover
@@ -591,7 +580,7 @@ public class GuideBookScreen extends Screen {
 		int shown = Math.min(3, lines.size());
 		int textY = iconY + 8 - shown * 9 / 2 + 1;
 		for (int i = 0; i < shown; i++) {
-			graphics.text(this.font, lines.get(i), textX, textY + i * 9, hover ? LINK_HOVER : LINK, false);
+			graphics.drawString(this.font, lines.get(i), textX, textY + i * 9, hover ? LINK_HOVER : LINK, false);
 		}
 		this.hotspots.add(new Hotspot(x, y, width, height - 1, () -> {
 			this.clickSound();
@@ -646,25 +635,25 @@ public class GuideBookScreen extends Screen {
 		return Component.literal(this.font.plainSubstrByWidth(text.getString(), budget) + ellipsis).withStyle(text.getStyle());
 	}
 
-	private int drawWrapped(GuiGraphicsExtractor graphics, Component text, int x, int y, int width, int color) {
+	private int drawWrapped(GuiGraphics graphics, Component text, int x, int y, int width, int color) {
 		for (FormattedCharSequence line : this.font.split(text, width)) {
-			graphics.text(this.font, line, x, y, color, false);
+			graphics.drawString(this.font, line, x, y, color, false);
 			y += 9;
 		}
 		return y;
 	}
 
 	/** 16px item icon with a bold, wrapped title beside it and a rule underneath; returns the height used. */
-	private int drawIconTitle(GuiGraphicsExtractor graphics, int x, int y, ItemStack icon, Component title) {
+	private int drawIconTitle(GuiGraphics graphics, int x, int y, ItemStack icon, Component title) {
 		List<FormattedCharSequence> lines = this.font.split(bold(title), ICON_TITLE_W);
 		int textH = lines.size() * 9;
 		int h = Math.max(16, textH);
-		graphics.item(icon, x, y + (h - 16) / 2);
+		graphics.renderItem(icon, x, y + (h - 16) / 2);
 		this.hotspots.add(new Hotspot(x, y + (h - 16) / 2, 16, 16, null, icon, null));
 		int yy = y + (h - textH) / 2 + 1;
 		int lineW = 0;
 		for (FormattedCharSequence line : lines) {
-			graphics.text(this.font, line, x + 18, yy, INK, false);
+			graphics.drawString(this.font, line, x + 18, yy, INK, false);
 			lineW = Math.max(lineW, this.font.width(line));
 			yy += 9;
 		}
@@ -676,13 +665,13 @@ public class GuideBookScreen extends Screen {
 		return Math.max(16, font.split(bold(title), ICON_TITLE_W).size() * 9) + 6;
 	}
 
-	private int drawTitle(GuiGraphicsExtractor graphics, int x, int y, int width, Component title) {
+	private int drawTitle(GuiGraphics graphics, int x, int y, int width, Component title) {
 		Component bold = title.copy().withStyle(ChatFormatting.BOLD);
 		List<FormattedCharSequence> lines = this.font.split(bold, width);
 		int yy = y;
 		int lineW = 24;
 		for (FormattedCharSequence line : lines) {
-			graphics.text(this.font, line, x, yy, INK, false);
+			graphics.drawString(this.font, line, x, yy, INK, false);
 			lineW = Math.max(lineW, this.font.width(line));
 			yy += 9;
 		}
@@ -691,7 +680,7 @@ public class GuideBookScreen extends Screen {
 		return yy + 4 - y;
 	}
 
-	private int drawRecipe(GuiGraphicsExtractor graphics, int x, int y, RecipeGrid grid, Component header, int mouseX, int mouseY) {
+	private int drawRecipe(GuiGraphics graphics, int x, int y, RecipeGrid grid, Component header, int mouseX, int mouseY) {
 		int gridY = header == null ? y : this.drawWrapped(graphics, header.copy().withStyle(ChatFormatting.BOLD), x, y, PAGE_W, INK) + 3;
 		long tick = System.currentTimeMillis() / 1000L;
 		if (grid.smithing()) {
@@ -702,7 +691,7 @@ public class GuideBookScreen extends Screen {
 				this.drawSlot(graphics, x + i * SLOT, gridY, stack, false, mouseX, mouseY);
 			}
 			int arrowX = x + 3 * SLOT + 4;
-			graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, arrowX, gridY + (SLOT - ARROW_H) / 2, ARROW_U, ARROW_V, ARROW_W, ARROW_H, TEX, TEX);
+			graphics.blit(TEXTURE, arrowX, gridY + (SLOT - ARROW_H) / 2, ARROW_U, ARROW_V, ARROW_W, ARROW_H, TEX, TEX);
 			this.drawSlot(graphics, arrowX + ARROW_W + 4, gridY, grid.result(), true, mouseX, mouseY);
 			return gridY + SLOT - y;
 		}
@@ -715,23 +704,23 @@ public class GuideBookScreen extends Screen {
 		}
 		int arrowX = x + 3 * SLOT + 4;
 		int arrowY = gridY + SLOT + (SLOT - ARROW_H) / 2;
-		graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, arrowX, arrowY, ARROW_U, ARROW_V, ARROW_W, ARROW_H, TEX, TEX);
+		graphics.blit(TEXTURE, arrowX, arrowY, ARROW_U, ARROW_V, ARROW_W, ARROW_H, TEX, TEX);
 		this.drawSlot(graphics, arrowX + ARROW_W + 4, gridY + SLOT, grid.result(), true, mouseX, mouseY);
 		return gridY + RECIPE_H - y;
 	}
 
 	/** Item slot with tooltip; clicking it opens the item's (or species') entry when the book has one. */
-	private void drawSlot(GuiGraphicsExtractor graphics, int x, int y, ItemStack stack, boolean result, int mouseX, int mouseY) {
+	private void drawSlot(GuiGraphics graphics, int x, int y, ItemStack stack, boolean result, int mouseX, int mouseY) {
 		boolean hover = !stack.isEmpty() && mouseX >= x && mouseY >= y && mouseX < x + SLOT && mouseY < y + SLOT;
 		int u = result ? RESULT_U : (hover ? SLOT_HOVER_U : SLOT_U);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, u, WIDGET_V, SLOT, SLOT, TEX, TEX);
+		graphics.blit(TEXTURE, x, y, u, WIDGET_V, SLOT, SLOT, TEX, TEX);
 		if (stack.isEmpty()) {
 			return;
 		}
-		graphics.item(stack, x + 1, y + 1);
+		graphics.renderItem(stack, x + 1, y + 1);
 		if (stack.getCount() > 1) {
 			String amount = String.valueOf(stack.getCount());
-			graphics.text(this.font, amount, x + SLOT - 3 - this.font.width(amount), y + SLOT - 2 - this.font.lineHeight, 0xFFFFFFFF, true);
+			graphics.drawString(this.font, amount, x + SLOT - 3 - this.font.width(amount), y + SLOT - 2 - this.font.lineHeight, 0xFFFFFFFF, true);
 		}
 		Entry target = this.contents.entryFor(stack);
 		Entry here = this.location.entryId() == null ? null : this.contents.entry(this.location.entryId());
@@ -742,7 +731,7 @@ public class GuideBookScreen extends Screen {
 		this.hotspots.add(new Hotspot(x, y, SLOT, SLOT, action, stack, null));
 	}
 
-	private void drawNavIcons(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	private void drawNavIcons(GuiGraphics graphics, int mouseX, int mouseY) {
 		int backX = this.leftPos + 102;
 		int homeX = this.leftPos + 138;
 		int iconY = this.topPos + 174;
@@ -754,8 +743,8 @@ public class GuideBookScreen extends Screen {
 		if (homeHover) {
 			graphics.fill(homeX - 1, iconY - 1, homeX + ICON + 1, iconY + ICON + 1, HOVER_FILL);
 		}
-		graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, backX, iconY, BACK_U, WIDGET_V, ICON, ICON, TEX, TEX);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, homeX, iconY, HOME_U, WIDGET_V, ICON, ICON, TEX, TEX);
+		graphics.blit(TEXTURE, backX, iconY, BACK_U, WIDGET_V, ICON, ICON, TEX, TEX);
+		graphics.blit(TEXTURE, homeX, iconY, HOME_U, WIDGET_V, ICON, ICON, TEX, TEX);
 		if (this.history.isEmpty()) {
 			graphics.fill(backX, iconY, backX + ICON, iconY + ICON, 0x66805030);
 		}
@@ -770,7 +759,7 @@ public class GuideBookScreen extends Screen {
 		}, ItemStack.EMPTY, Component.translatable("book.dinosaurs.nav.index")));
 	}
 
-	private void applyHoverTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	private void applyHoverTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
 		Hotspot hit = null;
 		for (Hotspot hotspot : this.hotspots) {
 			if (hotspot.contains(mouseX, mouseY)) {
@@ -781,40 +770,40 @@ public class GuideBookScreen extends Screen {
 			return;
 		}
 		if (hit.tooltipItem != null && !hit.tooltipItem.isEmpty()) {
-			graphics.setTooltipForNextFrame(this.font, hit.tooltipItem, mouseX, mouseY);
+			graphics.renderTooltip(this.font, hit.tooltipItem, mouseX, mouseY);
 		} else if (hit.tooltipText != null) {
-			graphics.setTooltipForNextFrame(this.font, hit.tooltipText, mouseX, mouseY);
+			graphics.renderTooltip(this.font, hit.tooltipText, mouseX, mouseY);
 		}
 	}
 
 	@Override
-	public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-		if (event.button() == 0) {
-			if (this.picX1 > this.picX0 && event.x() >= this.picX0 && event.x() < this.picX1 && event.y() >= this.picY0 && event.y() < this.picY1) {
+	public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
+		if (button == 0) {
+			if (this.picX1 > this.picX0 && mouseX >= this.picX0 && mouseX < this.picX1 && mouseY >= this.picY0 && mouseY < this.picY1) {
 				this.draggingPicture = true;
 				return true;
 			}
 			for (int i = this.hotspots.size() - 1; i >= 0; i--) {
 				Hotspot hotspot = this.hotspots.get(i);
-				if (hotspot.action != null && hotspot.contains(event.x(), event.y())) {
+				if (hotspot.action != null && hotspot.contains(mouseX, mouseY)) {
 					hotspot.action.run();
 					return true;
 				}
 			}
 		}
-		return super.mouseClicked(event, doubleClick);
+		return super.mouseClicked(mouseX, mouseY, button);
 	}
 
 	@Override
-	public boolean keyPressed(final KeyEvent event) {
-		if (super.keyPressed(event)) {
+	public boolean keyPressed(final int keyCode, final int scanCode, final int modifiers) {
+		if (super.keyPressed(keyCode, scanCode, modifiers)) {
 			return true;
 		}
-		if (event.isLeft()) {
+		if (keyCode == GLFW.GLFW_KEY_LEFT) {
 			this.turnPage(-1);
 			return true;
 		}
-		if (event.isRight()) {
+		if (keyCode == GLFW.GLFW_KEY_RIGHT) {
 			this.turnPage(1);
 			return true;
 		}

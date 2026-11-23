@@ -1,9 +1,15 @@
 {
   "type": "minecraft:smithing_transform",
-  "addition": "dinosaurs:parasaurolophus_crest",
-  "base": "minecraft:netherite_leggings",
+  "addition": {
+    "item": "dinosaurs:parasaurolophus_crest"
+  },
+  "base": {
+    "item": "minecraft:netherite_leggings"
+  },
   "result": {
     "id": "dinosaurs:dinosaur_leggings"
   },
-  "template": "dinosaurs:dinosaur_upgrade_smithing_template"
+  "template": {
+    "item": "dinosaurs:dinosaur_upgrade_smithing_template"
+  }
 }

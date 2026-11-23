@@ -152,5 +152,6 @@
   "book.dinosaurs.item.t_rex_skull_helmet": "Noś czaszkę tyranozaura na głowie. Odporny na ogień jak netheryt. Napraw go sztabką netherytu lub czaszką tyranozaura.",
   "book.dinosaurs.item.dinosaur_upgrade_smithing_template": "Szablon kowalski, który zmienia netherytowy napierśnik, nogawice i buty w dinozaurową zbroję. Zużywa się jak netherytowe ulepszenie. 7 kości dinozaura i blok kości go powielą.",
   "book.dinosaurs.item.dinosaur_claw": "Szponiasta rękawica: bije mocniej niż netherytowy miecz, ale zasięg ma o 0,5 krótszy. Zaklęcia miecza. Nie płonie. Naprawa: kości dinozaura.",
-  "book.dinosaurs.item.dinosaur_armor": "Zaklęcia zostają. Lepsza od netherytu we wszystkim. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura."
+  "book.dinosaurs.item.dinosaur_armor": "Zaklęcia zostają. Lepsza od netherytu we wszystkim. Naprawa: kości dinozaura. Hełm: z czaszki tyranozaura.",
+  "item.dinosaurs.smithing_template.dinosaur_upgrade.upgrade": "Szablon kowalski"
 }

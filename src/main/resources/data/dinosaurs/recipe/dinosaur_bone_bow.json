@@ -2,16 +2,24 @@
   "type": "dinosaurs:crafting_shaped_keep_components",
   "category": "equipment",
   "key": {
-    "B": "dinosaurs:dinosaur_bones",
-    "W": "minecraft:bow",
-    "N": "minecraft:netherite_ingot"
+    "B": {
+      "item": "dinosaurs:dinosaur_bones"
+    },
+    "W": {
+      "item": "minecraft:bow"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    }
   },
   "pattern": [
     " B ",
     "BWB",
     " N "
   ],
-  "source": "minecraft:bow",
+  "source": {
+    "item": "minecraft:bow"
+  },
   "result": {
     "id": "dinosaurs:dinosaur_bone_bow"
   }

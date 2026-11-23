@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3;
 public class Pteranodon extends PathfinderMob {
 	public Pteranodon(EntityType<? extends Pteranodon> type, Level level) {
 		super(type, level);
-		this.moveControl = new FlyingMoveControl<>(this, 10, false);
+		this.moveControl = new FlyingMoveControl(this, 10, false);
 		this.xpReward = 3;
 	}
 

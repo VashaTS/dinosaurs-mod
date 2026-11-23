@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": "dinosaurs:dinosaur_bones",
-    "T": "minecraft:netherite_upgrade_smithing_template"
+    "B": {
+      "item": "dinosaurs:dinosaur_bones"
+    },
+    "T": {
+      "item": "minecraft:netherite_upgrade_smithing_template"
+    }
   },
   "pattern": [
     "BBB",

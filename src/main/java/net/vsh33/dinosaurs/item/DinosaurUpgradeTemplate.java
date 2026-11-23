@@ -2,7 +2,7 @@ package net.vsh33.dinosaurs.item;
 
 import java.util.List;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SmithingTemplateItem;
 import net.vsh33.dinosaurs.Dinosaurs;
@@ -20,13 +20,13 @@ public final class DinosaurUpgradeTemplate {
 		return new SmithingTemplateItem(
 				text("applies_to").copy().withStyle(net.minecraft.ChatFormatting.BLUE),
 				text("ingredients").copy().withStyle(net.minecraft.ChatFormatting.BLUE),
+				text("upgrade").copy().withStyle(net.minecraft.ChatFormatting.GRAY),
 				text("base_slot_description"),
 				text("additions_slot_description"),
-				List.of(Identifier.withDefaultNamespace("container/slot/chestplate"), Identifier.withDefaultNamespace("container/slot/leggings"),
-						Identifier.withDefaultNamespace("container/slot/boots")),
-				List.of(Dinosaurs.id("container/slot/megalodon_tooth"), Dinosaurs.id("container/slot/parasaurolophus_crest"),
-						Dinosaurs.id("container/slot/raptor_claw")),
-				properties);
+				List.of(ResourceLocation.withDefaultNamespace("item/empty_armor_slot_chestplate"), ResourceLocation.withDefaultNamespace("item/empty_armor_slot_leggings"),
+						ResourceLocation.withDefaultNamespace("item/empty_armor_slot_boots")),
+				List.of(Dinosaurs.id("item/empty_slot/megalodon_tooth"), Dinosaurs.id("item/empty_slot/parasaurolophus_crest"),
+						Dinosaurs.id("item/empty_slot/raptor_claw")));
 	}
 
 	private DinosaurUpgradeTemplate() {

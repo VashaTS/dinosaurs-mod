@@ -36,18 +36,18 @@ public class DinosaurBoneBowItem extends BowItem {
 	}
 
 	@Override
-	public boolean releaseUsing(ItemStack itemStack, Level level, LivingEntity entity, int remainingTime) {
+	public void releaseUsing(ItemStack itemStack, Level level, LivingEntity entity, int remainingTime) {
 		if (!(entity instanceof Player player)) {
-			return false;
+			return;
 		}
 		ItemStack projectile = player.getProjectile(itemStack);
 		if (projectile.isEmpty()) {
-			return false;
+			return;
 		}
 		int timeHeld = this.getUseDuration(itemStack, entity) - remainingTime;
 		float pow = getPowerForTime(timeHeld);
 		if (pow < 0.1F) {
-			return false;
+			return;
 		}
 		List<ItemStack> fired = draw(itemStack, projectile, player);
 		if (level instanceof ServerLevel serverLevel && !fired.isEmpty()) {
@@ -56,7 +56,16 @@ public class DinosaurBoneBowItem extends BowItem {
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS,
 				1.0F, 1.0F / (level.getRandom().nextFloat() * 0.4F + 1.2F) + pow * 0.5F);
 		player.awardStat(Stats.ITEM_USED.get(this));
-		return true;
+	}
+
+	@Override
+	public int getEnchantmentValue() {
+		return ENCHANTABILITY;
+	}
+
+	@Override
+	public boolean isValidRepairItem(ItemStack stack, ItemStack repair) {
+		return repair.is(ModItems.DINOSAUR_BONES) || super.isValidRepairItem(stack, repair);
 	}
 
 	@Override

@@ -20,7 +20,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
@@ -56,13 +56,13 @@ public final class ModEntities {
 
 	public static final EntityType<HostileDino> T_REX = register("t_rex",
 			EntityType.Builder.<HostileDino>of(HostileDino::new, MobCategory.MONSTER)
-					.sized(1.8F, 3.4F).eyeHeight(3.0F).clientTrackingRange(10).notInPeaceful());
+					.sized(1.8F, 3.4F).eyeHeight(3.0F).clientTrackingRange(10));
 	public static final EntityType<HostileDino> VELOCIRAPTOR = register("velociraptor",
 			EntityType.Builder.<HostileDino>of(HostileDino::new, MobCategory.MONSTER)
-					.sized(0.7F, 1.0F).eyeHeight(0.85F).clientTrackingRange(8).notInPeaceful());
+					.sized(0.7F, 1.0F).eyeHeight(0.85F).clientTrackingRange(8));
 	public static final EntityType<HostileDino> SPINOSAURUS = register("spinosaurus",
 			EntityType.Builder.<HostileDino>of(HostileDino::new, MobCategory.MONSTER)
-					.sized(1.8F, 3.2F).eyeHeight(2.6F).clientTrackingRange(10).notInPeaceful());
+					.sized(1.8F, 3.2F).eyeHeight(2.6F).clientTrackingRange(10));
 	public static final EntityType<Triceratops> TRICERATOPS = register("triceratops",
 			EntityType.Builder.<Triceratops>of(Triceratops::new, MobCategory.CREATURE)
 					.sized(1.7F, 2.1F).eyeHeight(1.5F).passengerAttachments(1.75F).clientTrackingRange(10));
@@ -80,14 +80,13 @@ public final class ModEntities {
 					.sized(1.2F, 2.4F).eyeHeight(2.0F).clientTrackingRange(10));
 	public static final EntityType<Megalodon> MEGALODON = register("megalodon",
 			EntityType.Builder.<Megalodon>of(Megalodon::new, MobCategory.WATER_CREATURE)
-					.sized(5.0F, 3.6F).eyeHeight(2.0F).clientTrackingRange(12).notInPeaceful()); // 1.7.0: twice the size (was 2.5 x 1.8)
+					.sized(5.0F, 3.6F).eyeHeight(2.0F).clientTrackingRange(12)); // 1.7.0: twice the size (was 2.5 x 1.8)
 	public static final EntityType<Pteranodon> PTERANODON = register("pteranodon",
 			EntityType.Builder.<Pteranodon>of(Pteranodon::new, MobCategory.CREATURE)
 					.sized(1.0F, 0.9F).eyeHeight(0.6F).clientTrackingRange(10));
 
 	private static <T extends Mob> EntityType<T> register(String name, EntityType.Builder<T> builder) {
-		ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, Dinosaurs.id(name));
-		EntityType<T> type = Registry.register(BuiltInRegistries.ENTITY_TYPE, key, builder.build(key));
+		EntityType<T> type = Registry.register(BuiltInRegistries.ENTITY_TYPE, Dinosaurs.id(name), builder.build(Dinosaurs.id(name).toString()));
 		ALL.add(type);
 		return type;
 	}
@@ -167,7 +166,7 @@ public final class ModEntities {
 				.add(ModificationPhase.ADDITIONS, BiomeSelectors.includeByKey(biomes), context -> {
 					int effective = DinoConfig.get().effectiveSpawnWeight(type);
 					if (effective > 0) {
-						context.getMobSpawnSettings().addSpawn(category, new MobSpawnSettings.SpawnerData(type, UniformInt.of(min, max)), effective);
+						context.getSpawnSettings().addSpawn(category, new MobSpawnSettings.SpawnerData(type, effective, min, max));
 					}
 				});
 	}
@@ -186,8 +185,8 @@ public final class ModEntities {
 	 * Config checks for natural spawning (world generation and the regular mob spawner).
 	 * Spawn eggs, spawners and /summon are never blocked.
 	 */
-	private static boolean configAllows(EntityType<?> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, boolean hostile) {
-		if (reason != EntitySpawnReason.NATURAL && reason != EntitySpawnReason.CHUNK_GENERATION) {
+	private static boolean configAllows(EntityType<?> type, ServerLevelAccessor level, MobSpawnType reason, BlockPos pos, boolean hostile) {
+		if (reason != MobSpawnType.NATURAL && reason != MobSpawnType.CHUNK_GENERATION) {
 			return true;
 		}
 		DinoConfig config = DinoConfig.get();
@@ -196,7 +195,7 @@ public final class ModEntities {
 		}
 		if (hostile && !config.hostileSpawnInDaylight) {
 			// Only at night and only where it is dark (like vanilla monsters: light level 7 or less).
-			return level.getLevel().isDarkOutside() && level.getMaxLocalRawBrightness(pos) <= 7;
+			return !level.getLevel().isDay() && level.getMaxLocalRawBrightness(pos) <= 7;
 		}
 		return true;
 	}
@@ -206,29 +205,29 @@ public final class ModEntities {
 	}
 
 	/** Predators hunt in daylight too, but are rare and limited per area so they never flood a biome. */
-	private static <T extends Mob> boolean checkPredatorSpawn(EntityType<T> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, RandomSource random, int maxNearby, int chance) {
+	private static <T extends Mob> boolean checkPredatorSpawn(EntityType<T> type, ServerLevelAccessor level, MobSpawnType reason, BlockPos pos, RandomSource random, int maxNearby, int chance) {
 		if (level.getDifficulty() == Difficulty.PEACEFUL || !Mob.checkMobSpawnRules(type, level, reason, pos, random)) {
 			return false;
 		}
-		if (EntitySpawnReason.isSpawner(reason)) {
+		if (MobSpawnType.isSpawner(reason)) {
 			return true;
 		}
 		return level.canSeeSky(pos) && random.nextInt(chance) == 0 && countNearby(level, type, pos, 64) < maxNearby;
 	}
 
-	private static <T extends Mob> boolean checkHerbivoreSpawn(EntityType<T> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, RandomSource random) {
-		boolean bright = EntitySpawnReason.ignoresLightRequirements(reason) || level.getRawBrightness(pos, 0) > 8;
+	private static <T extends Mob> boolean checkHerbivoreSpawn(EntityType<T> type, ServerLevelAccessor level, MobSpawnType reason, BlockPos pos, RandomSource random) {
+		boolean bright = MobSpawnType.ignoresLightRequirements(reason) || level.getRawBrightness(pos, 0) > 8;
 		return bright && level.getBlockState(pos.below()).is(BlockTags.ANIMALS_SPAWNABLE_ON);
 	}
 
-	private static <T extends Mob> boolean checkMegalodonSpawn(EntityType<T> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, RandomSource random) {
+	private static <T extends Mob> boolean checkMegalodonSpawn(EntityType<T> type, ServerLevelAccessor level, MobSpawnType reason, BlockPos pos, RandomSource random) {
 		if (level.getDifficulty() == Difficulty.PEACEFUL) {
 			return false;
 		}
 		if (!level.getFluidState(pos).is(FluidTags.WATER) || !level.getFluidState(pos.above()).is(FluidTags.WATER)) {
 			return false;
 		}
-		if (EntitySpawnReason.isSpawner(reason)) {
+		if (MobSpawnType.isSpawner(reason)) {
 			return true;
 		}
 		// 1.7.0: the shark is 3.6 blocks tall now, it needs at least 4 blocks of water.
@@ -238,10 +237,10 @@ public final class ModEntities {
 		return pos.getY() <= level.getSeaLevel() - 10 && random.nextInt(3) == 0 && countNearby(level, type, pos, 96) < 1;
 	}
 
-	private static <T extends Mob> boolean checkPteranodonSpawn(EntityType<T> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, RandomSource random) {
-		boolean bright = EntitySpawnReason.ignoresLightRequirements(reason) || level.getRawBrightness(pos, 0) > 8;
+	private static <T extends Mob> boolean checkPteranodonSpawn(EntityType<T> type, ServerLevelAccessor level, MobSpawnType reason, BlockPos pos, RandomSource random) {
+		boolean bright = MobSpawnType.ignoresLightRequirements(reason) || level.getRawBrightness(pos, 0) > 8;
 		return bright && level.canSeeSky(pos) && Mob.checkMobSpawnRules(type, level, reason, pos, random)
-				&& (EntitySpawnReason.isSpawner(reason) || countNearby(level, type, pos, 48) < 6);
+				&& (MobSpawnType.isSpawner(reason) || countNearby(level, type, pos, 48) < 6);
 	}
 
 	private ModEntities() {

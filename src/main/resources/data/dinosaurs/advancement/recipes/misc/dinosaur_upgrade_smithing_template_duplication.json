@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:dinosaur_upgrade_smithing_template_duplication"
+        "recipe": "dinosaurs:dinosaur_upgrade_smithing_template_duplication"
       }
     }
   },

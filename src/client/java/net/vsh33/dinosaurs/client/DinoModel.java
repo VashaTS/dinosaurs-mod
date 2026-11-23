@@ -1,26 +1,31 @@
 package net.vsh33.dinosaurs.client;
 
-import java.util.function.Function;
-import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.world.entity.Mob;
+import net.vsh33.dinosaurs.entity.AttackAnimated;
+import net.vsh33.dinosaurs.entity.HostileDino;
+import net.vsh33.dinosaurs.entity.Pteranodon;
+import net.vsh33.dinosaurs.entity.Triceratops;
 
 /**
  * One model class for all species: parts are looked up by name and animated if present
  * (legs, arms, tail, neck, head, jaw, wings, fins).
  */
-public class DinoModel extends EntityModel<DinoRenderState> {
-	private final @Nullable ModelPart head, neck, jaw, tail, tail2;
-	private final @Nullable ModelPart rightLeg, leftLeg, rightArm, leftArm;
-	private final @Nullable ModelPart rightHindLeg, leftHindLeg, rightFrontLeg, leftFrontLeg;
-	private final @Nullable ModelPart rightWing, leftWing, rightFin, leftFin;
+public class DinoModel extends HierarchicalModel<Mob> {
+	private final ModelPart root;
+	private float partialTick;
+	private final ModelPart head, neck, jaw, tail, tail2;
+	private final ModelPart rightLeg, leftLeg, rightArm, leftArm;
+	private final ModelPart rightHindLeg, leftHindLeg, rightFrontLeg, leftFrontLeg;
+	private final ModelPart rightWing, leftWing, rightFin, leftFin;
 	private final float walkScale;
 	private final boolean swimmer;
 
 	public DinoModel(ModelPart root, float walkScale, boolean swimmer) {
-		super(root);
-		Function<String, @Nullable ModelPart> lookup = root.createPartLookup();
+		this.root = root;
+		java.util.function.Function<String, ModelPart> lookup = name -> this.getAnyDescendantWithName(name).orElse(null);
 		this.head = lookup.apply("head");
 		this.neck = lookup.apply("neck");
 		this.jaw = lookup.apply("jaw");
@@ -43,8 +48,41 @@ public class DinoModel extends EntityModel<DinoRenderState> {
 	}
 
 	@Override
+	public ModelPart root() {
+		return this.root;
+	}
+
+	@Override
+	public void prepareMobModel(Mob entity, float limbSwing, float limbSwingAmount, float partialTick) {
+		this.partialTick = partialTick;
+	}
+
+	/** Collects the per-frame state of the entity, like the 26.x render state. */
+	public static DinoRenderState state(Mob entity, float pos, float speed, float age, float yaw, float pitch, float partialTicks) {
+		DinoRenderState state = new DinoRenderState();
+		state.walkAnimationPos = pos;
+		state.walkAnimationSpeed = speed;
+		state.ageInTicks = age;
+		state.yRot = yaw;
+		state.xRot = pitch;
+		state.flying = entity instanceof Pteranodon p && p.isFlying();
+		state.saddled = entity instanceof Triceratops t && t.isSaddled();
+		state.collared = entity instanceof HostileDino dino && dino.isCollared();
+		state.sitting = entity instanceof HostileDino dino && dino.isOrderedToSit();
+		if (entity instanceof AttackAnimated animated) {
+			int ticks = animated.dinosaurs$getAttackTicks();
+			state.attackProgress = ticks > 0 ? Math.max(0.0F, (ticks - partialTicks) / 10.0F) : 0.0F;
+		}
+		return state;
+	}
+
+	@Override
+	public void setupAnim(Mob entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+		this.setupAnim(state(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, this.partialTick));
+	}
+
 	public void setupAnim(DinoRenderState state) {
-		super.setupAnim(state);
+		this.root.getAllParts().forEach(ModelPart::resetPose);
 		float age = state.ageInTicks;
 		float pos = state.walkAnimationPos * walkScale;
 		float speed = Math.min(1.0F, state.walkAnimationSpeed);
@@ -80,7 +118,7 @@ public class DinoModel extends EntityModel<DinoRenderState> {
 		if (swimmer && head != null) head.yRot -= tailSway * 0.3F;
 		// Drooping tails (rest pose pitched down, e.g. Brachiosaurus) also bob slowly up and down,
 		// staying below horizontal: amplitude ~4 degrees around the ~20 degree droop.
-		if (tail != null && tail.getInitialPose().xRot() < 0.0F) {
+		if (tail != null && tail.getInitialPose().xRot < 0.0F) {
 			float bob = Mth.sin(age * 0.06F) * 0.07F + Mth.sin(pos * 0.6662F * 2.0F) * 0.04F * speed;
 			tail.xRot += bob;
 			if (tail2 != null) tail2.xRot += bob * 0.8F;
@@ -92,8 +130,8 @@ public class DinoModel extends EntityModel<DinoRenderState> {
 			if (leftLeg != null) leftLeg.xRot = -Mth.HALF_PI;
 			if (rightArm != null) rightArm.xRot = 0.6F;
 			if (leftArm != null) leftArm.xRot = 0.6F;
-			if (tail != null) tail.xRot = tail.getInitialPose().xRot() + 0.25F;
-			if (tail2 != null) tail2.xRot = tail2.getInitialPose().xRot() + 0.1F;
+			if (tail != null) tail.xRot = tail.getInitialPose().xRot + 0.25F;
+			if (tail2 != null) tail2.xRot = tail2.getInitialPose().xRot + 0.1F;
 		}
 
 		if (jaw != null) {

@@ -17,7 +17,7 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
-import net.minecraft.world.entity.animal.fish.WaterAnimal;
+import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -29,7 +29,7 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 
 	public Megalodon(EntityType<? extends Megalodon> type, Level level) {
 		super(type, level);
-		this.moveControl = new SmoothSwimmingMoveControl<>(this, 85, 10, 0.02F, 0.1F, true);
+		this.moveControl = new SmoothSwimmingMoveControl(this, 85, 10, 0.02F, 0.1F, true);
 		this.lookControl = new SmoothSwimmingLookControl(this, 10);
 		this.xpReward = 15;
 	}
@@ -46,7 +46,7 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 		this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
 		this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
-				(target, level) -> target.isInWater()));
+				target -> target.isInWater()));
 	}
 
 	@Override
@@ -66,19 +66,25 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 	}
 
 	@Override
-	protected void travelInWater(Vec3 input, double baseGravity, boolean isFalling, double oldY) {
-		this.moveRelative(this.getSpeed(), input);
-		this.move(MoverType.SELF, this.getDeltaMovement());
-		this.setDeltaMovement(this.getDeltaMovement().scale(0.9));
-		if (this.getTarget() == null) {
-			this.setDeltaMovement(this.getDeltaMovement().add(0.0, -0.005, 0.0));
+	public void travel(Vec3 input) {
+		if (this.isControlledByLocalInstance() && this.isInWater()) {
+			this.moveRelative(this.getSpeed(), input);
+			this.move(MoverType.SELF, this.getDeltaMovement());
+			this.setDeltaMovement(this.getDeltaMovement().scale(0.9));
+			if (this.getTarget() == null) {
+				this.setDeltaMovement(this.getDeltaMovement().add(0.0, -0.005, 0.0));
+			}
+		} else {
+			super.travel(input);
 		}
 	}
 
 	@Override
-	public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
-		protection.onHurt(source);
-		return super.hurtServer(level, source, damage);
+	public boolean hurt(DamageSource source, float damage) {
+		if (!this.level().isClientSide()) {
+			protection.onHurt(source);
+		}
+		return super.hurt(source, damage);
 	}
 
 	@Override
@@ -88,10 +94,10 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 	}
 
 	@Override
-	public boolean doHurtTarget(ServerLevel level, Entity target) {
-		boolean hit = super.doHurtTarget(level, target);
+	public boolean doHurtTarget(Entity target) {
+		boolean hit = super.doHurtTarget(target);
 		if (hit) {
-			level.broadcastEntityEvent(this, ATTACK_EVENT);
+			this.level().broadcastEntityEvent(this, ATTACK_EVENT);
 		}
 		return hit;
 	}
@@ -108,6 +114,11 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 	@Override
 	public int dinosaurs$getAttackTicks() {
 		return attackTicks;
+	}
+
+	@Override
+	protected boolean shouldDespawnInPeaceful() {
+		return true;
 	}
 
 	@Override

@@ -5,18 +5,11 @@
 	"name": "Dinosaurs tests",
 	"environment": "*",
 	"entrypoints": {
-		"fabric-client-gametest": [
-			"net.vsh33.dinosaurs.test.XaeroRadarScreenshotTest",
-			"net.vsh33.dinosaurs.test.CollarScreenshotTest",
-			"net.vsh33.dinosaurs.test.ClawScreenshotTest",
-			"net.vsh33.dinosaurs.test.ArmorScreenshotTest",
-			"net.vsh33.dinosaurs.test.HelmetScreenshotTest",
-			"net.vsh33.dinosaurs.test.BowScreenshotTest",
-			"net.vsh33.dinosaurs.test.GuideBookScreenshotTest",
-			"net.vsh33.dinosaurs.test.DinosaursScreenshotTest"
-		],
 		"fabric-gametest": [
 			"net.vsh33.dinosaurs.test.DinosaursServerTest"
+		],
+		"client": [
+			"net.vsh33.dinosaurs.test.ClientSmokeTest"
 		]
 	},
 	"depends": {

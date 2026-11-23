@@ -15,11 +15,9 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.Vec3;
 import net.vsh33.dinosaurs.item.ModItems;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Triceratops: a neutral herbivore that can be saddled with a Dinosaur Saddle and ridden.
@@ -52,15 +50,15 @@ public class Triceratops extends HerbivoreDino {
 	}
 
 	@Override
-	protected void addAdditionalSaveData(ValueOutput output) {
+	public void addAdditionalSaveData(CompoundTag output) {
 		super.addAdditionalSaveData(output);
 		output.putBoolean("Saddled", this.isSaddled());
 	}
 
 	@Override
-	protected void readAdditionalSaveData(ValueInput input) {
+	public void readAdditionalSaveData(CompoundTag input) {
 		super.readAdditionalSaveData(input);
-		this.setSaddled(input.getBooleanOr("Saddled", false));
+		this.setSaddled(input.getBoolean("Saddled"));
 	}
 
 	@Override
@@ -69,7 +67,7 @@ public class Triceratops extends HerbivoreDino {
 		if (!this.isSaddled() && stack.getItem() == ModItems.DINOSAUR_SADDLE && this.isAlive()) {
 			if (!this.level().isClientSide()) {
 				this.setSaddled(true);
-				this.level().playSound(null, this, SoundEvents.HORSE_SADDLE.value(), this.getSoundSource(), 1.0F, 0.8F);
+				this.level().playSound(null, this, SoundEvents.HORSE_SADDLE, this.getSoundSource(), 1.0F, 0.8F);
 				stack.consume(1, player);
 				if (this.getTarget() == player) {
 					this.setTarget(null);
@@ -82,10 +80,10 @@ public class Triceratops extends HerbivoreDino {
 				if (stack.isEmpty()) {
 					if (!this.level().isClientSide()) {
 						this.setSaddled(false);
-						this.level().playSound(null, this, SoundEvents.SADDLE_UNEQUIP.value(), this.getSoundSource(), 1.0F, 0.8F);
+						this.level().playSound(null, this, SoundEvents.HORSE_SADDLE, this.getSoundSource(), 1.0F, 0.8F);
 						ItemStack saddle = new ItemStack(ModItems.DINOSAUR_SADDLE);
 						if (!player.getInventory().add(saddle)) {
-							this.spawnAtLocation((ServerLevel) this.level(), saddle);
+							this.spawnAtLocation(saddle);
 						}
 					}
 					return InteractionResult.SUCCESS;
@@ -113,7 +111,7 @@ public class Triceratops extends HerbivoreDino {
 	}
 
 	@Override
-	public @Nullable LivingEntity getControllingPassenger() {
+	public LivingEntity getControllingPassenger() {
 		if (this.isSaddled() && this.getFirstPassenger() instanceof Player player) {
 			return player;
 		}
@@ -155,7 +153,7 @@ public class Triceratops extends HerbivoreDino {
 	protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
 		super.dropCustomDeathLoot(level, source, killedByPlayer);
 		if (this.isSaddled()) {
-			this.spawnAtLocation(level, new ItemStack(ModItems.DINOSAUR_SADDLE));
+			this.spawnAtLocation(new ItemStack(ModItems.DINOSAUR_SADDLE));
 			this.setSaddled(false);
 		}
 	}

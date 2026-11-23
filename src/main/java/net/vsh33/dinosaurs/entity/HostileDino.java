@@ -19,7 +19,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
@@ -45,10 +44,10 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.GameRules;
+import java.util.UUID;
 import net.vsh33.dinosaurs.item.ModItems;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Carnivorous dinosaur: hostile to players (T. rex, Velociraptor, Spinosaurus).
@@ -65,8 +64,8 @@ import org.jspecify.annotations.Nullable;
  * The owner's UUID is saved in the entity data ("Owner"); the collar is dropped when the T. rex dies.
  */
 public class HostileDino extends Monster implements AttackAnimated, OwnableEntity {
-	private static final EntityDataAccessor<Optional<EntityReference<LivingEntity>>> DATA_OWNER =
-			SynchedEntityData.defineId(HostileDino.class, EntityDataSerializers.OPTIONAL_LIVING_ENTITY_REFERENCE);
+	private static final EntityDataAccessor<Optional<UUID>> DATA_OWNER =
+			SynchedEntityData.defineId(HostileDino.class, EntityDataSerializers.OPTIONAL_UUID);
 	private static final EntityDataAccessor<Boolean> DATA_SITTING = SynchedEntityData.defineId(HostileDino.class, EntityDataSerializers.BOOLEAN);
 	/** Teleport to the owner from this far away (blocks, squared), like wolves. */
 	private static final double TELEPORT_DISTANCE_SQR = 12.0 * 12.0;
@@ -116,7 +115,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 		this.targetSelector.addGoal(3, hurtBy);
 		// Wild carnivores hunt players; a collared T. rex leaves other players alone.
 		this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
-				(target, level) -> this.huntsPlayers()));
+				target -> this.huntsPlayers()));
 	}
 
 	// ---- Dino Collar: ownership
@@ -135,19 +134,33 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 		return this.entityData.get(DATA_OWNER).isPresent();
 	}
 
+	/** Last resolved owner (like 26.x EntityReference): kept while it is alive and still the owner. */
+	private LivingEntity cachedOwner;
+
 	@Override
-	public @Nullable EntityReference<LivingEntity> getOwnerReference() {
+	public LivingEntity getOwner() {
+		UUID id = this.getOwnerUUID();
+		if (id == null) return null;
+		if (this.cachedOwner != null && !this.cachedOwner.isRemoved() && id.equals(this.cachedOwner.getUUID())) return this.cachedOwner;
+		LivingEntity found = this.level().getPlayerByUUID(id);
+		if (found == null && this.level() instanceof ServerLevel server && server.getEntity(id) instanceof LivingEntity living) found = living;
+		this.cachedOwner = found;
+		return found;
+	}
+
+	@Override
+	public UUID getOwnerUUID() {
 		return this.entityData.get(DATA_OWNER).orElse(null);
 	}
 
-	public void setOwnerReference(@Nullable EntityReference<LivingEntity> owner) {
+	public void setOwnerUUID(UUID owner) {
 		this.entityData.set(DATA_OWNER, Optional.ofNullable(owner));
 	}
 
 	/** True if this entity is the collared dinosaur's owner (works while the owner is offline too: compares UUIDs). */
-	public boolean isOwnedBy(@Nullable Entity entity) {
-		EntityReference<LivingEntity> owner = this.getOwnerReference();
-		return owner != null && entity != null && owner.getUUID().equals(entity.getUUID());
+	public boolean isOwnedBy(Entity entity) {
+		UUID owner = this.getOwnerUUID();
+		return owner != null && entity != null && owner.equals(entity.getUUID());
 	}
 
 	public boolean isOrderedToSit() {
@@ -163,7 +176,8 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	 * becomes persistent. Server side; the caller checks the amulet and consumes the collar.
 	 */
 	public void collar(Player owner) {
-		this.setOwnerReference(EntityReference.of(owner));
+		this.setOwnerUUID(owner.getUUID());
+		this.cachedOwner = owner;
 		this.setOrderedToSit(false);
 		this.setTarget(null);
 		this.setLastHurtByMob(null);
@@ -172,18 +186,20 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	}
 
 	@Override
-	protected void addAdditionalSaveData(ValueOutput output) {
+	public void addAdditionalSaveData(CompoundTag output) {
 		super.addAdditionalSaveData(output);
-		EntityReference.store(this.getOwnerReference(), output, "Owner");
+		if (this.getOwnerUUID() != null) {
+			output.putUUID("Owner", this.getOwnerUUID());
+		}
 		output.putBoolean("Sitting", this.isOrderedToSit());
 	}
 
 	@Override
-	protected void readAdditionalSaveData(ValueInput input) {
+	public void readAdditionalSaveData(CompoundTag input) {
 		super.readAdditionalSaveData(input);
-		EntityReference<LivingEntity> owner = EntityReference.read(input, "Owner");
-		this.setOwnerReference(owner);
-		this.setOrderedToSit(owner != null && input.getBooleanOr("Sitting", false));
+		UUID owner = input.hasUUID("Owner") ? input.getUUID("Owner") : null;
+		this.setOwnerUUID(owner);
+		this.setOrderedToSit(owner != null && input.getBoolean("Sitting"));
 	}
 
 	@Override
@@ -195,14 +211,14 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 		if (stack.is(ModItems.DINO_COLLAR)) {
 			if (this.isCollared()) {
 				if (!this.level().isClientSide()) {
-					player.sendOverlayMessage(Component.translatable(this.isOwnedBy(player)
-							? "message.dinosaurs.dino_collar.already_yours" : "message.dinosaurs.dino_collar.has_owner").withStyle(ChatFormatting.YELLOW));
+					player.displayClientMessage(Component.translatable(this.isOwnedBy(player)
+							? "message.dinosaurs.dino_collar.already_yours" : "message.dinosaurs.dino_collar.has_owner").withStyle(ChatFormatting.YELLOW), true);
 				}
 				return InteractionResult.FAIL;
 			}
 			if (!DinoProtection.hasAmulet(player)) {
 				if (!this.level().isClientSide()) {
-					player.sendOverlayMessage(Component.translatable("message.dinosaurs.dino_collar.need_amulet").withStyle(ChatFormatting.RED));
+					player.displayClientMessage(Component.translatable("message.dinosaurs.dino_collar.need_amulet").withStyle(ChatFormatting.RED), true);
 				}
 				return InteractionResult.FAIL;
 			}
@@ -212,7 +228,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 				this.level().playSound(null, this, SoundEvents.ARMOR_EQUIP_LEATHER.value(), this.getSoundSource(), 1.0F, 0.8F);
 				this.level().playSound(null, this, SoundEvents.CHAIN_PLACE, this.getSoundSource(), 1.0F, 1.0F);
 				((ServerLevel) this.level()).sendParticles(ParticleTypes.HEART, this.getX(), this.getEyeY(), this.getZ(), 7, 0.8, 0.5, 0.8, 0.02);
-				player.sendOverlayMessage(Component.translatable("message.dinosaurs.dino_collar.collared").withStyle(ChatFormatting.GREEN));
+				player.displayClientMessage(Component.translatable("message.dinosaurs.dino_collar.collared").withStyle(ChatFormatting.GREEN), true);
 			}
 			return InteractionResult.SUCCESS;
 		}
@@ -222,7 +238,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 					var food = stack.get(net.minecraft.core.component.DataComponents.FOOD);
 					this.heal(food != null ? 2.0F * food.nutrition() : 8.0F);
 					stack.consume(1, player);
-					this.playSound(SoundEvents.GENERIC_EAT.value(), 1.0F, 0.8F);
+					this.playSound(SoundEvents.GENERIC_EAT, 1.0F, 0.8F);
 				}
 				return InteractionResult.SUCCESS;
 			}
@@ -232,7 +248,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 					this.setOrderedToSit(sit);
 					this.getNavigation().stop();
 					this.setTarget(null);
-					player.sendOverlayMessage(Component.translatable(sit ? "message.dinosaurs.dino_collar.sit" : "message.dinosaurs.dino_collar.follow"));
+					player.displayClientMessage(Component.translatable(sit ? "message.dinosaurs.dino_collar.sit" : "message.dinosaurs.dino_collar.follow"), true);
 				}
 				return InteractionResult.SUCCESS;
 			}
@@ -245,23 +261,23 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 		if (target instanceof Creeper || target instanceof ArmorStand || target == owner) {
 			return false;
 		}
-		if (target instanceof OwnableEntity pet && pet.getOwnerReference() != null && pet.getOwnerReference().getUUID().equals(owner.getUUID())) {
+		if (target instanceof OwnableEntity pet && pet.getOwnerUUID() != null && pet.getOwnerUUID().equals(owner.getUUID())) {
 			return false;
 		}
 		return !(target instanceof Player targetPlayer && owner instanceof Player ownerPlayer && !ownerPlayer.canHarmPlayer(targetPlayer));
 	}
 
 	@Override
-	protected boolean considersEntityAsAlly(Entity other) {
+	public boolean isAlliedTo(Entity other) {
 		if (this.isCollared()) {
 			if (this.isOwnedBy(other)) {
 				return true;
 			}
-			if (other instanceof OwnableEntity pet && pet.getOwnerReference() != null && this.isOwnedBy(this.level().getPlayerByUUID(pet.getOwnerReference().getUUID()))) {
+			if (other instanceof OwnableEntity pet && pet.getOwnerUUID() != null && this.isOwnedBy(this.level().getPlayerByUUID(pet.getOwnerUUID()))) {
 				return true;
 			}
 		}
-		return super.considersEntityAsAlly(other);
+		return super.isAlliedTo(other);
 	}
 
 	@Override
@@ -285,14 +301,14 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	}
 
 	@Override
-	public boolean isPreventingPlayerRest(ServerLevel level, Player player) {
-		return !this.isCollared() && super.isPreventingPlayerRest(level, player);
+	public boolean isPreventingPlayerRest(Player player) {
+		return !this.isCollared() && super.isPreventingPlayerRest(player);
 	}
 
 	@Override
 	public void die(DamageSource source) {
 		if (this.level() instanceof ServerLevel && this.isCollared() && this.getOwner() instanceof ServerPlayer owner
-				&& ((ServerLevel) this.level()).getGameRules().get(net.minecraft.world.level.gamerules.GameRules.SHOW_DEATH_MESSAGES)) {
+				&& ((ServerLevel) this.level()).getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES)) {
 			owner.sendSystemMessage(this.getCombatTracker().getDeathMessage());
 		}
 		super.die(source);
@@ -302,7 +318,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
 		super.dropCustomDeathLoot(level, source, killedByPlayer);
 		if (this.isCollared()) {
-			this.spawnAtLocation(level, new ItemStack(ModItems.DINO_COLLAR));
+			this.spawnAtLocation(new ItemStack(ModItems.DINO_COLLAR));
 		}
 	}
 
@@ -315,9 +331,12 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	}
 
 	@Override
-	public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+	public boolean hurt(DamageSource source, float damage) {
+		if (this.level().isClientSide()) {
+			return super.hurt(source, damage);
+		}
 		protection.onHurt(source);
-		boolean hurt = super.hurtServer(level, source, damage);
+		boolean hurt = super.hurt(source, damage);
 		if (hurt && this.isOrderedToSit()) {
 			this.setOrderedToSit(false); // stands up to defend itself, like a sitting wolf
 		}
@@ -332,7 +351,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 			if (this.isOwnedBy(target)) {
 				return false;
 			}
-			if (target instanceof OwnableEntity pet && pet.getOwnerReference() != null && this.isOwnedBy(this.level().getPlayerByUUID(pet.getOwnerReference().getUUID()))) {
+			if (target instanceof OwnableEntity pet && pet.getOwnerUUID() != null && this.isOwnedBy(this.level().getPlayerByUUID(pet.getOwnerUUID()))) {
 				return false;
 			}
 			return super.canAttack(target);
@@ -342,10 +361,10 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	}
 
 	@Override
-	public boolean doHurtTarget(ServerLevel level, Entity target) {
-		boolean hit = super.doHurtTarget(level, target);
+	public boolean doHurtTarget(Entity target) {
+		boolean hit = super.doHurtTarget(target);
 		if (hit) {
-			level.broadcastEntityEvent(this, ATTACK_EVENT);
+			this.level().broadcastEntityEvent(this, ATTACK_EVENT);
 		}
 		return hit;
 	}
@@ -419,7 +438,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	// ---- companion goals (the vanilla ones need a TamableAnimal)
 
 	/** Following the owner is possible: collared, standing, not riding, owner in this level and not a spectator. */
-	private boolean canMoveToOwner(@Nullable LivingEntity owner) {
+	private boolean canMoveToOwner(LivingEntity owner) {
 		return owner != null && !this.isOrderedToSit() && !this.isPassenger() && !owner.isSpectator();
 	}
 
@@ -438,7 +457,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 			}
 			BlockPos pos = center.offset(dx, this.random.nextIntBetweenInclusive(-1, 1), dz);
 			if (this.canTeleportTo(pos)) {
-				this.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, this.getYRot(), this.getXRot());
+				this.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, this.getYRot(), this.getXRot());
 				this.getNavigation().stop();
 				return true;
 			}
@@ -484,7 +503,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 		private final double speed;
 		private final float startDistance;
 		private final float stopDistance;
-		private @Nullable LivingEntity owner;
+		private LivingEntity owner;
 		private int timeToRecalcPath;
 		private float oldWaterCost;
 
@@ -552,7 +571,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 
 	/** Attacks whatever hurt the owner (vanilla OwnerHurtByTargetGoal). */
 	private final class OwnerHurtByTargetGoal extends TargetGoal {
-		private @Nullable LivingEntity ownerLastHurtBy;
+		private LivingEntity ownerLastHurtBy;
 		private int timestamp;
 
 		OwnerHurtByTargetGoal() {
@@ -567,10 +586,6 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 			}
 			LivingEntity owner = getOwner();
 			if (owner == null) {
-				return false;
-			}
-			DamageSource last = owner.getLastDamageSource(100);
-			if (last == null || last.is(DamageTypeTags.NO_WOLF_RETALIATION)) {
 				return false;
 			}
 			this.ownerLastHurtBy = owner.getLastHurtByMob();
@@ -591,7 +606,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 
 	/** Attacks whatever the owner attacks (vanilla OwnerHurtTargetGoal). */
 	private final class OwnerHurtTargetGoal extends TargetGoal {
-		private @Nullable LivingEntity ownerLastHurt;
+		private LivingEntity ownerLastHurt;
 		private int timestamp;
 
 		OwnerHurtTargetGoal() {

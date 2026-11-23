@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -11,13 +11,14 @@ base {
 }
 
 repositories {
-	// Optional integrations (Trinkets Updated, Cloth Config, Mod Menu) are pulled from Modrinth's Maven.
+	// Optional integrations (Trinkets, Cloth Config, Mod Menu) are pulled from Modrinth's Maven.
 	exclusiveContent {
 		forRepository {
 			maven { name = "Modrinth"; url = "https://api.modrinth.com/maven" }
 		}
 		filter { includeGroup "maven.modrinth" }
 	}
+	maven { name = "Ladysnake"; url = "https://maven.ladysnake.org/releases" }
 }
 
 loom {
@@ -31,39 +32,64 @@ loom {
 	}
 }
 
-fabricApi {
-	// Client game test used to render every mob and take screenshots (run with xvfb-run ./gradlew runClientGameTest).
-	configureTests {
-		createSourceSet = true
-		modId = "dinosaurs-test"
-		enableGameTests = true
-		enableClientGameTests = true
-		eula = true
+sourceSets {
+	gametest {
+		compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output + sourceSets.client.compileClasspath + sourceSets.client.output
+		runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output + sourceSets.client.runtimeClasspath + sourceSets.client.output
+	}
+}
+
+loom {
+	mods {
+		"dinosaurs-test" {
+			sourceSet sourceSets.gametest
+		}
+	}
+	runs {
+		// Server game tests: ./gradlew runGametest
+		gametest {
+			server()
+			name = "Game Test"
+			vmArg "-Dfabric-api.gametest"
+			vmArg "-Dfabric-api.gametest.report-file=${project.buildDir}/junit.xml"
+			runDir "build/gametest"
+			source sourceSets.gametest
+		}
+		// Client smoke test with screenshots: xvfb-run ./gradlew runClientSmoke
+		clientSmoke {
+			client()
+			name = "Client Smoke"
+			vmArg "-Ddinosaurs.smoke=true"
+			vmArg "-Ddinosaurs.smokeShots=" + (project.findProperty("smokeShots") ?: "/workspace/dino-backport/" + project.minecraft_version)
+			runDir "build/clientsmoke"
+			source sourceSets.gametest
+		}
 	}
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	// All three are OPTIONAL at runtime: the mod checks FabricLoader.isModLoaded before touching them.
-	compileOnly "maven.modrinth:trinkets-updated:${project.trinkets_version}"
-	compileOnly "maven.modrinth:cloth-config:${project.cloth_config_version}"
-	compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
-	if (project.findProperty("xaeroJar")) {
-		// ./gradlew runClientGameTest -PxaeroJar=/path/to/xaerominimap-fabric-<mc>-<ver>.jar
-		//   -> only XaeroRadarScreenshotTest runs: minimap radar screenshots with the dinosaur head icons
-		localRuntime files(project.property("xaeroJar"))
-	}
+	modCompileOnly "maven.modrinth:trinkets:${project.trinkets_version}"
+	modCompileOnly "org.ladysnake.cardinal-components-api:cardinal-components-base:${project.cca_version}"
+	modCompileOnly "org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
+	modCompileOnly "maven.modrinth:cloth-config:${project.cloth_config_version}"
+	modCompileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
 	if (project.findProperty("withCloth") == "true") {
-		// ./gradlew runClientGameTest -PwithCloth=true  -> Cloth Config + Mod Menu at runtime (config screen screenshots)
-		localRuntime "maven.modrinth:cloth-config:${project.cloth_config_version}"
-		localRuntime "maven.modrinth:modmenu:${project.modmenu_version}"
+		modLocalRuntime "maven.modrinth:cloth-config:${project.cloth_config_version}"
+		modLocalRuntime "maven.modrinth:modmenu:${project.modmenu_version}"
 	}
 	if (project.findProperty("withTrinkets") == "true") {
-		// ./gradlew runServer -PwithTrinkets=true  -> test the Trinkets integration in the dev server
-		localRuntime "maven.modrinth:trinkets-updated:${project.trinkets_version}"
+		modLocalRuntime "maven.modrinth:trinkets:${project.trinkets_version}"
+		modLocalRuntime "org.ladysnake.cardinal-components-api:cardinal-components-base:${project.cca_version}"
+		modLocalRuntime "org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
+	}
+	if (project.findProperty("xaeroJar")) {
+		modLocalRuntime files(project.property("xaeroJar").split(","))
 	}
 }
 
@@ -77,13 +103,13 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+	it.options.release = 21
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
@@ -95,57 +121,25 @@ jar {
 	}
 }
 
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			from components.java
-		}
-	}
-	repositories {
-	}
-}
-
-// -PclawOnly=true: run only the Dinosaur Claw screenshot test. -PclawShots=dir: where its screenshots go (default /workspace/dino-claw).
-tasks.matching { it.name == "runClientGameTest" }.configureEach {
-	if (project.findProperty("clawOnly")) {
-		systemProperty "dinosaurs.clawOnly", "true"
-	}
-	if (project.findProperty("clawShots")) {
-		systemProperty "dinosaurs.clawShots", project.property("clawShots")
-	}
-	// -PcollarOnly=true: run only the Dino Collar / Megalodon / config screenshot test (1.7.0). -PcollarShots=dir (default /workspace/dino-collar).
-	if (project.findProperty("collarOnly")) {
-		systemProperty "dinosaurs.collarOnly", "true"
-	}
-	if (project.findProperty("collarShots")) {
-		systemProperty "dinosaurs.collarShots", project.property("collarShots")
-	}
-}
-
+// ./gradlew runClientSmoke -PxaeroJar=/path/to/xaerominimap-fabric-<mc>-<ver>.jar
+//   -> only the Xaero's Minimap radar part runs (icons + names always on), screenshot xaero_radar.png
 if (project.findProperty("xaeroJar")) {
-	def xaeroCfg = file("build/run/clientGameTest/config/xaero/minimap/profiles/default.cfg")
-	// -PxaeroRadar=always: icons and names always on (no Tab needed). Default: Xaero's defaults (icons while Tab is held).
-	def xaeroAlways = project.findProperty("xaeroRadar") == "always"
+	def xaeroCfg = file("build/clientsmoke/config/xaero/minimap/profiles/default.cfg")
 	def xaeroCategories = file("src/gametest/xaero/default_radar_categories_client.json")
-	def xaeroCategoriesTarget = file("build/run/clientGameTest/config/xaero/minimap/default_radar_categories_client.json")
-	tasks.matching { it.name == "runClientGameTest" }.configureEach {
+	def xaeroCategoriesTarget = file("build/clientsmoke/config/xaero/minimap/default_radar_categories_client.json")
+	tasks.matching { it.name == "runClientSmoke" }.configureEach {
 		systemProperty "dinosaurs.xaeroOnly", "true"
-		systemProperty "dinosaurs.xaeroRadar", xaeroAlways ? "always" : "tab"
-		systemProperty "dinosaurs.xaeroShots", project.findProperty("xaeroShots") ?: "/workspace/dino-xaero"
-		// A bigger, zoomed-in, north-locked minimap so the radar icons are easy to see. Xaero keeps any other options.
 		doFirst {
-			def cfg = xaeroCfg
-			cfg.parentFile.mkdirs()
+			xaeroCfg.parentFile.mkdirs()
 			def want = [minimap_size: "200", minimap_zoom: "6", minimap_north_locked: "true", minimap_ui_scale: "2"]
-			def lines = cfg.exists() ? cfg.readLines() : []
+			def lines = xaeroCfg.exists() ? xaeroCfg.readLines() : []
 			want.each { k, v ->
 				int i = lines.findIndexOf { it.startsWith(k + " = ") }
 				if (i >= 0) lines[i] = k + " = " + v else lines << (k + " = " + v)
 			}
-			cfg.text = lines.join("\n") + "\n"
-			if (xaeroAlways) {
-				xaeroCategoriesTarget.text = xaeroCategories.text
-			}
+			xaeroCfg.text = lines.join("\n") + "\n"
+			xaeroCategoriesTarget.parentFile.mkdirs()
+			xaeroCategoriesTarget.text = xaeroCategories.text
 		}
 	}
 }

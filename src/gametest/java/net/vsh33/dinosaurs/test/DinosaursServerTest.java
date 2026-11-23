@@ -1,17 +1,18 @@
 package net.vsh33.dinosaurs.test;
 
-import eu.pb4.trinkets.api.DefaultTrinketSlotTags;
-import eu.pb4.trinkets.api.TrinketInventory;
-import eu.pb4.trinkets.api.TrinketsApi;
-import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import dev.emi.trinkets.api.TrinketInventory;
+import dev.emi.trinkets.api.TrinketsApi;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.minecraft.gametest.framework.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.block.Blocks;
 import net.vsh33.dinosaurs.config.DinoConfig;
@@ -43,7 +44,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -54,7 +55,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Server game tests (./gradlew runGameTest): amulet logic, saddle/riding logic, recipes and advancements. */
-public class DinosaursServerTest {
+public class DinosaursServerTest implements FabricGameTest {
 	/** Survival mock player (the in-level mock player is creative, which no mob ever targets). */
 	static Player survivalPlayer(GameTestHelper helper) {
 		helper.getLevel().getServer().setDifficulty(Difficulty.NORMAL, true);
@@ -63,51 +64,51 @@ public class DinosaursServerTest {
 
 	private static void checkAmulet(GameTestHelper helper, Mob dino) {
 		Player player = survivalPlayer(helper);
-		player.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+		player.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
 		helper.assertTrue(dino.canAttack(player), "dino should be able to attack a player without the amulet");
 		player.getInventory().add(new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION));
 		helper.assertFalse(dino.canAttack(player), "dino must not attack a player carrying the amulet");
 		dino.setTarget(player);
 		helper.runAfterDelay(12, () -> {
 			helper.assertTrue(dino.getTarget() == null, "protected player must be dropped as target, got " + dino.getTarget());
-			dino.hurtServer(helper.getLevel(), player.damageSources().playerAttack(player), 1.0F);
+			dino.hurt(player.damageSources().playerAttack(player), 1.0F);
 			helper.assertTrue(dino.canAttack(player), "after being attacked the dino may retaliate");
 			helper.succeed();
 		});
 	}
 
-	@GameTest(maxTicks = 60)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 60)
 	public void raptorAmulet(GameTestHelper helper) {
 		checkAmulet(helper, helper.spawn(ModEntities.VELOCIRAPTOR, new BlockPos(4, 1, 4)));
 	}
 
-	@GameTest(maxTicks = 60)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 60)
 	public void tRexAmulet(GameTestHelper helper) {
 		checkAmulet(helper, helper.spawn(ModEntities.T_REX, new BlockPos(4, 1, 4)));
 	}
 
-	@GameTest(maxTicks = 60)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 60)
 	public void megalodonAmulet(GameTestHelper helper) {
 		checkAmulet(helper, helper.spawn(ModEntities.MEGALODON, new BlockPos(4, 1, 4)));
 	}
 
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void saddleAndRide(GameTestHelper helper) {
 		Player player = survivalPlayer(helper);
-		player.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+		player.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
 		Triceratops trike = helper.spawn(ModEntities.TRICERATOPS, new BlockPos(4, 1, 4));
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINOSAUR_SADDLE));
-		trike.interact(player, InteractionHand.MAIN_HAND, trike.position());
+		trike.interact(player, InteractionHand.MAIN_HAND);
 		helper.assertTrue(trike.isSaddled(), "saddle should be applied");
 		helper.assertTrue(player.getMainHandItem().isEmpty(), "saddle item should be consumed");
-		trike.interact(player, InteractionHand.MAIN_HAND, trike.position());
+		trike.interact(player, InteractionHand.MAIN_HAND);
 		helper.assertTrue(player.getVehicle() == trike, "player should be riding");
 		helper.assertTrue(trike.getControllingPassenger() == player, "rider should control the triceratops");
 		helper.succeed();
 	}
 
 	/** Only meaningful with Trinkets installed: ./gradlew runGameTest -PwithTrinkets=true */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void trinketsNecklaceSlot(GameTestHelper helper) {
 		if (!FabricLoader.getInstance().isModLoaded("trinkets")) {
 			Dinosaurs.LOGGER.info("[test] Trinkets not installed, skipping necklace slot test");
@@ -120,11 +121,11 @@ public class DinosaursServerTest {
 	private static final class TrinketsCheck {
 		static void run(GameTestHelper helper) {
 			Player player = survivalPlayer(helper);
-			player.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+			player.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
 			Mob raptor = helper.spawn(ModEntities.VELOCIRAPTOR, new BlockPos(4, 1, 4));
 			ItemStack amulet = new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION);
-			helper.assertTrue(amulet.typeHolder().is(DefaultTrinketSlotTags.CHEST_NECKLACE), "amulet must be tagged #trinkets:chest/necklace");
-			var groups = TrinketsApi.getAttachment(player).getInventory();
+			helper.assertTrue(amulet.is(TagKey.create(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath("trinkets", "chest/necklace"))), "amulet must be tagged #trinkets:chest/necklace");
+			var groups = TrinketsApi.getTrinketComponent(player).orElseThrow().getInventory();
 			helper.assertTrue(groups.containsKey("chest") && groups.get("chest").containsKey("necklace"), "player needs a chest/necklace slot, got " + groups.keySet());
 			TrinketInventory necklace = groups.get("chest").get("necklace");
 			necklace.setItem(0, amulet);
@@ -135,7 +136,7 @@ public class DinosaursServerTest {
 		}
 	}
 
-	@GameTest(skyAccess = true)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, skyAccess = true)
 	public void configSpawnToggles(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		BlockPos rel = new BlockPos(3, 2, 3);
@@ -143,10 +144,10 @@ public class DinosaursServerTest {
 		helper.setBlock(rel, Blocks.AIR);
 		BlockPos pos = helper.absolutePos(rel);
 		DinoConfig config = DinoConfig.get();
-		boolean before = SpawnPlacements.checkSpawnRules(ModEntities.TRICERATOPS, level, EntitySpawnReason.NATURAL, pos, level.getRandom());
+		boolean before = SpawnPlacements.checkSpawnRules(ModEntities.TRICERATOPS, level, MobSpawnType.NATURAL, pos, level.getRandom());
 		config.setSpawnEnabled(ModEntities.TRICERATOPS, false);
-		boolean disabled = SpawnPlacements.checkSpawnRules(ModEntities.TRICERATOPS, level, EntitySpawnReason.NATURAL, pos, level.getRandom());
-		boolean egg = SpawnPlacements.checkSpawnRules(ModEntities.TRICERATOPS, level, EntitySpawnReason.SPAWN_ITEM_USE, pos, level.getRandom());
+		boolean disabled = SpawnPlacements.checkSpawnRules(ModEntities.TRICERATOPS, level, MobSpawnType.NATURAL, pos, level.getRandom());
+		boolean egg = SpawnPlacements.checkSpawnRules(ModEntities.TRICERATOPS, level, MobSpawnType.SPAWN_EGG, pos, level.getRandom());
 		config.setSpawnEnabled(ModEntities.TRICERATOPS, true);
 		Dinosaurs.LOGGER.info("[test] triceratops natural spawn: enabled={} disabled={} spawnEgg(disabled)={}", before, disabled, egg);
 		helper.assertTrue(before, "baseline natural spawn should be allowed on grass in daylight");
@@ -155,10 +156,10 @@ public class DinosaursServerTest {
 		helper.succeed();
 	}
 
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void recipesAndAdvancements(GameTestHelper helper) {
 		for (String id : new String[]{"dino_collar", "amulet_of_dino_protection", "dinosaur_saddle", "leather_from_brachiosaurus_hide", "t_rex_skull_helmet", "dinosaur_bone_bow", "bone_meal_from_dinosaur_bones"}) {
-			helper.assertTrue(helper.getLevel().recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id(id))).isPresent(), "missing recipe " + id);
+			helper.assertTrue(helper.getLevel().getRecipeManager().byKey(Dinosaurs.id(id)).isPresent(), "missing recipe " + id);
 		}
 		for (String id : new String[]{"amulet", "ride_triceratops", "recipes/equipment/dinosaur_saddle", "recipes/equipment/amulet_of_dino_protection", "recipes/misc/leather_from_brachiosaurus_hide", "recipes/equipment/dinosaur_bone_bow", "recipes/misc/bone_meal_from_dinosaur_bones"}) {
 			helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id(id)) != null, "missing advancement " + id);
@@ -176,7 +177,7 @@ public class DinosaursServerTest {
 			@SuppressWarnings("unchecked")
 			Recipe<CraftingInput> recipe = (Recipe<CraftingInput>) holder.value();
 			if (recipe.matches(input, level)) {
-				matches.add(holder.id().identifier().toString());
+				matches.add(holder.id().toString());
 			}
 		}
 		return matches;
@@ -186,7 +187,7 @@ public class DinosaursServerTest {
 	 * Guide book: Book + Leather + any dinosaur trophy is the ONLY recipe for that grid; Book + Leather alone
 	 * (left free for other mods' guide books) and Book + Leather + Bone do not make it.
 	 */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void guideBookRecipe(GameTestHelper helper) {
 		TagKey<Item> trophies = TagKey.create(Registries.ITEM, Dinosaurs.id("guide_book_trophies"));
 		Item[] expected = {ModItems.PARASAUROLOPHUS_CREST, ModItems.BRACHIOSAURUS_HIDE, ModItems.RAPTOR_CLAW, ModItems.T_REX_TOOTH, ModItems.MEGALODON_TOOTH};
@@ -198,13 +199,13 @@ public class DinosaursServerTest {
 		}
 		helper.assertTrue(tagged == expected.length, "trophy tag should hold " + expected.length + " items, has " + tagged);
 		CraftingRecipe recipe = (CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id("guide_book"))).orElseThrow().value();
+				.byKey(Dinosaurs.id("guide_book")).orElseThrow().value();
 		for (Item trophy : expected) {
 			helper.assertTrue(new ItemStack(trophy).is(trophies), trophy + " must be a guide book trophy");
 			CraftingInput input = CraftingInput.of(3, 1, List.of(new ItemStack(trophy), new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER)));
 			List<String> matches = craftingMatches(helper, input);
 			helper.assertTrue(matches.equals(List.of("dinosaurs:guide_book")), "book + leather + " + trophy + " matches " + matches);
-			ItemStack out = recipe.assemble(input);
+			ItemStack out = recipe.assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 			helper.assertTrue(out.is(ModItems.GUIDE_BOOK) && out.getCount() == 1, "should craft one guide book, got " + out);
 		}
 		List<String> plain = craftingMatches(helper, CraftingInput.of(2, 1, List.of(new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER))));
@@ -217,10 +218,10 @@ public class DinosaursServerTest {
 	}
 
 	/** T-Rex Skull + Leather + Netherite Ingot (any order) makes the helmet, and nothing else uses that grid. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void skullHelmetRecipe(GameTestHelper helper) {
 		CraftingRecipe recipe = (CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id("t_rex_skull_helmet"))).orElseThrow().value();
+				.byKey(Dinosaurs.id("t_rex_skull_helmet")).orElseThrow().value();
 		List<List<ItemStack>> orders = List.of(
 				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER), new ItemStack(Items.NETHERITE_INGOT)),
 				List.of(new ItemStack(Items.NETHERITE_INGOT), new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER)));
@@ -228,7 +229,7 @@ public class DinosaursServerTest {
 			CraftingInput input = CraftingInput.of(3, 1, items);
 			List<String> matches = craftingMatches(helper, input);
 			helper.assertTrue(matches.equals(List.of("dinosaurs:t_rex_skull_helmet")), "skull + leather + netherite matches " + matches);
-			ItemStack out = recipe.assemble(input);
+			ItemStack out = recipe.assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 			helper.assertTrue(out.is(ModItems.T_REX_SKULL_HELMET) && out.getCount() == 1, "should craft one helmet, got " + out);
 		}
 		CraftingInput tall = CraftingInput.of(1, 3, List.of(new ItemStack(Items.LEATHER), new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.NETHERITE_INGOT)));
@@ -246,7 +247,7 @@ public class DinosaursServerTest {
 	}
 
 	/** Above netherite in every stat, fire resistant, a head item, repairable with netherite or a skull, and wearable. */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void skullHelmetStats(GameTestHelper helper) {
 		ItemStack helmet = new ItemStack(ModItems.T_REX_SKULL_HELMET);
 		ItemStack netherite = new ItemStack(Items.NETHERITE_HELMET);
@@ -258,22 +259,20 @@ public class DinosaursServerTest {
 			helper.assertTrue(ours[i] > neth[i], "stat " + i + " should beat netherite: " + ours[i] + " vs " + neth[i]);
 		}
 		helper.assertTrue(helmet.getMaxDamage() > netherite.getMaxDamage(), "durability should beat netherite");
-		helper.assertTrue(helmet.get(net.minecraft.core.component.DataComponents.ENCHANTABLE).value()
-				>= netherite.get(net.minecraft.core.component.DataComponents.ENCHANTABLE).value(), "enchantability at least netherite");
-		helper.assertTrue(helmet.has(net.minecraft.core.component.DataComponents.DAMAGE_RESISTANT), "helmet must be fire resistant");
+		helper.assertTrue(helmet.getItem().getEnchantmentValue()
+				>= netherite.getItem().getEnchantmentValue(), "enchantability at least netherite");
+		helper.assertTrue(helmet.has(net.minecraft.core.component.DataComponents.FIRE_RESISTANT), "helmet must be fire resistant");
 		helper.assertTrue(helmet.is(net.minecraft.tags.ItemTags.HEAD_ARMOR), "helmet must be #minecraft:head_armor (helmet enchantments)");
-		var repairable = helmet.get(net.minecraft.core.component.DataComponents.REPAIRABLE);
-		helper.assertTrue(repairable != null && repairable.isValidRepairItem(new ItemStack(Items.NETHERITE_INGOT))
-				&& repairable.isValidRepairItem(new ItemStack(ModItems.T_REX_SKULL)), "repair with netherite ingot or T-Rex skull");
-		var equippable = helmet.get(net.minecraft.core.component.DataComponents.EQUIPPABLE);
-		helper.assertTrue(equippable != null && equippable.slot() == net.minecraft.world.entity.EquipmentSlot.HEAD && equippable.assetId().isEmpty(),
-				"head slot, no flat armor layer (3D model is drawn instead)");
+		helper.assertTrue(helmet.getItem().isValidRepairItem(helmet, new ItemStack(Items.NETHERITE_INGOT))
+				&& helmet.getItem().isValidRepairItem(helmet, new ItemStack(ModItems.T_REX_SKULL)), "repair with netherite ingot or T-Rex skull");
+		helper.assertTrue(helmet.getItem() instanceof net.minecraft.world.item.Equipable e && e.getEquipmentSlot() == net.minecraft.world.entity.EquipmentSlot.HEAD
+				&& !(helmet.getItem() instanceof net.minecraft.world.item.ArmorItem), "head slot, no flat armor layer (3D model is drawn instead)");
 		Player player = survivalPlayer(helper);
 		player.setItemInHand(InteractionHand.MAIN_HAND, helmet.copy());
 		player.getMainHandItem().use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
 		helper.assertTrue(player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD).is(ModItems.T_REX_SKULL_HELMET), "right-click should put it on");
 		// Attribute modifiers from equipment are applied on the wearer's next tick (the mock player is not ticked).
-		var stand = helper.spawn(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, new BlockPos(2, 1, 2));
+		var stand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(2, 1, 2));
 		stand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, helmet.copy());
 		helper.runAfterDelay(3, () -> {
 			helper.assertTrue(stand.getArmorValue() == (int) ours[0], "worn helmet should give " + ours[0] + " armor, got " + stand.getArmorValue());
@@ -295,7 +294,7 @@ public class DinosaursServerTest {
 	 * T. rex loot table, rolled 4000 times: the skull drops only when a player killed it, about 4% of the time,
 	 * about 10% with Looting III; the tooth still drops every time.
 	 */
-	@GameTest(maxTicks = 100)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 100)
 	public void tRexSkullLoot(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		var table = level.getServer().reloadableRegistries().getLootTable(
@@ -346,7 +345,7 @@ public class DinosaursServerTest {
 	// ---- 1.4.0: Dinosaur Bones and the Dinosaur Bone Bow
 
 	/** Bow + 3 Dinosaur Bones + Netherite Ingot makes ONLY the bone bow; near-miss grids make nothing of ours. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void boneBowRecipe(GameTestHelper helper) {
 		ItemStack e = ItemStack.EMPTY;
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
@@ -356,8 +355,8 @@ public class DinosaursServerTest {
 		List<String> matches = craftingMatches(helper, full);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_bone_bow")), "bone bow grid matches " + matches);
 		ItemStack out = ((CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id("dinosaur_bone_bow"))).orElseThrow().value())
-				.assemble(full);
+				.byKey(Dinosaurs.id("dinosaur_bone_bow")).orElseThrow().value())
+				.assemble(full, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_BONE_BOW) && out.getCount() == 1, "result " + out);
 		// Missing netherite / vanilla bones instead of dinosaur bones: no match at all.
 		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(e, b, e, b, w, b, e, e, e))).isEmpty(), "no-netherite grid must not craft");
@@ -376,20 +375,20 @@ public class DinosaursServerTest {
 	}
 
 	/** Item properties, then a real shot: a 15-tick draw fires a full-power arrow at 1.5x vanilla speed. */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void boneBowStats(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		ItemStack bow = new ItemStack(ModItems.DINOSAUR_BONE_BOW);
 		helper.assertTrue(bow.getMaxDamage() >= 1000, "durability " + bow.getMaxDamage());
 		helper.assertTrue(bow.getMaxDamage() > new ItemStack(Items.BOW).getMaxDamage() * 2, "durability vs bow");
-		helper.assertTrue(bow.has(DataComponents.DAMAGE_RESISTANT), "bone bow must be fire resistant");
-		helper.assertTrue(bow.isValidRepairItem(new ItemStack(ModItems.DINOSAUR_BONES)), "repairable with dinosaur bones");
-		helper.assertFalse(bow.isValidRepairItem(new ItemStack(Items.STICK)), "not repairable with sticks");
+		helper.assertTrue(bow.has(DataComponents.FIRE_RESISTANT), "bone bow must be fire resistant");
+		helper.assertTrue(bow.getItem().isValidRepairItem(bow, new ItemStack(ModItems.DINOSAUR_BONES)), "repairable with dinosaur bones");
+		helper.assertFalse(bow.getItem().isValidRepairItem(bow, new ItemStack(Items.STICK)), "not repairable with sticks");
 		helper.assertTrue(bow.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE), "enchantable/bow tag");
 		helper.assertTrue(bow.is(net.minecraft.tags.ItemTags.DURABILITY_ENCHANTABLE), "enchantable/durability tag");
 		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 		for (var key : List.of(Enchantments.POWER, Enchantments.PUNCH, Enchantments.FLAME, Enchantments.INFINITY, Enchantments.UNBREAKING, Enchantments.MENDING)) {
-			helper.assertTrue(enchants.getOrThrow(key).value().canEnchant(bow), "bow must accept " + key.identifier());
+			helper.assertTrue(enchants.getOrThrow(key).value().canEnchant(bow), "bow must accept " + key.location());
 		}
 		helper.assertTrue(DinosaurBoneBowItem.getPowerForTime(DinosaurBoneBowItem.DRAW_TICKS) >= 1.0F, "full power at 15 ticks");
 		helper.assertTrue(net.minecraft.world.item.BowItem.getPowerForTime(DinosaurBoneBowItem.DRAW_TICKS) < 1.0F, "vanilla is not full at 15 ticks");
@@ -406,7 +405,7 @@ public class DinosaursServerTest {
 	private static double shoot(GameTestHelper helper, ItemStack bow, int ticksHeld) {
 		ServerLevel level = helper.getLevel();
 		Player player = survivalPlayer(helper);
-		player.snapTo(helper.absoluteVec(new Vec3(2.5, 2, 2.5)), 0.0F, 0.0F);
+		player.moveTo(helper.absoluteVec(new Vec3(2.5, 2, 2.5)), 0.0F, 0.0F);
 		player.setItemInHand(InteractionHand.MAIN_HAND, bow);
 		player.getInventory().add(new ItemStack(Items.ARROW, 16));
 		AABB box = new AABB(player.blockPosition()).inflate(8);
@@ -442,7 +441,7 @@ public class DinosaursServerTest {
 	}
 
 	/** Anvil: Infinity + Mending combine on the bone bow (both orders); vanilla bows still refuse. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void boneBowInfinityMendingAnvil(GameTestHelper helper) {
 		var enchants = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 		Holder<Enchantment> infinity = enchants.getOrThrow(Enchantments.INFINITY);
@@ -462,13 +461,13 @@ public class DinosaursServerTest {
 	}
 
 	/** /enchant: Mending on an Infinity bone bow works, on an Infinity vanilla bow it fails. */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void boneBowInfinityMendingCommand(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
-		ArmorStand boneStand = helper.spawn(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, new BlockPos(1, 1, 1));
+		ArmorStand boneStand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(1, 1, 1));
 		boneStand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.INFINITY));
 		boneStand.addTag("dino_bone_bow_test");
-		ArmorStand plainStand = helper.spawn(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, new BlockPos(3, 1, 1));
+		ArmorStand plainStand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(3, 1, 1));
 		plainStand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, enchanted(helper, Items.BOW, Enchantments.INFINITY));
 		plainStand.addTag("dino_plain_bow_test");
 		var server = level.getServer();
@@ -487,7 +486,7 @@ public class DinosaursServerTest {
 	}
 
 	/** Large dinosaurs drop Dinosaur Bones instead of bones; Velociraptor, Pteranodon and Megalodon keep vanilla bones. */
-	@GameTest(maxTicks = 100)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 100)
 	public void dinosaurBonesLoot(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		Player player = survivalPlayer(helper);
@@ -502,7 +501,7 @@ public class DinosaursServerTest {
 		StringBuilder log = new StringBuilder();
 		int x = 1;
 		for (EntityType<? extends Mob> type : ModEntities.ALL) {
-			var table = level.getServer().reloadableRegistries().getLootTable(type.getDefaultLootTable().orElseThrow());
+			var table = level.getServer().reloadableRegistries().getLootTable(type.getDefaultLootTable());
 			Mob mob = helper.spawn(type, new BlockPos(x, 1, 4));
 			int rolls = 300;
 			int min = Integer.MAX_VALUE, max = 0, vanilla = 0;
@@ -542,7 +541,7 @@ public class DinosaursServerTest {
 	}
 
 	/** 1.4.1: crafting the bone bow from an enchanted, named, damaged bow keeps its data; a plain bow gives a plain bone bow. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void boneBowKeepsEnchantments(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
@@ -565,7 +564,7 @@ public class DinosaursServerTest {
 		helper.assertTrue(out.getMaxDamage() == 1152, "max durability is the bone bow's: " + out.getMaxDamage());
 		// 100/384 damaged -> 300/1152: the same fraction of durability, never a free repair.
 		helper.assertTrue(out.getDamageValue() == 300, "damage scaled 100/384 -> 300/1152, got " + out.getDamageValue());
-		helper.assertTrue(out.has(DataComponents.DAMAGE_RESISTANT), "still fire resistant");
+		helper.assertTrue(out.has(DataComponents.FIRE_RESISTANT), "still fire resistant");
 		helper.assertTrue(bow.getDamageValue() == 100 && bow.is(Items.BOW), "input stack untouched");
 
 		ItemStack plain = craftBoneBow(helper, new ItemStack(Items.BOW));
@@ -587,7 +586,7 @@ public class DinosaursServerTest {
 			{ModItems.DINOSAUR_BOOTS, Items.NETHERITE_BOOTS, ModItems.RAPTOR_CLAW, Items.DIAMOND_BOOTS}};
 
 	private static net.minecraft.world.entity.EquipmentSlot slotOf(Item item) {
-		return new ItemStack(item).get(DataComponents.EQUIPPABLE).slot();
+		return ((net.minecraft.world.item.Equipable) item).getEquipmentSlot();
 	}
 
 	/** armor, toughness, knockback resistance of one piece in its own slot. */
@@ -602,7 +601,7 @@ public class DinosaursServerTest {
 	}
 
 	private static int enchantability(ItemStack stack) {
-		return stack.get(DataComponents.ENCHANTABLE).value();
+		return stack.getItem().getEnchantmentValue();
 	}
 
 	/**
@@ -610,7 +609,7 @@ public class DinosaursServerTest {
 	 * durability multiplier, enchantability); armor points 10 / 8 / 4 (netherite 8 / 6 / 3).
 	 * Fire resistant, armor tags (enchantments, trims), repaired with Dinosaur Bones, worn with the dinosaur armor layer.
 	 */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void dinosaurArmorStats(GameTestHelper helper) {
 		StringBuilder log = new StringBuilder();
 		for (Item[] row : ARMOR) {
@@ -627,13 +626,12 @@ public class DinosaursServerTest {
 					row[0] + " durability " + ours.getMaxDamage() + " should be 41/37/33 x " + slotMul);
 			helper.assertTrue(enchantability(ours) - enchantability(neth) == enchantability(neth) - enchantability(dia),
 					row[0] + " enchantability " + enchantability(ours));
-			helper.assertTrue(ours.has(DataComponents.DAMAGE_RESISTANT), row[0] + " must be fire resistant");
+			helper.assertTrue(ours.has(DataComponents.FIRE_RESISTANT), row[0] + " must be fire resistant");
 			helper.assertTrue(ours.is(net.minecraft.tags.ItemTags.TRIMMABLE_ARMOR), row[0] + " must be trimmable armor");
-			var repairable = ours.get(DataComponents.REPAIRABLE);
-			helper.assertTrue(repairable != null && repairable.isValidRepairItem(new ItemStack(ModItems.DINOSAUR_BONES))
-					&& !repairable.isValidRepairItem(new ItemStack(Items.NETHERITE_INGOT)), row[0] + " repaired with dinosaur bones");
-			var equippable = ours.get(DataComponents.EQUIPPABLE);
-			helper.assertTrue(equippable.slot() == slotOf(row[1]) && equippable.assetId().orElseThrow().identifier().equals(Dinosaurs.id("dinosaur")),
+			helper.assertTrue(ours.getItem().isValidRepairItem(ours, new ItemStack(ModItems.DINOSAUR_BONES))
+					&& !ours.getItem().isValidRepairItem(ours, new ItemStack(Items.NETHERITE_INGOT)), row[0] + " repaired with dinosaur bones");
+			helper.assertTrue(slotOf(row[0]) == slotOf(row[1]) && ((net.minecraft.world.item.ArmorItem) row[0]).getMaterial().value().layers().get(0)
+					.texture(false).equals(Dinosaurs.id("textures/models/armor/dinosaur_layer_1.png")),
 					row[0] + " worn layer dinosaurs:dinosaur in " + slotOf(row[1]));
 			log.append(String.format(" %s %.0f/%.1f/%.1f %d ench %d (netherite %.0f/%.1f/%.1f %d %d, diamond %.0f/%.1f/%.1f %d %d)",
 					BuiltInRegistries.ITEM.getKey(row[0]).getPath(), o[0], o[1], o[2], ours.getMaxDamage(), enchantability(ours),
@@ -649,7 +647,7 @@ public class DinosaursServerTest {
 				"skull helmet should match the dinosaur tier: " + h[0] + "/" + h[1] + "/" + h[2] + " " + helmet.getMaxDamage() + " " + enchantability(helmet));
 		Dinosaurs.LOGGER.info("[test] dinosaur armor:{}", log);
 		// Full set worn by an armor stand: 3 + 8 + 6 + 3... armor stand with skull helmet + the three pieces.
-		var stand = helper.spawn(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, new BlockPos(2, 1, 2));
+		var stand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(2, 1, 2));
 		stand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, helmet.copy());
 		for (Item[] row : ARMOR) {
 			stand.setItemSlot(slotOf(row[0]), new ItemStack(row[0]));
@@ -665,7 +663,7 @@ public class DinosaursServerTest {
 	}
 
 	/** Template recipes: Netherite Upgrade + 8 Dinosaur Bones, and the duplication (2 out); nothing else uses those grids. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void dinosaurUpgradeRecipes(GameTestHelper helper) {
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
 		ItemStack nt = new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
@@ -674,19 +672,19 @@ public class DinosaursServerTest {
 		List<String> matches = craftingMatches(helper, make);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_upgrade_smithing_template")), "template grid matches " + matches);
 		var level = helper.getLevel();
-		ItemStack out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, make, level).orElseThrow().value().assemble(make);
+		ItemStack out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, make, level).orElseThrow().value().assemble(make, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE) && out.getCount() == 1, "one template, got " + out);
 		CraftingInput copy = CraftingInput.of(3, 3, List.of(b, dt, b, b, new ItemStack(Items.BONE_BLOCK), b, b, b, b));
 		matches = craftingMatches(helper, copy);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_upgrade_smithing_template_duplication")), "duplication grid matches " + matches);
-		out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, copy, level).orElseThrow().value().assemble(copy);
+		out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, copy, level).orElseThrow().value().assemble(copy, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE) && out.getCount() == 2, "duplication gives 2, got " + out);
 		// Vanilla bones instead of dinosaur bones: nothing.
 		ItemStack bone = new ItemStack(Items.BONE);
 		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(bone, bone, bone, bone, nt, bone, bone, bone, bone))).isEmpty(), "vanilla bones must not work");
 		for (String id : new String[]{"dinosaur_upgrade_smithing_template", "dinosaur_upgrade_smithing_template_duplication",
 				"dinosaur_chestplate_smithing", "dinosaur_leggings_smithing", "dinosaur_boots_smithing"}) {
-			helper.assertTrue(level.recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id(id))).isPresent(), "missing recipe " + id);
+			helper.assertTrue(level.getRecipeManager().byKey(Dinosaurs.id(id)).isPresent(), "missing recipe " + id);
 		}
 		for (String id : new String[]{"recipes/misc/dinosaur_upgrade_smithing_template", "recipes/misc/dinosaur_upgrade_smithing_template_duplication",
 				"recipes/equipment/dinosaur_chestplate_smithing", "recipes/equipment/dinosaur_leggings_smithing", "recipes/equipment/dinosaur_boots_smithing"}) {
@@ -705,7 +703,7 @@ public class DinosaursServerTest {
 			@SuppressWarnings("unchecked")
 			Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput> recipe = (Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput>) holder.value();
 			if (recipe.matches(input, level)) {
-				matches.add(holder.id().identifier().toString());
+				matches.add(holder.id().toString());
 			}
 		}
 		return matches;
@@ -715,7 +713,7 @@ public class DinosaursServerTest {
 	 * Smithing table: Dinosaur Upgrade + netherite piece + its trophy -> the dinosaur piece, keeping enchantments, name,
 	 * trim and damage (like the netherite upgrade). Wrong trophy, a diamond piece or the netherite template: no match.
 	 */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void dinosaurArmorSmithing(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
@@ -734,8 +732,8 @@ public class DinosaursServerTest {
 			helper.assertTrue(matches.equals(List.of(id)), row[0] + " smithing matches " + matches);
 			@SuppressWarnings("unchecked")
 			Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput> recipe = (Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput>)
-					level.getServer().getRecipeManager().byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id(id.substring(10)))).orElseThrow().value();
-			ItemStack out = recipe.assemble(input);
+					level.getServer().getRecipeManager().byKey(Dinosaurs.id(id.substring(10))).orElseThrow().value();
+			ItemStack out = recipe.assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 			helper.assertTrue(out.is(row[0]) && out.getCount() == 1, "result " + out);
 			helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.PROTECTION), out) == 4
 					&& EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.MENDING), out) == 1, "enchantments kept: " + out.getEnchantments());
@@ -762,7 +760,7 @@ public class DinosaursServerTest {
 	 * The three trophies used by the armor still drop as before (no Looting): Raptor Claw 0-1 from the Velociraptor,
 	 * Parasaurolophus Crest 0-1, Megalodon Tooth 1-3; Looting III raises the maximum by 3.
 	 */
-	@GameTest(maxTicks = 100)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 100)
 	public void armorTrophyLoot(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		Player player = survivalPlayer(helper);
@@ -776,7 +774,7 @@ public class DinosaursServerTest {
 			@SuppressWarnings("unchecked")
 			EntityType<? extends Mob> type = (EntityType<? extends Mob>) c[0];
 			Item item = (Item) c[1];
-			var table = level.getServer().reloadableRegistries().getLootTable(type.getDefaultLootTable().orElseThrow());
+			var table = level.getServer().reloadableRegistries().getLootTable(type.getDefaultLootTable());
 			Mob mob = helper.spawn(type, new BlockPos(x, 1, 4));
 			int[] plain = roll(table, level, mob, player, item, 400);
 			player.setItemInHand(InteractionHand.MAIN_HAND, sword.copy());
@@ -816,14 +814,14 @@ public class DinosaursServerTest {
 		ItemStack n = new ItemStack(Items.NETHERITE_INGOT);
 		CraftingInput input = CraftingInput.of(3, 3, List.of(e, b, e, b, bow, b, e, n, e));
 		var holder = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow();
-		helper.assertTrue(holder.id().identifier().equals(Dinosaurs.id("dinosaur_bone_bow")), "matched " + holder.id());
-		return holder.value().assemble(input);
+		helper.assertTrue(holder.id().equals(Dinosaurs.id("dinosaur_bone_bow")), "matched " + holder.id());
+		return holder.value().assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 	}
 
 	// ---- 1.6.0: Dinosaur Claw
 
 	/** Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / stick: ONLY the claw. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void dinosaurClawRecipe(GameTestHelper helper) {
 		ItemStack e = ItemStack.EMPTY;
 		ItemStack c = new ItemStack(ModItems.RAPTOR_CLAW);
@@ -835,7 +833,7 @@ public class DinosaursServerTest {
 		List<String> matches = craftingMatches(helper, full);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_claw")), "claw grid matches " + matches);
 		ItemStack out = ((CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id("dinosaur_claw"))).orElseThrow().value()).assemble(full);
+				.byKey(Dinosaurs.id("dinosaur_claw")).orElseThrow().value()).assemble(full, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_CLAW) && out.getCount() == 1, "result " + out);
 		// Near misses make nothing: Megalodon Tooth for the T-Rex Tooth, vanilla bones, no stick, no netherite.
 		ItemStack m = new ItemStack(ModItems.MEGALODON_TOOTH);
@@ -861,7 +859,7 @@ public class DinosaursServerTest {
 
 	/** 11 damage vs the netherite sword's 8, same speed, more durability and enchantability, reach modifier -0.5; a sword for
 	 * sweeping and enchantments; fire resistant; repaired with Dinosaur Bones. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void dinosaurClawStats(GameTestHelper helper) {
 		var damage = net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE;
 		var speed = net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED;
@@ -872,17 +870,17 @@ public class DinosaursServerTest {
 		helper.assertTrue(clawDamage == 11 && swordDamage == 8, "damage " + clawDamage + " (netherite sword " + swordDamage + ")");
 		helper.assertTrue(Math.abs(clawSpeed - 1.6) < 1e-4 && Math.abs(clawSpeed - swordSpeed) < 1e-4, "speed " + clawSpeed + " (netherite " + swordSpeed + ")");
 		helper.assertTrue(claw.getMaxDamage() == 2501 && claw.getMaxDamage() > sword.getMaxDamage(), "durability " + claw.getMaxDamage());
-		var enchantable = claw.get(DataComponents.ENCHANTABLE);
-		helper.assertTrue(enchantable != null && enchantable.value() == 20, "enchantability " + enchantable);
+		int enchantable = claw.getItem().getEnchantmentValue();
+		helper.assertTrue(enchantable == 20, "enchantability " + enchantable);
 		helper.assertTrue(Math.abs(handModifier(claw, net.minecraft.world.entity.ai.attributes.Attributes.ENTITY_INTERACTION_RANGE) + 0.5) < 1e-6
 				&& handModifier(sword, net.minecraft.world.entity.ai.attributes.Attributes.ENTITY_INTERACTION_RANGE) == 0, "claw reach modifier -0.5");
-		helper.assertTrue(claw.has(DataComponents.DAMAGE_RESISTANT), "fire resistant");
+		helper.assertTrue(claw.has(DataComponents.FIRE_RESISTANT), "fire resistant");
 		helper.assertTrue(claw.is(net.minecraft.tags.ItemTags.SWORDS), "in #minecraft:swords (sweeping attack)");
-		helper.assertTrue(claw.has(DataComponents.WEAPON) && claw.has(DataComponents.TOOL), "weapon and sword tool (cobwebs) components");
+		helper.assertTrue(claw.getItem() instanceof net.minecraft.world.item.SwordItem && claw.has(DataComponents.TOOL), "weapon and sword tool (cobwebs) components");
 		var enchants = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 		for (var key : List.of(Enchantments.SHARPNESS, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS, Enchantments.SWEEPING_EDGE,
 				Enchantments.LOOTING, Enchantments.FIRE_ASPECT, Enchantments.KNOCKBACK, Enchantments.UNBREAKING, Enchantments.MENDING)) {
-			helper.assertTrue(enchants.getOrThrow(key).value().canEnchant(claw), "should take " + key.identifier());
+			helper.assertTrue(enchants.getOrThrow(key).value().canEnchant(claw), "should take " + key.location());
 		}
 		// Repair: Dinosaur Bones yes, netherite ingot no (anvil).
 		ItemStack worn = claw.copy();
@@ -896,17 +894,17 @@ public class DinosaursServerTest {
 		double[] dealt = new double[2];
 		int i = 0;
 		for (ItemStack weapon : List.of(claw, sword)) {
-			net.minecraft.world.entity.monster.zombie.Zombie zombie = helper.spawnWithNoFreeWill(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(1 + 2 * i, 1, 1));
+			net.minecraft.world.entity.monster.Zombie zombie = helper.spawnWithNoFreeWill(EntityType.ZOMBIE, new BlockPos(1 + 2 * i, 1, 1));
 			float before = zombie.getHealth();
 			Player player = survivalPlayer(helper);
 			player.setItemInHand(InteractionHand.MAIN_HAND, weapon.copy());
 			float attack = (float) (1 + handModifier(weapon, damage));
-			zombie.hurtServer(level, level.damageSources().playerAttack(player), attack);
+			zombie.hurt(level.damageSources().playerAttack(player), attack);
 			dealt[i++] = before - zombie.getHealth();
 		}
 		helper.assertTrue(dealt[0] > dealt[1], "claw hit " + dealt[0] + " vs netherite sword " + dealt[1]);
 		Dinosaurs.LOGGER.info("[test] dinosaur claw: damage {} speed {} durability {} ench {} (netherite sword {} / {} / {} / 15); hit {} vs {}",
-				clawDamage, clawSpeed, claw.getMaxDamage(), enchantable.value(), swordDamage, swordSpeed, sword.getMaxDamage(), dealt[0], dealt[1]);
+				clawDamage, clawSpeed, claw.getMaxDamage(), enchantable, swordDamage, swordSpeed, sword.getMaxDamage(), dealt[0], dealt[1]);
 		helper.succeed();
 	}
 
@@ -915,7 +913,7 @@ public class DinosaursServerTest {
 	 * as the attack reach of weapons without an attack_range component). A target 2.75 blocks from the eyes can be hit
 	 * with a netherite sword but not with the claw; at 2.25 both reach. In the off hand the claw changes nothing.
 	 */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void dinosaurClawReach(GameTestHelper helper) {
 		Player clawPlayer = survivalPlayer(helper), swordPlayer = survivalPlayer(helper), offhandPlayer = survivalPlayer(helper);
 		ItemStack claw = new ItemStack(ModItems.DINOSAUR_CLAW), sword = new ItemStack(Items.NETHERITE_SWORD);
@@ -924,7 +922,7 @@ public class DinosaursServerTest {
 		offhandPlayer.setItemInHand(InteractionHand.OFF_HAND, claw.copy());
 		// Mock players are not ticked by the level; one tick applies the held item's attribute modifiers, like in game.
 		for (Player p : List.of(clawPlayer, swordPlayer, offhandPlayer)) {
-			p.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+			p.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
 			p.tick();
 		}
 		helper.runAfterDelay(1, () -> {
@@ -933,8 +931,8 @@ public class DinosaursServerTest {
 			helper.assertTrue(Math.abs(swordRange - 3.0) < 1e-6, "netherite sword reach " + swordRange);
 			helper.assertTrue(Math.abs(offhandPlayer.entityInteractionRange() - 3.0) < 1e-6, "claw in the off hand: reach " + offhandPlayer.entityInteractionRange());
 			for (double gap : new double[]{2.25, 2.75}) {
-				boolean clawHits = clawPlayer.isWithinAttackRange(clawPlayer.getMainHandItem(), target(clawPlayer, gap), 0);
-				boolean swordHits = swordPlayer.isWithinAttackRange(swordPlayer.getMainHandItem(), target(swordPlayer, gap), 0);
+				boolean clawHits = clawPlayer.canInteractWithEntity(target(clawPlayer, gap), 0);
+				boolean swordHits = swordPlayer.canInteractWithEntity(target(swordPlayer, gap), 0);
 				helper.assertTrue(swordHits, "netherite sword should reach " + gap);
 				helper.assertTrue(clawHits == (gap < 2.5), "claw at " + gap + ": " + clawHits);
 			}
@@ -953,22 +951,22 @@ public class DinosaursServerTest {
 
 	private static HostileDino collaredTRex(GameTestHelper helper, Player owner) {
 		HostileDino rex = helper.spawn(ModEntities.T_REX, new BlockPos(4, 1, 4));
-		owner.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+		owner.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
 		owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
 		owner.getInventory().add(new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION)); // after the collar: add() fills the hand slot first
-		InteractionResult result = rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		InteractionResult result = rex.interact(owner, InteractionHand.MAIN_HAND);
 		helper.assertTrue(result.consumesAction(), "collaring should succeed, got " + result);
 		return rex;
 	}
 
 	/** Without the amulet the collar does nothing (and is not used up); with it the player becomes the owner. */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void dinoCollarNeedsAmulet(GameTestHelper helper) {
 		Player player = survivalPlayer(helper);
-		player.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+		player.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
 		HostileDino rex = helper.spawn(ModEntities.T_REX, new BlockPos(4, 1, 4));
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
-		rex.interact(player, InteractionHand.MAIN_HAND, rex.position());
+		rex.interact(player, InteractionHand.MAIN_HAND);
 		helper.assertFalse(rex.isCollared(), "no amulet: the T-Rex must not take the collar");
 		helper.assertTrue(player.getMainHandItem().is(ModItems.DINO_COLLAR), "no amulet: the collar must not be used up");
 		// Only the T-Rex takes a collar.
@@ -976,10 +974,10 @@ public class DinosaursServerTest {
 		owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
 		owner.getInventory().add(new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION)); // after the collar: add() fills the hand slot first
 		HostileDino spino = helper.spawn(ModEntities.SPINOSAURUS, new BlockPos(1, 1, 6));
-		spino.interact(owner, InteractionHand.MAIN_HAND, spino.position());
+		spino.interact(owner, InteractionHand.MAIN_HAND);
 		helper.assertFalse(spino.isCollared(), "a Spinosaurus must not take the collar");
 		// With the amulet: collared, owner saved, collar used up, persistent.
-		rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		rex.interact(owner, InteractionHand.MAIN_HAND);
 		helper.assertTrue(rex.isCollared(), "amulet: the T-Rex should be collared");
 		helper.assertTrue(rex.isOwnedBy(owner) && rex.getOwner() == owner, "owner should be the player who used the collar");
 		helper.assertTrue(owner.getMainHandItem().isEmpty(), "collar should be used up");
@@ -988,21 +986,21 @@ public class DinosaursServerTest {
 		Player thief = survivalPlayer(helper);
 		thief.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
 		thief.getInventory().add(new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION)); // after the collar: add() fills the hand slot first
-		rex.interact(thief, InteractionHand.MAIN_HAND, rex.position());
+		rex.interact(thief, InteractionHand.MAIN_HAND);
 		helper.assertTrue(rex.isOwnedBy(owner), "a collared T-Rex keeps its owner");
 		helper.assertTrue(thief.getMainHandItem().is(ModItems.DINO_COLLAR), "the second collar must not be used up");
 		helper.succeed();
 	}
 
 	/** Never the owner (even after being hit by them), not hunting other players, but the wild one does. */
-	@GameTest(maxTicks = 60)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 60)
 	public void dinoCollarNeverAttacksOwner(GameTestHelper helper) {
 		Player owner = survivalPlayer(helper);
 		HostileDino rex = collaredTRex(helper, owner);
 		Player other = survivalPlayer(helper);
-		other.snapTo(helper.absoluteVec(new Vec3(6.5, 1, 6.5)));
+		other.moveTo(helper.absoluteVec(new Vec3(6.5, 1, 6.5)));
 		helper.assertFalse(rex.canAttack(owner), "collared T-Rex must never attack its owner (amulet or not)");
-		rex.hurtServer(helper.getLevel(), owner.damageSources().playerAttack(owner), 1.0F);
+		rex.hurt(owner.damageSources().playerAttack(owner), 1.0F);
 		helper.assertFalse(rex.canAttack(owner), "...not even after the owner hit it");
 		rex.setTarget(owner);
 		helper.assertTrue(rex.isAlliedTo(owner), "owner is an ally");
@@ -1016,20 +1014,20 @@ public class DinosaursServerTest {
 	}
 
 	/** Fights for the owner: whoever hurts the owner, and whatever the owner attacks. */
-	@GameTest(maxTicks = 80)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 80)
 	public void dinoCollarDefendsOwner(GameTestHelper helper) {
 		Player owner = survivalPlayer(helper);
 		HostileDino rex = collaredTRex(helper, owner);
 		Player attacker = survivalPlayer(helper);
-		attacker.snapTo(helper.absoluteVec(new Vec3(6.5, 1, 1.5)));
+		attacker.moveTo(helper.absoluteVec(new Vec3(6.5, 1, 1.5)));
 		helper.assertTrue(rex.getTarget() == null, "no target before the attack");
 		owner.tickCount = 100; // mock players never tick; the goals compare the owner's hurt timestamps (tickCount)
-		owner.hurtServer(helper.getLevel(), attacker.damageSources().playerAttack(attacker), 1.0F);
+		owner.hurt(attacker.damageSources().playerAttack(attacker), 1.0F);
 		helper.assertTrue(owner.getLastHurtByMob() == attacker, "owner should remember the attacker");
 		helper.runAfterDelay(15, () -> {
 			helper.assertTrue(rex.getTarget() == attacker, "T-Rex should attack the player who hurt its owner, got " + rex.getTarget());
 			rex.setTarget(null);
-			net.minecraft.world.entity.Mob pig = helper.spawn(net.minecraft.world.entity.EntityTypes.PIG, new BlockPos(1, 1, 6));
+			net.minecraft.world.entity.Mob pig = helper.spawn(EntityType.PIG, new BlockPos(1, 1, 6));
 			owner.tickCount = 200;
 			owner.setLastHurtMob(pig);
 			// The T-Rex one-shots the pig, so either it is the target or it was killed by the T-Rex.
@@ -1039,19 +1037,18 @@ public class DinosaursServerTest {
 	}
 
 	/** Owner saved with the entity; never despawns (not even on Peaceful, where a wild T-Rex vanishes). */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void dinoCollarPersistsAndNeverDespawns(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		Player owner = survivalPlayer(helper);
 		HostileDino rex = collaredTRex(helper, owner);
 		helper.assertTrue(rex.requiresCustomPersistence() && !rex.removeWhenFarAway(1.0E6), "collared T-Rex must not despawn far away");
 		// Save and load a copy: same owner, still collared.
-		var output = net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess());
-		rex.saveWithoutId(output);
-		var tag = output.buildResult();
-		helper.assertTrue(tag.contains("Owner"), "owner UUID should be saved, got " + tag.keySet());
-		HostileDino copy = ModEntities.T_REX.create(level, EntitySpawnReason.LOAD);
-		copy.load(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), tag));
+		var tag = new net.minecraft.nbt.CompoundTag();
+		rex.saveWithoutId(tag);
+		helper.assertTrue(tag.hasUUID("Owner"), "owner UUID should be saved, got " + tag.getAllKeys());
+		HostileDino copy = ModEntities.T_REX.create(level);
+		copy.load(tag);
 		helper.assertTrue(copy.isCollared() && copy.isOwnedBy(owner), "loaded copy should keep the owner");
 		helper.assertTrue(copy.isPersistenceRequired(), "loaded copy should stay persistent");
 		// Peaceful: the wild T-Rex is removed by checkDespawn, the collared one stays. Restored in the same tick.
@@ -1067,17 +1064,17 @@ public class DinosaursServerTest {
 	}
 
 	/** Sneak + empty hand toggles sit; the collar drops when the T-Rex dies. */
-	@GameTest(maxTicks = 40)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
 	public void dinoCollarSitAndDrop(GameTestHelper helper) {
 		Player owner = survivalPlayer(helper);
 		HostileDino rex = collaredTRex(helper, owner);
 		owner.setShiftKeyDown(true);
-		rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		rex.interact(owner, InteractionHand.MAIN_HAND);
 		helper.assertTrue(rex.isOrderedToSit(), "sneak + empty hand should make it sit");
-		rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		rex.interact(owner, InteractionHand.MAIN_HAND);
 		helper.assertFalse(rex.isOrderedToSit(), "again: follow");
 		owner.setShiftKeyDown(false);
-		rex.hurtServer(helper.getLevel(), helper.getLevel().damageSources().genericKill(), Float.MAX_VALUE);
+		rex.hurt(helper.getLevel().damageSources().genericKill(), Float.MAX_VALUE);
 		helper.runAfterDelay(25, () -> {
 			var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new AABB(helper.absolutePos(new BlockPos(4, 1, 4))).inflate(6));
 			boolean collar = drops.stream().anyMatch(item -> item.getItem().is(ModItems.DINO_COLLAR));
@@ -1087,13 +1084,13 @@ public class DinosaursServerTest {
 	}
 
 	/** 3 T-Rex Teeth / Leather, Dinosaur Bones, Leather / Iron Chain: ONLY the collar; advancements exist. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void dinoCollarRecipe(GameTestHelper helper) {
 		ItemStack e = ItemStack.EMPTY;
 		ItemStack t = new ItemStack(ModItems.T_REX_TOOTH);
 		ItemStack l = new ItemStack(Items.LEATHER);
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
-		ItemStack c = new ItemStack(Items.IRON_CHAIN);
+		ItemStack c = new ItemStack(Items.CHAIN);
 		CraftingInput full = CraftingInput.of(3, 3, List.of(t, t, t, l, b, l, e, c, e));
 		List<String> matches = craftingMatches(helper, full);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dino_collar")), "collar grid matches " + matches);
@@ -1106,7 +1103,7 @@ public class DinosaursServerTest {
 	}
 
 	/** Megalodon: twice the 1.6 size (2.5 x 1.8 -> 5 x 3.6). */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void megalodonSize(GameTestHelper helper) {
 		var dims = ModEntities.MEGALODON.getDimensions();
 		helper.assertTrue(dims.width() == 5.0F && dims.height() == 3.6F, "megalodon size " + dims);
@@ -1114,7 +1111,7 @@ public class DinosaursServerTest {
 	}
 
 	/** Spawn weights: defaults, per-species value, global percent (rounded, at least 1), and the biome spawn lists use them. */
-	@GameTest
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void configSpawnWeights(GameTestHelper helper) {
 		DinoConfig config = DinoConfig.get();
 		int savedRex = config.spawnWeight(ModEntities.T_REX);
@@ -1137,10 +1134,9 @@ public class DinosaursServerTest {
 		// The biome list built at server start holds the configured (here: default) weight.
 		var plains = helper.getLevel().registryAccess().lookupOrThrow(Registries.BIOME).getOrThrow(net.minecraft.world.level.biome.Biomes.PLAINS).value();
 		int weight = -1;
-		for (var entry : plains.getAttributes().applyModifier(net.minecraft.world.attribute.EnvironmentAttributes.NATURAL_MOB_SPAWNS,
-				net.minecraft.world.level.biome.MobSpawnSettings.EMPTY).getMobsToSpawn(net.minecraft.world.entity.MobCategory.MONSTER).unwrap()) {
-			if (entry.value().type() == ModEntities.T_REX) {
-				weight = entry.weight();
+		for (var entry : plains.getMobSettings().getMobs(net.minecraft.world.entity.MobCategory.MONSTER).unwrap()) {
+			if (entry.type == ModEntities.T_REX) {
+				weight = entry.getWeight().asInt();
 			}
 		}
 		Dinosaurs.LOGGER.info("[test] plains T-Rex spawn weight {} (config {})", weight, config.effectiveSpawnWeight(ModEntities.T_REX));

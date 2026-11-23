@@ -8,11 +8,7 @@
           "items": "dinosaurs:dino_collar"
         },
         "entity": {
-          "type": "minecraft:entity_properties",
-          "entity": "this",
-          "predicate": {
-            "minecraft:entity_type": "dinosaurs:t_rex"
-          }
+          "type": "dinosaurs:t_rex"
         }
       }
     }

@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:amulet_of_dino_protection"
+        "recipe": "dinosaurs:amulet_of_dino_protection"
       }
     }
   },

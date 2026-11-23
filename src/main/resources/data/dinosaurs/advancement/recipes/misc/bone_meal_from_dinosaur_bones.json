@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "dinosaurs:bone_meal_from_dinosaur_bones"
+        "recipe": "dinosaurs:bone_meal_from_dinosaur_bones"
       }
     }
   },
