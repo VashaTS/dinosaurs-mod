@@ -53,7 +53,7 @@
   "item.dinosaurs.dinosaur_bones.desc": "From large dinosaurs. Bone bow, or 4 bone meal",
   "item.dinosaurs.dinosaur_bone_bow.desc": "Draws faster, hits harder. Infinity + Mending OK",
   "item.dinosaurs.t_rex_skull_helmet.desc": "Stronger than netherite. Fire resistant",
-  "item.dinosaurs.dinosaur_claw.desc": "Clawed gauntlet: hits hard, shorter reach",
+  "item.dinosaurs.dinosaur_claw.desc": "Clawed gauntlet: hits hard",
   "item.dinosaurs.dinosaur_armor.desc": "Stronger than netherite. Fire resistant",
   "item.dinosaurs.smithing_template.dinosaur_upgrade.applies_to": "Netherite Armor",
   "item.dinosaurs.smithing_template.dinosaur_upgrade.ingredients": "Dinosaur Trophies",
@@ -151,7 +151,7 @@
   "book.dinosaurs.item.t_rex_skull": "Rare: 4% of T. rexes killed by a player drop one, up to 10% with Looting. Craft it with Leather and a Netherite Ingot into a helmet.",
   "book.dinosaurs.item.t_rex_skull_helmet": "Wear a T. rex skull on your head. Fire resistant like netherite. Repair it with a Netherite Ingot or a T-Rex Skull.",
   "book.dinosaurs.item.dinosaur_upgrade_smithing_template": "Smithing template that turns netherite chestplate, leggings and boots into Dinosaur Armor. Used up like the Netherite Upgrade. 7 Dinosaur Bones and a Bone Block copy it.",
-  "book.dinosaurs.item.dinosaur_claw": "A clawed gauntlet: hits harder than a netherite sword, but its reach is 0.5 shorter. Sword enchantments. Fire resistant. Repair: Dinosaur Bones.",
+  "book.dinosaurs.item.dinosaur_claw": "A clawed gauntlet: hits harder than a netherite sword. Sword enchantments. Fire resistant. Repair: Dinosaur Bones.",
   "book.dinosaurs.item.dinosaur_armor": "Enchantments stay. Better than netherite in every stat. Repair: Dinosaur Bones. Helmet: T-Rex Skull Helmet.",
   "item.dinosaurs.smithing_template.dinosaur_upgrade.upgrade": "Smithing Template"
 }
