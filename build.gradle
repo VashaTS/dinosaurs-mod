@@ -56,6 +56,11 @@ dependencies {
 		//   -> only XaeroRadarScreenshotTest runs: minimap radar screenshots with the dinosaur head icons
 		localRuntime files(project.property("xaeroJar"))
 	}
+	if (project.findProperty("withCloth") == "true") {
+		// ./gradlew runClientGameTest -PwithCloth=true  -> Cloth Config + Mod Menu at runtime (config screen screenshots)
+		localRuntime "maven.modrinth:cloth-config:${project.cloth_config_version}"
+		localRuntime "maven.modrinth:modmenu:${project.modmenu_version}"
+	}
 	if (project.findProperty("withTrinkets") == "true") {
 		// ./gradlew runServer -PwithTrinkets=true  -> test the Trinkets integration in the dev server
 		localRuntime "maven.modrinth:trinkets-updated:${project.trinkets_version}"
@@ -107,6 +112,13 @@ tasks.matching { it.name == "runClientGameTest" }.configureEach {
 	}
 	if (project.findProperty("clawShots")) {
 		systemProperty "dinosaurs.clawShots", project.property("clawShots")
+	}
+	// -PcollarOnly=true: run only the Dino Collar / Megalodon / config screenshot test (1.7.0). -PcollarShots=dir (default /workspace/dino-collar).
+	if (project.findProperty("collarOnly")) {
+		systemProperty "dinosaurs.collarOnly", "true"
+	}
+	if (project.findProperty("collarShots")) {
+		systemProperty "dinosaurs.collarShots", project.property("collarShots")
 	}
 }
 

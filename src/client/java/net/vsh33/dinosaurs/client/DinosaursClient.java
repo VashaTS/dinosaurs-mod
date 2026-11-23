@@ -19,8 +19,11 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Supplier;
 
 public class DinosaursClient implements ClientModInitializer {
+	private static final ModelLayerLocation T_REX_COLLAR = new ModelLayerLocation(Dinosaurs.id("t_rex"), "collar");
+
 	@Override
 	public void onInitializeClient() {
+		ModelLayerRegistry.registerModelLayer(T_REX_COLLAR, DinoCollarModel::createTRexCollar);
 		//        type                          layer                                  scale  shadow walk  swimmer
 		register(ModEntities.T_REX, "t_rex", DinoModelLayers::createTRex, 2.0F, 1.2F, 0.6F, false);
 		register(ModEntities.VELOCIRAPTOR, "velociraptor", DinoModelLayers::createVelociraptor, 0.8F, 0.4F, 1.0F, false);
@@ -30,7 +33,7 @@ public class DinosaursClient implements ClientModInitializer {
 		register(ModEntities.ANKYLOSAURUS, "ankylosaurus", DinoModelLayers::createAnkylosaurus, 1.5F, 1.0F, 0.9F, false);
 		register(ModEntities.BRACHIOSAURUS, "brachiosaurus", DinoModelLayers::createBrachiosaurus, 1.8F, 1.3F, 0.5F, false);
 		register(ModEntities.PARASAUROLOPHUS, "parasaurolophus", DinoModelLayers::createParasaurolophus, 1.4F, 0.8F, 0.8F, false);
-		register(ModEntities.MEGALODON, "megalodon", DinoModelLayers::createMegalodon, 2.0F, 0.0F, 1.0F, true);
+		register(ModEntities.MEGALODON, "megalodon", DinoModelLayers::createMegalodon, 4.0F, 0.0F, 1.0F, true); // 1.7.0: 2x (was 2.0)
 		register(ModEntities.PTERANODON, "pteranodon", DinoModelLayers::createPteranodon, 1.4F, 0.5F, 1.0F, false);
 
 		// The guide book item lives in the common source set; the screen is client-only.
@@ -40,6 +43,9 @@ public class DinosaursClient implements ClientModInitializer {
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.getItem() == ModItems.AMULET_OF_DINO_PROTECTION) {
 				lines.add(Component.translatable("item.dinosaurs.amulet_of_dino_protection.desc").withStyle(ChatFormatting.GRAY));
+			} else if (stack.getItem() == ModItems.DINO_COLLAR) {
+				lines.add(Component.translatable("item.dinosaurs.dino_collar.desc").withStyle(ChatFormatting.GRAY));
+				lines.add(Component.translatable("item.dinosaurs.dino_collar.desc2").withStyle(ChatFormatting.DARK_GRAY));
 			} else if (stack.getItem() == ModItems.DINOSAUR_SADDLE) {
 				lines.add(Component.translatable("item.dinosaurs.dinosaur_saddle.desc").withStyle(ChatFormatting.GRAY));
 			} else if (stack.getItem() == ModItems.T_REX_SKULL) {
@@ -68,6 +74,10 @@ public class DinosaursClient implements ClientModInitializer {
 					Dinosaurs.id("textures/entity/" + name + ".png"), scale, shadow);
 			if (type == ModEntities.TRICERATOPS) {
 				renderer.withSaddle(Dinosaurs.id("textures/entity/" + name + "_saddle.png"));
+			}
+			if (type == ModEntities.T_REX) {
+				renderer.withCollar(new DinoModel(context.bakeLayer(T_REX_COLLAR), walk, swimmer),
+						Dinosaurs.id("textures/entity/t_rex_collar.png"));
 			}
 			return renderer;
 		});

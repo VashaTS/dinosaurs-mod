@@ -58,6 +58,12 @@ public final class ModItems {
 	public static final Item PARASAUROLOPHUS_CREST = register("parasaurolophus_crest", Item::new, new Item.Properties());
 	public static final Item DINOSAUR_SADDLE = register("dinosaur_saddle", Item::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
 
+	/**
+	 * Dino Collar (1.7.0): used on a T. rex by a player carrying the Amulet of Dino Protection, it makes the T. rex theirs
+	 * (follows, fights for them, never despawns; see HostileDino). 3 T-Rex Teeth / Leather, Dinosaur Bones, Leather / Iron Chain.
+	 */
+	public static final Item DINO_COLLAR = register("dino_collar", Item::new, new Item.Properties().stacksTo(1).rarity(Rarity.RARE));
+
 	// Rare T. rex drop (killed by a player: 4%, up to 10% with Looting) -> T-Rex Skull Helmet
 	public static final Item T_REX_SKULL = register("t_rex_skull", Item::new, new Item.Properties().stacksTo(16).rarity(Rarity.RARE));
 	/** Netherite ingot or another skull repair the helmet (#dinosaurs:repairs_t_rex_skull_helmet). */

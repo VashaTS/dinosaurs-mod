@@ -86,6 +86,16 @@ public class DinoModel extends EntityModel<DinoRenderState> {
 			if (tail2 != null) tail2.xRot += bob * 0.8F;
 		}
 
+		if (state.sitting) {
+			// Collared T. rex ordered to sit (DinoRenderer lowers the body): legs folded forward, arms tucked.
+			if (rightLeg != null) rightLeg.xRot = -Mth.HALF_PI;
+			if (leftLeg != null) leftLeg.xRot = -Mth.HALF_PI;
+			if (rightArm != null) rightArm.xRot = 0.6F;
+			if (leftArm != null) leftArm.xRot = 0.6F;
+			if (tail != null) tail.xRot = tail.getInitialPose().xRot() + 0.25F;
+			if (tail2 != null) tail2.xRot = tail2.getInitialPose().xRot() + 0.1F;
+		}
+
 		if (jaw != null) {
 			jaw.xRot += state.attackProgress * 0.7F + Math.max(0.0F, Mth.sin(age * 0.05F)) * 0.04F;
 		}

@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.7.0
+
+* New item: **Dino Collar**. Shaped recipe: T-Rex Tooth ×3 (top row) / Leather, Dinosaur Bones, Leather / Iron Chain
+  (bottom middle). A player carrying the **Amulet of Dino Protection** (inventory or Trinkets necklace slot) uses it on a
+  **T. rex**: the collar is used up and the player becomes the T. rex's owner (saved as the `Owner` UUID). A collared T. rex
+  * wears the collar visibly (studded leather band with tooth spikes and an iron ring on its neck);
+  * follows its owner like a tamed wolf and teleports next to them when more than 12 blocks behind;
+  * attacks whatever its owner attacks and whatever attacks its owner (wolf rules: not creepers, not the owner's other
+    pets, not players the owner may not hurt), and never attacks its owner;
+  * is neutral to other players: it no longer hunts them, only players who attack its owner (or the T. rex itself);
+  * never despawns (also not on Peaceful) and does not stop players from sleeping nearby;
+  * owner: sneak + use with an empty hand to make it sit / follow again (it stands up when hurt); any meat heals it;
+  * drops its collar when it dies; the owner gets the death message.
+  * Without the amulet the collar does nothing (message on the action bar); a collared T. rex keeps its first owner.
+* **Megalodon is twice as big**: hitbox 5 × 3.6 blocks (was 2.5 × 1.8), model and render scale doubled; it needs
+  4 blocks of water to spawn. Guide book picture rescaled; the Xaero's Minimap head icon is unchanged.
+* **Spawn frequency settings** (config file and the Cloth Config screen, new *Spawn frequency* tab): a spawn weight per
+  species (0-100, defaults = the previous built-in weights) and a global percentage (0-500%, default 100%). They go into
+  the biome spawn lists when a world loads, so they apply after re-joining the world / restarting the server (said in
+  the tooltips and in the screen). The on/off switches still apply immediately.
+* Guide book: Dino Collar page with its recipe; the T-Rex Tooth page mentions it. The item list uses tighter rows (names
+  longer than two lines shortened, full name in the tooltip) so it still fits on its two pages. English and Polish.
+* Advancement *Who's a Good Rex?* (collar a T. rex) and the collar's recipe advancement (unlocked by a T-Rex Tooth).
+
 ## 1.6.0
 
 * New weapon: **Dinosaur Claw**, a clawed gauntlet: a netherite and leather glove with bone knuckle plates and three

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "T": "dinosaurs:t_rex_tooth",
+    "L": "minecraft:leather",
+    "B": "dinosaurs:dinosaur_bones",
+    "C": "minecraft:iron_chain"
+  },
+  "pattern": [
+    "TTT",
+    "LBL",
+    " C "
+  ],
+  "result": {
+    "id": "dinosaurs:dino_collar"
+  }
+}

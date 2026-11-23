@@ -35,6 +35,8 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.vsh33.dinosaurs.Dinosaurs;
 import net.vsh33.dinosaurs.entity.ModEntities;
 import net.vsh33.dinosaurs.entity.Triceratops;
+import net.vsh33.dinosaurs.entity.HostileDino;
+import net.minecraft.world.InteractionResult;
 import net.vsh33.dinosaurs.item.ModItems;
 import net.vsh33.dinosaurs.item.DinosaurBoneBowItem;
 import net.minecraft.core.Holder;
@@ -155,7 +157,7 @@ public class DinosaursServerTest {
 
 	@GameTest
 	public void recipesAndAdvancements(GameTestHelper helper) {
-		for (String id : new String[]{"amulet_of_dino_protection", "dinosaur_saddle", "leather_from_brachiosaurus_hide", "t_rex_skull_helmet", "dinosaur_bone_bow", "bone_meal_from_dinosaur_bones"}) {
+		for (String id : new String[]{"dino_collar", "amulet_of_dino_protection", "dinosaur_saddle", "leather_from_brachiosaurus_hide", "t_rex_skull_helmet", "dinosaur_bone_bow", "bone_meal_from_dinosaur_bones"}) {
 			helper.assertTrue(helper.getLevel().recipeAccess().byKey(ResourceKey.create(Registries.RECIPE, Dinosaurs.id(id))).isPresent(), "missing recipe " + id);
 		}
 		for (String id : new String[]{"amulet", "ride_triceratops", "recipes/equipment/dinosaur_saddle", "recipes/equipment/amulet_of_dino_protection", "recipes/misc/leather_from_brachiosaurus_hide", "recipes/equipment/dinosaur_bone_bow", "recipes/misc/bone_meal_from_dinosaur_bones"}) {
@@ -945,5 +947,204 @@ public class DinosaursServerTest {
 	private static net.minecraft.world.phys.AABB target(Player player, double gap) {
 		Vec3 eye = player.getEyePosition();
 		return new net.minecraft.world.phys.AABB(eye.x + gap, eye.y - 0.5, eye.z - 0.3, eye.x + gap + 0.6, eye.y + 0.5, eye.z + 0.3);
+	}
+
+	// ---- 1.7.0: Dino Collar, Megalodon size, spawn weights
+
+	private static HostileDino collaredTRex(GameTestHelper helper, Player owner) {
+		HostileDino rex = helper.spawn(ModEntities.T_REX, new BlockPos(4, 1, 4));
+		owner.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+		owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
+		owner.getInventory().add(new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION)); // after the collar: add() fills the hand slot first
+		InteractionResult result = rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		helper.assertTrue(result.consumesAction(), "collaring should succeed, got " + result);
+		return rex;
+	}
+
+	/** Without the amulet the collar does nothing (and is not used up); with it the player becomes the owner. */
+	@GameTest(maxTicks = 40)
+	public void dinoCollarNeedsAmulet(GameTestHelper helper) {
+		Player player = survivalPlayer(helper);
+		player.snapTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
+		HostileDino rex = helper.spawn(ModEntities.T_REX, new BlockPos(4, 1, 4));
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
+		rex.interact(player, InteractionHand.MAIN_HAND, rex.position());
+		helper.assertFalse(rex.isCollared(), "no amulet: the T-Rex must not take the collar");
+		helper.assertTrue(player.getMainHandItem().is(ModItems.DINO_COLLAR), "no amulet: the collar must not be used up");
+		// Only the T-Rex takes a collar.
+		Player owner = survivalPlayer(helper);
+		owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
+		owner.getInventory().add(new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION)); // after the collar: add() fills the hand slot first
+		HostileDino spino = helper.spawn(ModEntities.SPINOSAURUS, new BlockPos(1, 1, 6));
+		spino.interact(owner, InteractionHand.MAIN_HAND, spino.position());
+		helper.assertFalse(spino.isCollared(), "a Spinosaurus must not take the collar");
+		// With the amulet: collared, owner saved, collar used up, persistent.
+		rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		helper.assertTrue(rex.isCollared(), "amulet: the T-Rex should be collared");
+		helper.assertTrue(rex.isOwnedBy(owner) && rex.getOwner() == owner, "owner should be the player who used the collar");
+		helper.assertTrue(owner.getMainHandItem().isEmpty(), "collar should be used up");
+		helper.assertTrue(rex.isPersistenceRequired(), "collared T-Rex must be persistent");
+		// A second player cannot take it over.
+		Player thief = survivalPlayer(helper);
+		thief.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.DINO_COLLAR));
+		thief.getInventory().add(new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION)); // after the collar: add() fills the hand slot first
+		rex.interact(thief, InteractionHand.MAIN_HAND, rex.position());
+		helper.assertTrue(rex.isOwnedBy(owner), "a collared T-Rex keeps its owner");
+		helper.assertTrue(thief.getMainHandItem().is(ModItems.DINO_COLLAR), "the second collar must not be used up");
+		helper.succeed();
+	}
+
+	/** Never the owner (even after being hit by them), not hunting other players, but the wild one does. */
+	@GameTest(maxTicks = 60)
+	public void dinoCollarNeverAttacksOwner(GameTestHelper helper) {
+		Player owner = survivalPlayer(helper);
+		HostileDino rex = collaredTRex(helper, owner);
+		Player other = survivalPlayer(helper);
+		other.snapTo(helper.absoluteVec(new Vec3(6.5, 1, 6.5)));
+		helper.assertFalse(rex.canAttack(owner), "collared T-Rex must never attack its owner (amulet or not)");
+		rex.hurtServer(helper.getLevel(), owner.damageSources().playerAttack(owner), 1.0F);
+		helper.assertFalse(rex.canAttack(owner), "...not even after the owner hit it");
+		rex.setTarget(owner);
+		helper.assertTrue(rex.isAlliedTo(owner), "owner is an ally");
+		HostileDino wild = helper.spawn(ModEntities.T_REX, new BlockPos(1, 1, 7));
+		helper.assertTrue(wild.canAttack(other) && wild.huntsPlayers(), "a wild T-Rex hunts players");
+		helper.assertFalse(rex.huntsPlayers(), "a collared T-Rex is neutral to other players");
+		helper.runAfterDelay(5, () -> {
+			helper.assertTrue(rex.getTarget() == null, "owner must be dropped as target, got " + rex.getTarget());
+			helper.succeed();
+		});
+	}
+
+	/** Fights for the owner: whoever hurts the owner, and whatever the owner attacks. */
+	@GameTest(maxTicks = 80)
+	public void dinoCollarDefendsOwner(GameTestHelper helper) {
+		Player owner = survivalPlayer(helper);
+		HostileDino rex = collaredTRex(helper, owner);
+		Player attacker = survivalPlayer(helper);
+		attacker.snapTo(helper.absoluteVec(new Vec3(6.5, 1, 1.5)));
+		helper.assertTrue(rex.getTarget() == null, "no target before the attack");
+		owner.tickCount = 100; // mock players never tick; the goals compare the owner's hurt timestamps (tickCount)
+		owner.hurtServer(helper.getLevel(), attacker.damageSources().playerAttack(attacker), 1.0F);
+		helper.assertTrue(owner.getLastHurtByMob() == attacker, "owner should remember the attacker");
+		helper.runAfterDelay(15, () -> {
+			helper.assertTrue(rex.getTarget() == attacker, "T-Rex should attack the player who hurt its owner, got " + rex.getTarget());
+			rex.setTarget(null);
+			net.minecraft.world.entity.Mob pig = helper.spawn(net.minecraft.world.entity.EntityTypes.PIG, new BlockPos(1, 1, 6));
+			owner.tickCount = 200;
+			owner.setLastHurtMob(pig);
+			// The T-Rex one-shots the pig, so either it is the target or it was killed by the T-Rex.
+			helper.succeedWhen(() -> helper.assertTrue(rex.getTarget() == pig || (!pig.isAlive() && pig.getLastHurtByMob() == rex),
+					"T-Rex should attack what its owner attacks, got " + rex.getTarget()));
+		});
+	}
+
+	/** Owner saved with the entity; never despawns (not even on Peaceful, where a wild T-Rex vanishes). */
+	@GameTest(maxTicks = 40)
+	public void dinoCollarPersistsAndNeverDespawns(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		Player owner = survivalPlayer(helper);
+		HostileDino rex = collaredTRex(helper, owner);
+		helper.assertTrue(rex.requiresCustomPersistence() && !rex.removeWhenFarAway(1.0E6), "collared T-Rex must not despawn far away");
+		// Save and load a copy: same owner, still collared.
+		var output = net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess());
+		rex.saveWithoutId(output);
+		var tag = output.buildResult();
+		helper.assertTrue(tag.contains("Owner"), "owner UUID should be saved, got " + tag.keySet());
+		HostileDino copy = ModEntities.T_REX.create(level, EntitySpawnReason.LOAD);
+		copy.load(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), tag));
+		helper.assertTrue(copy.isCollared() && copy.isOwnedBy(owner), "loaded copy should keep the owner");
+		helper.assertTrue(copy.isPersistenceRequired(), "loaded copy should stay persistent");
+		// Peaceful: the wild T-Rex is removed by checkDespawn, the collared one stays. Restored in the same tick.
+		HostileDino wild = helper.spawn(ModEntities.T_REX, new BlockPos(1, 1, 7));
+		Difficulty before = level.getDifficulty();
+		level.getServer().setDifficulty(Difficulty.PEACEFUL, true);
+		rex.checkDespawn();
+		wild.checkDespawn();
+		level.getServer().setDifficulty(before, true);
+		helper.assertTrue(wild.isRemoved(), "wild T-Rex should despawn on Peaceful");
+		helper.assertFalse(rex.isRemoved(), "collared T-Rex must never despawn");
+		helper.succeed();
+	}
+
+	/** Sneak + empty hand toggles sit; the collar drops when the T-Rex dies. */
+	@GameTest(maxTicks = 40)
+	public void dinoCollarSitAndDrop(GameTestHelper helper) {
+		Player owner = survivalPlayer(helper);
+		HostileDino rex = collaredTRex(helper, owner);
+		owner.setShiftKeyDown(true);
+		rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		helper.assertTrue(rex.isOrderedToSit(), "sneak + empty hand should make it sit");
+		rex.interact(owner, InteractionHand.MAIN_HAND, rex.position());
+		helper.assertFalse(rex.isOrderedToSit(), "again: follow");
+		owner.setShiftKeyDown(false);
+		rex.hurtServer(helper.getLevel(), helper.getLevel().damageSources().genericKill(), Float.MAX_VALUE);
+		helper.runAfterDelay(25, () -> {
+			var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new AABB(helper.absolutePos(new BlockPos(4, 1, 4))).inflate(6));
+			boolean collar = drops.stream().anyMatch(item -> item.getItem().is(ModItems.DINO_COLLAR));
+			helper.assertTrue(collar, "a dead collared T-Rex should drop its collar");
+			helper.succeed();
+		});
+	}
+
+	/** 3 T-Rex Teeth / Leather, Dinosaur Bones, Leather / Iron Chain: ONLY the collar; advancements exist. */
+	@GameTest
+	public void dinoCollarRecipe(GameTestHelper helper) {
+		ItemStack e = ItemStack.EMPTY;
+		ItemStack t = new ItemStack(ModItems.T_REX_TOOTH);
+		ItemStack l = new ItemStack(Items.LEATHER);
+		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
+		ItemStack c = new ItemStack(Items.IRON_CHAIN);
+		CraftingInput full = CraftingInput.of(3, 3, List.of(t, t, t, l, b, l, e, c, e));
+		List<String> matches = craftingMatches(helper, full);
+		helper.assertTrue(matches.equals(List.of("dinosaurs:dino_collar")), "collar grid matches " + matches);
+		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(t, t, e, l, b, l, e, c, e))).isEmpty(), "2 teeth must not craft");
+		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(t, t, t, l, b, l, e, e, e))).isEmpty(), "no chain must not craft");
+		for (String id : new String[]{"recipes/equipment/dino_collar", "collar_t_rex"}) {
+			helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id(id)) != null, "missing advancement " + id);
+		}
+		helper.succeed();
+	}
+
+	/** Megalodon: twice the 1.6 size (2.5 x 1.8 -> 5 x 3.6). */
+	@GameTest
+	public void megalodonSize(GameTestHelper helper) {
+		var dims = ModEntities.MEGALODON.getDimensions();
+		helper.assertTrue(dims.width() == 5.0F && dims.height() == 3.6F, "megalodon size " + dims);
+		helper.succeed();
+	}
+
+	/** Spawn weights: defaults, per-species value, global percent (rounded, at least 1), and the biome spawn lists use them. */
+	@GameTest
+	public void configSpawnWeights(GameTestHelper helper) {
+		DinoConfig config = DinoConfig.get();
+		int savedRex = config.spawnWeight(ModEntities.T_REX);
+		int savedPercent = config.spawnFrequencyPercent;
+		try {
+			helper.assertTrue(ModEntities.defaultSpawnWeight(ModEntities.VELOCIRAPTOR) == 14 && ModEntities.defaultSpawnWeight(ModEntities.MEGALODON) == 1, "defaults");
+			config.setSpawnWeight(ModEntities.T_REX, 10);
+			config.spawnFrequencyPercent = 150;
+			helper.assertTrue(config.effectiveSpawnWeight(ModEntities.T_REX) == 15, "10 x 150% = 15, got " + config.effectiveSpawnWeight(ModEntities.T_REX));
+			config.spawnFrequencyPercent = 10;
+			helper.assertTrue(config.effectiveSpawnWeight(ModEntities.MEGALODON) == 1, "a small multiplier keeps at least 1");
+			config.spawnFrequencyPercent = 0;
+			helper.assertTrue(config.effectiveSpawnWeight(ModEntities.T_REX) == 0, "0% = no natural spawns");
+			config.setSpawnWeight(ModEntities.T_REX, 500);
+			helper.assertTrue(config.spawnWeight(ModEntities.T_REX) == DinoConfig.MAX_WEIGHT, "weight is clamped");
+		} finally {
+			config.setSpawnWeight(ModEntities.T_REX, savedRex);
+			config.spawnFrequencyPercent = savedPercent;
+		}
+		// The biome list built at server start holds the configured (here: default) weight.
+		var plains = helper.getLevel().registryAccess().lookupOrThrow(Registries.BIOME).getOrThrow(net.minecraft.world.level.biome.Biomes.PLAINS).value();
+		int weight = -1;
+		for (var entry : plains.getAttributes().applyModifier(net.minecraft.world.attribute.EnvironmentAttributes.NATURAL_MOB_SPAWNS,
+				net.minecraft.world.level.biome.MobSpawnSettings.EMPTY).getMobsToSpawn(net.minecraft.world.entity.MobCategory.MONSTER).unwrap()) {
+			if (entry.value().type() == ModEntities.T_REX) {
+				weight = entry.weight();
+			}
+		}
+		Dinosaurs.LOGGER.info("[test] plains T-Rex spawn weight {} (config {})", weight, config.effectiveSpawnWeight(ModEntities.T_REX));
+		helper.assertTrue(weight == config.effectiveSpawnWeight(ModEntities.T_REX), "plains T-Rex weight " + weight);
+		helper.succeed();
 	}
 }
