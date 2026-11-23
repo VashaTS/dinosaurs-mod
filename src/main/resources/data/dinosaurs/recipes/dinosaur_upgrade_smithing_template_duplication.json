@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "dinosaurs:dinosaur_bones"
+    },
+    "T": {
+      "item": "dinosaurs:dinosaur_upgrade_smithing_template"
+    },
+    "C": {
+      "item": "minecraft:bone_block"
+    }
+  },
+  "pattern": [
+    "BTB",
+    "BCB",
+    "BBB"
+  ],
+  "result": {
+    "count": 2,
+    "item": "dinosaurs:dinosaur_upgrade_smithing_template"
+  }
+}

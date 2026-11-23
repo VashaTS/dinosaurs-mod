@@ -42,7 +42,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.GameRules;
@@ -75,10 +75,11 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 
 	public HostileDino(EntityType<? extends HostileDino> type, Level level) {
 		super(type, level);
+		this.setMaxUpStep(ModEntities.stepHeight(type));
 		this.xpReward = profile().xp();
 		if (type == ModEntities.SPINOSAURUS) {
 			// Spinosaurus was semi-aquatic: it is happy to walk through water.
-			this.setPathfindingMalus(PathType.WATER, 0.0F);
+			this.setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
 		}
 	}
 
@@ -87,10 +88,10 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	}
 
 	@Override
-	protected void defineSynchedData(SynchedEntityData.Builder builder) {
-		super.defineSynchedData(builder);
-		builder.define(DATA_OWNER, Optional.empty());
-		builder.define(DATA_SITTING, false);
+	protected void defineSynchedData() {
+		super.defineSynchedData();
+		this.entityData.define(DATA_OWNER, Optional.empty());
+		this.entityData.define(DATA_SITTING, false);
 	}
 
 	@Override
@@ -224,8 +225,8 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 			}
 			if (!this.level().isClientSide()) {
 				this.collar(player);
-				stack.consume(1, player);
-				this.level().playSound(null, this, SoundEvents.ARMOR_EQUIP_LEATHER.value(), this.getSoundSource(), 1.0F, 0.8F);
+				if (!player.getAbilities().instabuild) stack.shrink(1);
+				this.level().playSound(null, this, SoundEvents.ARMOR_EQUIP_LEATHER, this.getSoundSource(), 1.0F, 0.8F);
 				this.level().playSound(null, this, SoundEvents.CHAIN_PLACE, this.getSoundSource(), 1.0F, 1.0F);
 				((ServerLevel) this.level()).sendParticles(ParticleTypes.HEART, this.getX(), this.getEyeY(), this.getZ(), 7, 0.8, 0.5, 0.8, 0.02);
 				player.displayClientMessage(Component.translatable("message.dinosaurs.dino_collar.collared").withStyle(ChatFormatting.GREEN), true);
@@ -233,11 +234,11 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 			return InteractionResult.SUCCESS;
 		}
 		if (this.isOwnedBy(player)) {
-			if (stack.is(ItemTags.MEAT) && this.getHealth() < this.getMaxHealth()) {
+			if ((stack.getItem().isEdible() && stack.getItem().getFoodProperties().isMeat()) && this.getHealth() < this.getMaxHealth()) {
 				if (!this.level().isClientSide()) {
-					var food = stack.get(net.minecraft.core.component.DataComponents.FOOD);
-					this.heal(food != null ? 2.0F * food.nutrition() : 8.0F);
-					stack.consume(1, player);
+					var food = stack.getItem().getFoodProperties();
+					this.heal(food != null ? 2.0F * food.getNutrition() : 8.0F);
+					if (!player.getAbilities().instabuild) stack.shrink(1);
 					this.playSound(SoundEvents.GENERIC_EAT, 1.0F, 0.8F);
 				}
 				return InteractionResult.SUCCESS;
@@ -315,8 +316,8 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	}
 
 	@Override
-	protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
-		super.dropCustomDeathLoot(level, source, killedByPlayer);
+	protected void dropCustomDeathLoot(DamageSource source, int looting, boolean killedByPlayer) {
+		super.dropCustomDeathLoot(source, looting, killedByPlayer);
 		if (this.isCollared()) {
 			this.spawnAtLocation(new ItemStack(ModItems.DINO_COLLAR));
 		}
@@ -466,7 +467,7 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 	}
 
 	private boolean canTeleportTo(BlockPos pos) {
-		if (WalkNodeEvaluator.getPathTypeStatic(this, pos) != PathType.WALKABLE) {
+		if (WalkNodeEvaluator.getBlockPathTypeStatic(this.level(), pos.mutable()) != BlockPathTypes.WALKABLE) {
 			return false;
 		}
 		if (this.level().getBlockState(pos.below()).getBlock() instanceof LeavesBlock) {
@@ -538,15 +539,15 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 		@Override
 		public void start() {
 			this.timeToRecalcPath = 0;
-			this.oldWaterCost = getPathfindingMalus(PathType.WATER);
-			setPathfindingMalus(PathType.WATER, 0.0F);
+			this.oldWaterCost = getPathfindingMalus(BlockPathTypes.WATER);
+			setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
 		}
 
 		@Override
 		public void stop() {
 			this.owner = null;
 			getNavigation().stop();
-			setPathfindingMalus(PathType.WATER, this.oldWaterCost);
+			setPathfindingMalus(BlockPathTypes.WATER, this.oldWaterCost);
 		}
 
 		@Override
@@ -637,5 +638,10 @@ public class HostileDino extends Monster implements AttackAnimated, OwnableEntit
 			}
 			super.start();
 		}
+	}
+
+	@Override
+	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+		return ModEntities.eyeHeight(this.getType(), dimensions.height * 0.85F);
 	}
 }

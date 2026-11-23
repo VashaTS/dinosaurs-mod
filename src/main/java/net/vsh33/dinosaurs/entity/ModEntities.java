@@ -24,8 +24,6 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.entity.SpawnPlacementType;
-import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -50,43 +48,61 @@ public final class ModEntities {
 	// ---- Herbivores
 	private static final DinoProfile TRIKE_PROFILE = new DinoProfile(SoundEvents.HOGLIN_AMBIENT, SoundEvents.HOGLIN_HURT, SoundEvents.HOGLIN_DEATH, null, 0.7F, 1.4F, true, false, 8);
 	private static final DinoProfile STEGO_PROFILE = new DinoProfile(SoundEvents.SNIFFER_IDLE, SoundEvents.SNIFFER_HURT, SoundEvents.SNIFFER_DEATH, SoundEvents.SNIFFER_STEP, 0.8F, 1.4F, true, false, 8);
-	private static final DinoProfile ANKY_PROFILE = new DinoProfile(SoundEvents.ARMADILLO_AMBIENT, SoundEvents.ARMADILLO_HURT, SoundEvents.ARMADILLO_DEATH, null, 0.5F, 1.4F, true, false, 8);
+	private static final DinoProfile ANKY_PROFILE = new DinoProfile(SoundEvents.TURTLE_AMBIENT_LAND, SoundEvents.TURTLE_HURT, SoundEvents.TURTLE_DEATH, null, 0.5F, 1.4F, true, false, 8);
 	private static final DinoProfile BRACHIO_PROFILE = new DinoProfile(SoundEvents.CAMEL_AMBIENT, SoundEvents.CAMEL_HURT, SoundEvents.CAMEL_DEATH, SoundEvents.RAVAGER_STEP, 0.5F, 2.0F, false, false, 10);
 	private static final DinoProfile PARA_PROFILE = new DinoProfile(SoundEvents.GOAT_AMBIENT, SoundEvents.GOAT_HURT, SoundEvents.GOAT_DEATH, null, 0.6F, 1.3F, false, false, 5);
 
 	public static final EntityType<HostileDino> T_REX = register("t_rex",
 			EntityType.Builder.<HostileDino>of(HostileDino::new, MobCategory.MONSTER)
-					.sized(1.8F, 3.4F).eyeHeight(3.0F).clientTrackingRange(10));
+					.sized(1.8F, 3.4F).clientTrackingRange(10), 3.0F);
 	public static final EntityType<HostileDino> VELOCIRAPTOR = register("velociraptor",
 			EntityType.Builder.<HostileDino>of(HostileDino::new, MobCategory.MONSTER)
-					.sized(0.7F, 1.0F).eyeHeight(0.85F).clientTrackingRange(8));
+					.sized(0.7F, 1.0F).clientTrackingRange(8), 0.85F);
 	public static final EntityType<HostileDino> SPINOSAURUS = register("spinosaurus",
 			EntityType.Builder.<HostileDino>of(HostileDino::new, MobCategory.MONSTER)
-					.sized(1.8F, 3.2F).eyeHeight(2.6F).clientTrackingRange(10));
+					.sized(1.8F, 3.2F).clientTrackingRange(10), 2.6F);
 	public static final EntityType<Triceratops> TRICERATOPS = register("triceratops",
 			EntityType.Builder.<Triceratops>of(Triceratops::new, MobCategory.CREATURE)
-					.sized(1.7F, 2.1F).eyeHeight(1.5F).passengerAttachments(1.75F).clientTrackingRange(10));
+					.sized(1.7F, 2.1F).clientTrackingRange(10), 1.5F);
 	public static final EntityType<HerbivoreDino> STEGOSAURUS = register("stegosaurus",
 			EntityType.Builder.<HerbivoreDino>of(HerbivoreDino::new, MobCategory.CREATURE)
-					.sized(1.6F, 2.2F).eyeHeight(1.2F).clientTrackingRange(10));
+					.sized(1.6F, 2.2F).clientTrackingRange(10), 1.2F);
 	public static final EntityType<HerbivoreDino> ANKYLOSAURUS = register("ankylosaurus",
 			EntityType.Builder.<HerbivoreDino>of(HerbivoreDino::new, MobCategory.CREATURE)
-					.sized(1.7F, 1.3F).eyeHeight(0.9F).clientTrackingRange(10));
+					.sized(1.7F, 1.3F).clientTrackingRange(10), 0.9F);
 	public static final EntityType<HerbivoreDino> BRACHIOSAURUS = register("brachiosaurus",
 			EntityType.Builder.<HerbivoreDino>of(HerbivoreDino::new, MobCategory.CREATURE)
-					.sized(2.0F, 3.0F).eyeHeight(2.9F).clientTrackingRange(12));
+					.sized(2.0F, 3.0F).clientTrackingRange(12), 2.9F);
 	public static final EntityType<HerbivoreDino> PARASAUROLOPHUS = register("parasaurolophus",
 			EntityType.Builder.<HerbivoreDino>of(HerbivoreDino::new, MobCategory.CREATURE)
-					.sized(1.2F, 2.4F).eyeHeight(2.0F).clientTrackingRange(10));
+					.sized(1.2F, 2.4F).clientTrackingRange(10), 2.0F);
 	public static final EntityType<Megalodon> MEGALODON = register("megalodon",
 			EntityType.Builder.<Megalodon>of(Megalodon::new, MobCategory.WATER_CREATURE)
-					.sized(5.0F, 3.6F).eyeHeight(2.0F).clientTrackingRange(12)); // 1.7.0: twice the size (was 2.5 x 1.8)
+					.sized(5.0F, 3.6F).clientTrackingRange(12), 2.0F); // 1.7.0: twice the size (was 2.5 x 1.8)
 	public static final EntityType<Pteranodon> PTERANODON = register("pteranodon",
 			EntityType.Builder.<Pteranodon>of(Pteranodon::new, MobCategory.CREATURE)
-					.sized(1.0F, 0.9F).eyeHeight(0.6F).clientTrackingRange(10));
+					.sized(1.0F, 0.9F).clientTrackingRange(10), 0.6F);
 
-	private static <T extends Mob> EntityType<T> register(String name, EntityType.Builder<T> builder) {
+	/** Eye heights (EntityType.Builder.eyeHeight does not exist in 1.20.1; the mobs override getStandingEyeHeight). */
+	private static final Map<EntityType<?>, Float> EYE_HEIGHTS = new HashMap<>();
+
+	/** Step heights (no STEP_HEIGHT attribute in 1.20.1; applied with setMaxUpStep in the constructors). */
+	public static float stepHeight(EntityType<?> type) {
+		String id = BuiltInRegistries.ENTITY_TYPE.getKey(type).getPath();
+		return switch (id) {
+			case "t_rex", "spinosaurus", "brachiosaurus" -> 1.1F;
+			case "triceratops", "stegosaurus", "parasaurolophus" -> 1.0F;
+			default -> 0.6F;
+		};
+	}
+
+	public static float eyeHeight(EntityType<?> type, float fallback) {
+		return EYE_HEIGHTS.getOrDefault(type, fallback);
+	}
+
+	private static <T extends Mob> EntityType<T> register(String name, EntityType.Builder<T> builder, float eyeHeight) {
 		EntityType<T> type = Registry.register(BuiltInRegistries.ENTITY_TYPE, Dinosaurs.id(name), builder.build(Dinosaurs.id(name).toString()));
+		EYE_HEIGHTS.put(type, eyeHeight);
 		ALL.add(type);
 		return type;
 	}
@@ -108,14 +124,14 @@ public final class ModEntities {
 	public static void initialize() {
 		PROFILES.putAll(Map.of(T_REX, T_REX_PROFILE, VELOCIRAPTOR, RAPTOR_PROFILE, SPINOSAURUS, SPINO_PROFILE, TRICERATOPS, TRIKE_PROFILE, STEGOSAURUS, STEGO_PROFILE, ANKYLOSAURUS, ANKY_PROFILE, BRACHIOSAURUS, BRACHIO_PROFILE, PARASAUROLOPHUS, PARA_PROFILE));
 		// Attributes
-		FabricDefaultAttributeRegistry.register(T_REX, attrs(90, 0.3, 14, 6, 0.9, 32).add(Attributes.STEP_HEIGHT, 1.1).add(Attributes.ATTACK_KNOCKBACK, 1.0));
+		FabricDefaultAttributeRegistry.register(T_REX, attrs(90, 0.3, 14, 6, 0.9, 32).add(Attributes.ATTACK_KNOCKBACK, 1.0));
 		FabricDefaultAttributeRegistry.register(VELOCIRAPTOR, attrs(16, 0.38, 4, 0, 0.0, 24));
-		FabricDefaultAttributeRegistry.register(SPINOSAURUS, attrs(75, 0.28, 11, 4, 0.8, 28).add(Attributes.STEP_HEIGHT, 1.1));
-		FabricDefaultAttributeRegistry.register(TRICERATOPS, attrs(50, 0.24, 9, 6, 0.7, 16).add(Attributes.STEP_HEIGHT, 1.0).add(Attributes.ATTACK_KNOCKBACK, 1.5));
-		FabricDefaultAttributeRegistry.register(STEGOSAURUS, attrs(45, 0.22, 8, 4, 0.6, 16).add(Attributes.STEP_HEIGHT, 1.0));
+		FabricDefaultAttributeRegistry.register(SPINOSAURUS, attrs(75, 0.28, 11, 4, 0.8, 28));
+		FabricDefaultAttributeRegistry.register(TRICERATOPS, attrs(50, 0.24, 9, 6, 0.7, 16).add(Attributes.ATTACK_KNOCKBACK, 1.5));
+		FabricDefaultAttributeRegistry.register(STEGOSAURUS, attrs(45, 0.22, 8, 4, 0.6, 16));
 		FabricDefaultAttributeRegistry.register(ANKYLOSAURUS, attrs(55, 0.2, 8, 14, 0.8, 16).add(Attributes.ATTACK_KNOCKBACK, 1.2));
-		FabricDefaultAttributeRegistry.register(BRACHIOSAURUS, attrs(110, 0.2, 0, 4, 1.0, 16).add(Attributes.STEP_HEIGHT, 1.1));
-		FabricDefaultAttributeRegistry.register(PARASAUROLOPHUS, attrs(30, 0.27, 0, 0, 0.3, 16).add(Attributes.STEP_HEIGHT, 1.0));
+		FabricDefaultAttributeRegistry.register(BRACHIOSAURUS, attrs(110, 0.2, 0, 4, 1.0, 16));
+		FabricDefaultAttributeRegistry.register(PARASAUROLOPHUS, attrs(30, 0.27, 0, 0, 0.3, 16));
 		FabricDefaultAttributeRegistry.register(MEGALODON, Mob.createMobAttributes()
 				.add(Attributes.MAX_HEALTH, 100).add(Attributes.MOVEMENT_SPEED, 1.3).add(Attributes.ATTACK_DAMAGE, 12)
 				.add(Attributes.KNOCKBACK_RESISTANCE, 0.8).add(Attributes.FOLLOW_RANGE, 32));
@@ -123,16 +139,16 @@ public final class ModEntities {
 				.add(Attributes.MAX_HEALTH, 16).add(Attributes.MOVEMENT_SPEED, 0.25).add(Attributes.FLYING_SPEED, 0.6));
 
 		// Spawn placement rules (every rule first checks the config: per-species toggle and the daylight option)
-		placement(T_REX, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
-		placement(VELOCIRAPTOR, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 6, 2));
-		placement(SPINOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
-		placement(TRICERATOPS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
-		placement(STEGOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
-		placement(ANKYLOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
-		placement(BRACHIOSAURUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
-		placement(PARASAUROLOPHUS, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
-		placement(MEGALODON, SpawnPlacementTypes.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, ModEntities::checkMegalodonSpawn);
-		placement(PTERANODON, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING, false, ModEntities::checkPteranodonSpawn);
+		placement(T_REX, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
+		placement(VELOCIRAPTOR, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 6, 2));
+		placement(SPINOSAURUS, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, (t, l, r, p, rand) -> checkPredatorSpawn(t, l, r, p, rand, 1, 4));
+		placement(TRICERATOPS, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(STEGOSAURUS, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(ANKYLOSAURUS, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(BRACHIOSAURUS, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(PARASAUROLOPHUS, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, false, ModEntities::checkHerbivoreSpawn);
+		placement(MEGALODON, SpawnPlacements.Type.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, true, ModEntities::checkMegalodonSpawn);
+		placement(PTERANODON, SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING, false, ModEntities::checkPteranodonSpawn);
 
 		// Biomes: every species has its own home so they are spread over the world.
 		// Default weights; the config can change them (per species and globally, see DinoConfig).
@@ -176,7 +192,7 @@ public final class ModEntities {
 		return type == T_REX || type == VELOCIRAPTOR || type == SPINOSAURUS || type == MEGALODON;
 	}
 
-	private static <T extends Mob> void placement(EntityType<T> type, SpawnPlacementType placementType, Heightmap.Types heightmap, boolean hostile, SpawnPlacements.SpawnPredicate<T> rule) {
+	private static <T extends Mob> void placement(EntityType<T> type, SpawnPlacements.Type placementType, Heightmap.Types heightmap, boolean hostile, SpawnPlacements.SpawnPredicate<T> rule) {
 		SpawnPlacements.register(type, placementType, heightmap,
 				(t, level, reason, pos, random) -> configAllows(t, level, reason, pos, hostile) && rule.test(t, level, reason, pos, random));
 	}
@@ -209,14 +225,14 @@ public final class ModEntities {
 		if (level.getDifficulty() == Difficulty.PEACEFUL || !Mob.checkMobSpawnRules(type, level, reason, pos, random)) {
 			return false;
 		}
-		if (MobSpawnType.isSpawner(reason)) {
+		if (reason == MobSpawnType.SPAWNER) {
 			return true;
 		}
 		return level.canSeeSky(pos) && random.nextInt(chance) == 0 && countNearby(level, type, pos, 64) < maxNearby;
 	}
 
 	private static <T extends Mob> boolean checkHerbivoreSpawn(EntityType<T> type, ServerLevelAccessor level, MobSpawnType reason, BlockPos pos, RandomSource random) {
-		boolean bright = MobSpawnType.ignoresLightRequirements(reason) || level.getRawBrightness(pos, 0) > 8;
+		boolean bright = false || level.getRawBrightness(pos, 0) > 8;
 		return bright && level.getBlockState(pos.below()).is(BlockTags.ANIMALS_SPAWNABLE_ON);
 	}
 
@@ -227,7 +243,7 @@ public final class ModEntities {
 		if (!level.getFluidState(pos).is(FluidTags.WATER) || !level.getFluidState(pos.above()).is(FluidTags.WATER)) {
 			return false;
 		}
-		if (MobSpawnType.isSpawner(reason)) {
+		if (reason == MobSpawnType.SPAWNER) {
 			return true;
 		}
 		// 1.7.0: the shark is 3.6 blocks tall now, it needs at least 4 blocks of water.
@@ -238,9 +254,9 @@ public final class ModEntities {
 	}
 
 	private static <T extends Mob> boolean checkPteranodonSpawn(EntityType<T> type, ServerLevelAccessor level, MobSpawnType reason, BlockPos pos, RandomSource random) {
-		boolean bright = MobSpawnType.ignoresLightRequirements(reason) || level.getRawBrightness(pos, 0) > 8;
+		boolean bright = false || level.getRawBrightness(pos, 0) > 8;
 		return bright && level.canSeeSky(pos) && Mob.checkMobSpawnRules(type, level, reason, pos, random)
-				&& (MobSpawnType.isSpawner(reason) || countNearby(level, type, pos, 48) < 6);
+				&& (reason == MobSpawnType.SPAWNER || countNearby(level, type, pos, 48) < 6);
 	}
 
 	private ModEntities() {

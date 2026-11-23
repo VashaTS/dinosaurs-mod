@@ -28,7 +28,7 @@ public class DinoCollarLayer extends RenderLayer<Mob, DinoModel> {
 			float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
 		if (entity instanceof HostileDino dino && dino.isCollared()) {
 			coloredCutoutModelCopyLayerRender(this.getParentModel(), this.collarModel, this.texture, poseStack, buffers, light, entity,
-					limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, partialTick, -1);
+					limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, partialTick, 1.0F, 1.0F, 1.0F);
 		}
 	}
 }

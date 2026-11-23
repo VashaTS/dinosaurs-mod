@@ -24,7 +24,7 @@ public final class DinoProtection {
 	private final Set<UUID> provokedBy = new HashSet<>();
 
 	public static boolean hasAmulet(Player player) {
-		if (player.getInventory().contains(stack -> stack.getItem() == ModItems.AMULET_OF_DINO_PROTECTION)) {
+		if (player.getInventory().hasAnyMatching(stack -> stack.getItem() == ModItems.AMULET_OF_DINO_PROTECTION)) {
 			return true;
 		}
 		if (TRINKETS && !trinketsFailed) {

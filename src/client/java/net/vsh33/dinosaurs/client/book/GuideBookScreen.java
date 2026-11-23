@@ -150,7 +150,7 @@ public class GuideBookScreen extends Screen {
 		if (recordHistory && !GuideBookContents.same(this.location, target)) {
 			this.history.add(this.location);
 			if (this.history.size() > 64) {
-				this.history.removeFirst();
+				this.history.remove(0);
 			}
 		}
 		this.location = target;
@@ -162,7 +162,7 @@ public class GuideBookScreen extends Screen {
 		if (this.history.isEmpty()) {
 			return;
 		}
-		this.location = this.history.removeLast();
+		this.location = this.history.remove(this.history.size() - 1);
 		this.yaw = DEFAULT_YAW;
 		this.updateButtons();
 		this.pageSound();
@@ -195,13 +195,14 @@ public class GuideBookScreen extends Screen {
 
 	@Override
 	public void render(final GuiGraphics graphics, final int mouseX, final int mouseY, final float a) {
+		// 1.20.1: Screen.render does not draw the background itself.
+		this.renderBackground(graphics);
+		this.renderBook(graphics, mouseX, mouseY, a);
 		super.render(graphics, mouseX, mouseY, a);
 		this.applyHoverTooltip(graphics, mouseX, mouseY);
 	}
 
-	@Override
-	public void renderBackground(final GuiGraphics graphics, final int mouseX, final int mouseY, final float a) {
-		this.renderTransparentBackground(graphics);
+	private void renderBook(final GuiGraphics graphics, final int mouseX, final int mouseY, final float a) {
 		graphics.blit(TEXTURE, this.leftPos, this.topPos, 0.0F, 0.0F, BOOK_W, BOOK_H, TEX, TEX);
 		this.hotspots.clear();
 		this.picX1 = this.picX0;
@@ -530,7 +531,23 @@ public class GuideBookScreen extends Screen {
 		}
 		Vector3f translation = new Vector3f(framing.offsetX(), ty, 0.0F);
 		graphics.enableScissor(x0, y0, x1, y1);
-		InventoryScreen.renderEntityInInventory(graphics, (x0 + x1) / 2.0F, (y0 + y1) / 2.0F, framing.size(), translation, rotation, camera, entity);
+		// 1.21's InventoryScreen.renderEntityInInventory with a translation, written out for 1.20.1.
+		graphics.pose().pushPose();
+		graphics.pose().translate((x0 + x1) / 2.0F, (y0 + y1) / 2.0F, 50.0);
+		graphics.pose().mulPoseMatrix(new org.joml.Matrix4f().scaling(framing.size(), framing.size(), -framing.size()));
+		graphics.pose().translate(translation.x, translation.y, translation.z);
+		graphics.pose().mulPose(rotation);
+		com.mojang.blaze3d.platform.Lighting.setupForEntityInInventory();
+		var dispatcher = net.minecraft.client.Minecraft.getInstance().getEntityRenderDispatcher();
+		camera.conjugate();
+		dispatcher.overrideCameraOrientation(camera);
+		dispatcher.setRenderShadow(false);
+		com.mojang.blaze3d.systems.RenderSystem.runAsFancy(
+				() -> dispatcher.render(entity, 0.0, 0.0, 0.0, 0.0F, 1.0F, graphics.pose(), graphics.bufferSource(), 15728880));
+		graphics.flush();
+		dispatcher.setRenderShadow(true);
+		graphics.pose().popPose();
+		com.mojang.blaze3d.platform.Lighting.setupFor3DItems();
 		graphics.disableScissor();
 	}
 
@@ -572,7 +589,7 @@ public class GuideBookScreen extends Screen {
 			// Tight rows hold two lines: shorten the second one with "..." and show the full name in the tooltip.
 			tooltip = title;
 			String full = label.getString();
-			String first = this.font.getSplitter().splitLines(label, textW, label.getStyle()).getFirst().getString();
+			String first = this.font.getSplitter().splitLines(label, textW, label.getStyle()).get(0).getString();
 			String rest = full.substring(Math.min(full.length(), first.length())).trim();
 			lines = List.of(Component.literal(first).withStyle(label.getStyle()).getVisualOrderText(),
 					this.fitOneLine(Component.literal(rest).withStyle(label.getStyle()), textW).getVisualOrderText());

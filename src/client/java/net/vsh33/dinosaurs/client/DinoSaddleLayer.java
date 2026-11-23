@@ -21,7 +21,7 @@ public class DinoSaddleLayer extends RenderLayer<Mob, DinoModel> {
 	public void render(PoseStack poseStack, MultiBufferSource buffers, int light, Mob entity, float limbSwing, float limbSwingAmount,
 			float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
 		if (entity instanceof Triceratops t && t.isSaddled() && !entity.isInvisible()) {
-			renderColoredCutoutModel(this.getParentModel(), this.texture, poseStack, buffers, light, entity, -1);
+			renderColoredCutoutModel(this.getParentModel(), this.texture, poseStack, buffers, light, entity, 1.0F, 1.0F, 1.0F);
 		}
 	}
 }

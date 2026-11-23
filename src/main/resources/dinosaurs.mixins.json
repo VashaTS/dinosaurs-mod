@@ -1,11 +1,13 @@
 {
 	"required": true,
 	"package": "net.vsh33.dinosaurs.mixin",
-	"compatibilityLevel": "JAVA_21",
+	"compatibilityLevel": "JAVA_17",
 	"mixins": [
 		"AnvilMenuMixin",
 		"EnchantCommandMixin",
-		"EnchantmentMixin"
+		"EnchantmentHelperMixin",
+		"EnchantmentMixin",
+		"HelmetEnchantMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

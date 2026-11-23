@@ -2,12 +2,8 @@ package net.vsh33.dinosaurs.item;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import java.util.EnumMap;
-import net.minecraft.Util;
-import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.SwordItem;
@@ -24,16 +20,10 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -77,8 +67,7 @@ public final class ModItems {
 	 * enchantability 20, 46 x 11 = 506 durability. Not an ArmorItem, so the head layer draws the 3D item model on the head.
 	 */
 	public static final Item T_REX_SKULL_HELMET = register("t_rex_skull_helmet", TRexSkullHelmetItem::new, new Item.Properties()
-			.durability(ArmorItem.Type.HELMET.getDurability(46))
-			.attributes(TRexSkullHelmetItem.createAttributes())
+			.durability(11 * 46)
 			.fireResistant()
 			.rarity(Rarity.EPIC));
 
@@ -102,7 +91,7 @@ public final class ModItems {
 		@Override public int getUses() { return 2501; }
 		@Override public float getSpeed() { return 9.0F; }
 		@Override public float getAttackDamageBonus() { return 6.0F; }
-		@Override public TagKey<net.minecraft.world.level.block.Block> getIncorrectBlocksForDrops() { return BlockTags.INCORRECT_FOR_NETHERITE_TOOL; }
+		@Override public int getLevel() { return 4; }
 		@Override public int getEnchantmentValue() { return 20; }
 		@Override public Ingredient getRepairIngredient() { return Ingredient.of(REPAIRS_DINOSAUR_CLAW); }
 	};
@@ -110,17 +99,11 @@ public final class ModItems {
 	public static final double DINOSAUR_CLAW_DAMAGE = 11.0;
 	/** Reach change while the claw is in the main hand: a fist weapon, so 0.5 blocks shorter than a sword (3 -> 2.5). */
 	public static final double DINOSAUR_CLAW_REACH = -0.5;
-	public static final ResourceLocation DINOSAUR_CLAW_REACH_ID = Dinosaurs.id("dinosaur_claw_reach");
-	/** A sword (sweeping, sword enchantments, cobwebs) with 11 attack damage, speed 1.6 and entity interaction range -0.5. */
-	public static final Item DINOSAUR_CLAW = register("dinosaur_claw", p -> new SwordItem(DINOSAUR_TOOL_MATERIAL, p), new Item.Properties()
-			.attributes(ItemAttributeModifiers.builder()
-					.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, DINOSAUR_CLAW_DAMAGE - 1.0,
-							AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
-					.add(Attributes.ATTACK_SPEED, new AttributeModifier(Item.BASE_ATTACK_SPEED_ID, -2.4,
-							AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
-					.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(DINOSAUR_CLAW_REACH_ID, DINOSAUR_CLAW_REACH,
-							AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
-					.build())
+	/**
+	 * A sword (sweeping, sword enchantments, cobwebs) with 11 attack damage (1 + tier 6 + 4) and speed 1.6.
+	 * Minecraft 1.20.1 has no entity interaction range attribute, so the claw's reach is the normal 3 blocks here.
+	 */
+	public static final Item DINOSAUR_CLAW = register("dinosaur_claw", p -> new SwordItem(DINOSAUR_TOOL_MATERIAL, 4, -2.4F, p), new Item.Properties()
 			.fireResistant().rarity(Rarity.EPIC));
 
 	// Dinosaur Armor: netherite chestplate / leggings / boots upgraded on the smithing table with the Dinosaur Upgrade
@@ -133,16 +116,21 @@ public final class ModItems {
 	 * enchantability 10 -> 15 -> 20. Armor points are equal for diamond and netherite; by request they are raised to
 	 * boots 4 / leggings 8 / chestplate 10 (netherite 3 / 6 / 8). Helmet value unused (the T-Rex Skull Helmet is the set's helmet).
 	 */
-	public static final Holder<ArmorMaterial> DINOSAUR_ARMOR_MATERIAL = Registry.registerForHolder(BuiltInRegistries.ARMOR_MATERIAL,
-			Dinosaurs.id("dinosaur"), new ArmorMaterial(
-					Util.make(new EnumMap<>(ArmorItem.Type.class), m -> {
-						m.put(ArmorItem.Type.BOOTS, 4);
-						m.put(ArmorItem.Type.LEGGINGS, 8);
-						m.put(ArmorItem.Type.CHESTPLATE, 10);
-						m.put(ArmorItem.Type.HELMET, 3);
-						m.put(ArmorItem.Type.BODY, 19);
-					}), 20, SoundEvents.ARMOR_EQUIP_NETHERITE, () -> Ingredient.of(REPAIRS_DINOSAUR_ARMOR),
-					List.of(new ArmorMaterial.Layer(Dinosaurs.id("dinosaur"))), 4.0F, 0.2F));
+	public static final ArmorMaterial DINOSAUR_ARMOR_MATERIAL = new ArmorMaterial() {
+		@Override public int getDurabilityForType(ArmorItem.Type type) {
+			return switch (type) { case HELMET -> 11; case CHESTPLATE -> 16; case LEGGINGS -> 15; case BOOTS -> 13; } * DINOSAUR_ARMOR_DURABILITY;
+		}
+		@Override public int getDefenseForType(ArmorItem.Type type) {
+			return switch (type) { case HELMET -> 3; case CHESTPLATE -> 10; case LEGGINGS -> 8; case BOOTS -> 4; };
+		}
+		@Override public int getEnchantmentValue() { return 20; }
+		@Override public net.minecraft.sounds.SoundEvent getEquipSound() { return SoundEvents.ARMOR_EQUIP_NETHERITE; }
+		@Override public Ingredient getRepairIngredient() { return Ingredient.of(REPAIRS_DINOSAUR_ARMOR); }
+		/** 1.20.1 builds the texture path as minecraft:textures/models/armor/<name>_layer_N.png (no namespace support). */
+		@Override public String getName() { return "dinosaurs_dinosaur"; }
+		@Override public float getToughness() { return 4.0F; }
+		@Override public float getKnockbackResistance() { return 0.2F; }
+	};
 	/** Durability multiplier of the Dinosaur Armor (netherite 37). */
 	public static final int DINOSAUR_ARMOR_DURABILITY = 41;
 	/** Smithing template: Netherite Upgrade surrounded by 8 Dinosaur Bones (or duplicated with 7 bones + a bone block). */
@@ -154,7 +142,7 @@ public final class ModItems {
 
 	private static Item registerArmor(String name, ArmorItem.Type type) {
 		return register(name, p -> new ArmorItem(DINOSAUR_ARMOR_MATERIAL, type, p), new Item.Properties()
-				.durability(type.getDurability(DINOSAUR_ARMOR_DURABILITY)).fireResistant().rarity(Rarity.EPIC));
+				.fireResistant().rarity(Rarity.EPIC));
 	}
 
 	/** Illustrated field guide (Book + Leather + any dinosaur trophy). */

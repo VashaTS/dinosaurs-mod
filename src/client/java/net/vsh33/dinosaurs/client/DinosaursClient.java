@@ -36,7 +36,7 @@ public class DinosaursClient implements ClientModInitializer {
 				(stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1.0F : 0.0F);
 		FabricModelPredicateProviderRegistry.register(ModItems.DINOSAUR_BONE_BOW, Dinosaurs.id("pull"),
 				(stack, level, entity, seed) -> entity == null || entity.getUseItem() != stack ? 0.0F
-						: (stack.getUseDuration(entity) - entity.getUseItemRemainingTicks()) / (float) DinosaurBoneBowItem.DRAW_TICKS);
+						: (stack.getUseDuration() - entity.getUseItemRemainingTicks()) / (float) DinosaurBoneBowItem.DRAW_TICKS);
 		EntityModelLayerRegistry.registerModelLayer(T_REX_COLLAR, DinoCollarModel::createTRexCollar);
 		//        type                          layer                                  scale  shadow walk  swimmer
 		register(ModEntities.T_REX, "t_rex", DinoModelLayers::createTRex, 2.0F, 1.2F, 0.6F, false);
@@ -54,7 +54,7 @@ public class DinosaursClient implements ClientModInitializer {
 		GuideBookScreens.setOpener(() -> Minecraft.getInstance().setScreen(new GuideBookScreen()));
 
 		// One-line descriptions under the new items' names.
-		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
+		ItemTooltipCallback.EVENT.register((stack, flag, lines) -> {
 			if (stack.getItem() == ModItems.AMULET_OF_DINO_PROTECTION) {
 				lines.add(Component.translatable("item.dinosaurs.amulet_of_dino_protection.desc").withStyle(ChatFormatting.GRAY));
 			} else if (stack.getItem() == ModItems.DINO_COLLAR) {

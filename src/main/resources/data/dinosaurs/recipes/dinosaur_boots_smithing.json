@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "dinosaurs:raptor_claw"
+  },
+  "base": {
+    "item": "minecraft:netherite_boots"
+  },
+  "result": {
+    "item": "dinosaurs:dinosaur_boots"
+  },
+  "template": {
+    "item": "dinosaurs:dinosaur_upgrade_smithing_template"
+  }
+}

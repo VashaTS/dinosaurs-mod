@@ -36,9 +36,9 @@ public class Triceratops extends HerbivoreDino {
 	}
 
 	@Override
-	protected void defineSynchedData(SynchedEntityData.Builder builder) {
-		super.defineSynchedData(builder);
-		builder.define(DATA_SADDLED, false);
+	protected void defineSynchedData() {
+		super.defineSynchedData();
+		this.entityData.define(DATA_SADDLED, false);
 	}
 
 	public boolean isSaddled() {
@@ -68,7 +68,7 @@ public class Triceratops extends HerbivoreDino {
 			if (!this.level().isClientSide()) {
 				this.setSaddled(true);
 				this.level().playSound(null, this, SoundEvents.HORSE_SADDLE, this.getSoundSource(), 1.0F, 0.8F);
-				stack.consume(1, player);
+				if (!player.getAbilities().instabuild) stack.shrink(1);
 				if (this.getTarget() == player) {
 					this.setTarget(null);
 				}
@@ -141,6 +141,12 @@ public class Triceratops extends HerbivoreDino {
 		return (float) this.getAttributeValue(Attributes.MOVEMENT_SPEED);
 	}
 
+	/** 1.21.x: passenger attachment 1.75 minus the player's vehicle attachment 0.6; 1.20.1: offset + player riding offset -0.35. */
+	@Override
+	public double getPassengersRidingOffset() {
+		return 1.5;
+	}
+
 	@Override
 	protected void positionRider(Entity passenger, Entity.MoveFunction moveFunction) {
 		super.positionRider(passenger, moveFunction);
@@ -150,8 +156,8 @@ public class Triceratops extends HerbivoreDino {
 	}
 
 	@Override
-	protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
-		super.dropCustomDeathLoot(level, source, killedByPlayer);
+	protected void dropCustomDeathLoot(DamageSource source, int looting, boolean killedByPlayer) {
+		super.dropCustomDeathLoot(source, looting, killedByPlayer);
 		if (this.isSaddled()) {
 			this.spawnAtLocation(new ItemStack(ModItems.DINOSAUR_SADDLE));
 			this.setSaddled(false);

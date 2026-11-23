@@ -183,4 +183,9 @@ public class Pteranodon extends PathfinderMob {
 			mob.getNavigation().stop();
 		}
 	}
+
+	@Override
+	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+		return ModEntities.eyeHeight(this.getType(), dimensions.height * 0.85F);
+	}
 }

@@ -75,8 +75,8 @@ dependencies {
 
 	// All three are OPTIONAL at runtime: the mod checks FabricLoader.isModLoaded before touching them.
 	modCompileOnly "maven.modrinth:trinkets:${project.trinkets_version}"
-	modCompileOnly "org.ladysnake.cardinal-components-api:cardinal-components-base:${project.cca_version}"
-	modCompileOnly "org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
+	modCompileOnly "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}"
+	modCompileOnly "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
 	modCompileOnly "maven.modrinth:cloth-config:${project.cloth_config_version}"
 	modCompileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
 	if (project.findProperty("withCloth") == "true") {
@@ -85,8 +85,8 @@ dependencies {
 	}
 	if (project.findProperty("withTrinkets") == "true") {
 		modLocalRuntime "maven.modrinth:trinkets:${project.trinkets_version}"
-		modLocalRuntime "org.ladysnake.cardinal-components-api:cardinal-components-base:${project.cca_version}"
-		modLocalRuntime "org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
+		modLocalRuntime "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}"
+		modLocalRuntime "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
 	}
 	if (project.findProperty("xaeroJar")) {
 		modLocalRuntime files(project.property("xaeroJar").split(","))
@@ -103,13 +103,13 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 17
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {

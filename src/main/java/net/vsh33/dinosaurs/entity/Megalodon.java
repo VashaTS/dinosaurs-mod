@@ -145,4 +145,9 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 	public float getVoicePitch() {
 		return 0.5F + this.random.nextFloat() * 0.1F;
 	}
+
+	@Override
+	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+		return ModEntities.eyeHeight(this.getType(), dimensions.height * 0.85F);
+	}
 }

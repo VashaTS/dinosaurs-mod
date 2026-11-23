@@ -17,16 +17,22 @@ public final class DinosaurUpgradeTemplate {
 	}
 
 	public static SmithingTemplateItem create(Item.Properties properties) {
+		// 1.20.1's SmithingTemplateItem ignores the properties: keep the rarity by overriding it.
 		return new SmithingTemplateItem(
 				text("applies_to").copy().withStyle(net.minecraft.ChatFormatting.BLUE),
 				text("ingredients").copy().withStyle(net.minecraft.ChatFormatting.BLUE),
 				text("upgrade").copy().withStyle(net.minecraft.ChatFormatting.GRAY),
 				text("base_slot_description"),
 				text("additions_slot_description"),
-				List.of(ResourceLocation.withDefaultNamespace("item/empty_armor_slot_chestplate"), ResourceLocation.withDefaultNamespace("item/empty_armor_slot_leggings"),
-						ResourceLocation.withDefaultNamespace("item/empty_armor_slot_boots")),
+				List.of(new ResourceLocation("item/empty_armor_slot_chestplate"), new ResourceLocation("item/empty_armor_slot_leggings"),
+						new ResourceLocation("item/empty_armor_slot_boots")),
 				List.of(Dinosaurs.id("item/empty_slot/megalodon_tooth"), Dinosaurs.id("item/empty_slot/parasaurolophus_crest"),
-						Dinosaurs.id("item/empty_slot/raptor_claw")));
+						Dinosaurs.id("item/empty_slot/raptor_claw"))) {
+			@Override
+			public net.minecraft.world.item.Rarity getRarity(net.minecraft.world.item.ItemStack stack) {
+				return stack.isEnchanted() ? net.minecraft.world.item.Rarity.EPIC : net.minecraft.world.item.Rarity.RARE;
+			}
+		};
 	}
 
 	private DinosaurUpgradeTemplate() {

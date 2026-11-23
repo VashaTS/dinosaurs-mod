@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "dinosaurs:megalodon_tooth"
+  },
+  "base": {
+    "item": "minecraft:netherite_chestplate"
+  },
+  "result": {
+    "item": "dinosaurs:dinosaur_chestplate"
+  },
+  "template": {
+    "item": "dinosaurs:dinosaur_upgrade_smithing_template"
+  }
+}

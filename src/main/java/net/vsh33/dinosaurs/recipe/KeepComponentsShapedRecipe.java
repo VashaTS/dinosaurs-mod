@@ -1,67 +1,53 @@
 package net.vsh33.dinosaurs.recipe;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.HolderLookup;
+import com.google.gson.JsonObject;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import net.vsh33.dinosaurs.Dinosaurs;
 
 /**
  * A shaped crafting recipe (same JSON as {@code minecraft:crafting_shaped} plus {@code source}, type
- * {@code dinosaurs:crafting_shaped_keep_components}) whose result keeps the data of the {@code source} ingredient's item:
- * enchantments, custom name, repair cost, lore and every other component change. Damage is carried over proportionally
- * to the new max durability (rounded up, so crafting never repairs). Used to upgrade an enchanted bow into the Dinosaur Bone Bow.
+ * {@code dinosaurs:crafting_shaped_keep_components}) whose result keeps the NBT of the {@code source} ingredient's item:
+ * enchantments, custom name, repair cost, lore and the rest. Damage is carried over proportionally to the new max
+ * durability (rounded up, so crafting never repairs). Used to upgrade an enchanted bow into the Dinosaur Bone Bow.
  */
 public class KeepComponentsShapedRecipe extends ShapedRecipe {
-	public static final MapCodec<KeepComponentsShapedRecipe> MAP_CODEC = RecordCodecBuilder.mapCodec(
-			i -> i.group(
-					Codec.STRING.optionalFieldOf("group", "").forGetter(ShapedRecipe::getGroup),
-					CraftingBookCategory.CODEC.fieldOf("category").orElse(CraftingBookCategory.MISC).forGetter(ShapedRecipe::category),
-					ShapedRecipePattern.MAP_CODEC.forGetter(o -> o.pattern),
-					Ingredient.CODEC_NONEMPTY.fieldOf("source").forGetter(o -> o.source),
-					ItemStack.STRICT_CODEC.fieldOf("result").forGetter(o -> o.result))
-					.apply(i, KeepComponentsShapedRecipe::new));
-	public static final StreamCodec<RegistryFriendlyByteBuf, KeepComponentsShapedRecipe> STREAM_CODEC = StreamCodec.composite(
-			ByteBufCodecs.STRING_UTF8, ShapedRecipe::getGroup,
-			CraftingBookCategory.STREAM_CODEC, ShapedRecipe::category,
-			ShapedRecipePattern.STREAM_CODEC, o -> o.pattern,
-			Ingredient.CONTENTS_STREAM_CODEC, o -> o.source,
-			ItemStack.STREAM_CODEC, o -> o.result,
-			KeepComponentsShapedRecipe::new);
 	public static final RecipeSerializer<KeepComponentsShapedRecipe> SERIALIZER = new RecipeSerializer<>() {
 		@Override
-		public MapCodec<KeepComponentsShapedRecipe> codec() {
-			return MAP_CODEC;
+		public KeepComponentsShapedRecipe fromJson(ResourceLocation id, JsonObject json) {
+			ShapedRecipe shaped = RecipeSerializer.SHAPED_RECIPE.fromJson(id, json);
+			return new KeepComponentsShapedRecipe(shaped, Ingredient.fromJson(json.get("source"), false));
 		}
 
 		@Override
-		public StreamCodec<RegistryFriendlyByteBuf, KeepComponentsShapedRecipe> streamCodec() {
-			return STREAM_CODEC;
+		public KeepComponentsShapedRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buf) {
+			ShapedRecipe shaped = RecipeSerializer.SHAPED_RECIPE.fromNetwork(id, buf);
+			return new KeepComponentsShapedRecipe(shaped, Ingredient.fromNetwork(buf));
+		}
+
+		@Override
+		public void toNetwork(FriendlyByteBuf buf, KeepComponentsShapedRecipe recipe) {
+			RecipeSerializer.SHAPED_RECIPE.toNetwork(buf, recipe);
+			recipe.source.toNetwork(buf);
 		}
 	};
 
-	private final ShapedRecipePattern pattern;
 	private final Ingredient source;
 	private final ItemStack result;
 
-	public KeepComponentsShapedRecipe(String group, CraftingBookCategory category, ShapedRecipePattern pattern, Ingredient source, ItemStack result) {
-		super(group, category, pattern, result);
-		this.pattern = pattern;
+	public KeepComponentsShapedRecipe(ShapedRecipe shaped, Ingredient source) {
+		super(shaped.getId(), shaped.getGroup(), shaped.category(), shaped.getWidth(), shaped.getHeight(), shaped.getIngredients(),
+				shaped.getResultItem(RegistryAccess.EMPTY));
 		this.source = source;
-		this.result = result;
+		this.result = shaped.getResultItem(RegistryAccess.EMPTY);
 	}
 
 	public static void register() {
@@ -74,9 +60,10 @@ public class KeepComponentsShapedRecipe extends ShapedRecipe {
 	}
 
 	@Override
-	public ItemStack assemble(CraftingInput input, HolderLookup.Provider provider) {
+	public ItemStack assemble(CraftingContainer input, RegistryAccess access) {
 		ItemStack plain = this.result.copy();
-		for (ItemStack stack : input.items()) {
+		for (int i = 0; i < input.getContainerSize(); i++) {
+			ItemStack stack = input.getItem(i);
 			if (!stack.isEmpty() && this.source.test(stack)) {
 				return keepComponents(stack, plain);
 			}
@@ -84,18 +71,17 @@ public class KeepComponentsShapedRecipe extends ShapedRecipe {
 		return plain;
 	}
 
-	/** {@code plain} with every component change of {@code from}; damage scaled to the new max durability. */
+	/** {@code plain} with the NBT of {@code from}; damage scaled to the new max durability. */
 	public static ItemStack keepComponents(ItemStack from, ItemStack plain) {
 		ItemStack out = plain.copy();
-		out.applyComponents(from.getComponentsPatch());
-		// The source's own max durability must never override the result's (only relevant if it was patched).
-		if (plain.has(DataComponents.MAX_DAMAGE)) {
-			out.set(DataComponents.MAX_DAMAGE, plain.get(DataComponents.MAX_DAMAGE));
-			if (from.isDamageableItem() && from.getDamageValue() > 0) {
-				int newMax = plain.getMaxDamage();
-				int scaled = (int) Math.ceil(from.getDamageValue() * (double) newMax / from.getMaxDamage());
-				out.setDamageValue(Math.min(scaled, newMax - 1));
-			}
+		if (from.getTag() != null) {
+			out.setTag(from.getTag().copy());
+		}
+		out.setDamageValue(0);
+		if (out.isDamageableItem() && from.isDamageableItem() && from.getDamageValue() > 0) {
+			int newMax = out.getMaxDamage();
+			int scaled = (int) Math.ceil(from.getDamageValue() * (double) newMax / from.getMaxDamage());
+			out.setDamageValue(Math.min(scaled, newMax - 1));
 		}
 		return out;
 	}

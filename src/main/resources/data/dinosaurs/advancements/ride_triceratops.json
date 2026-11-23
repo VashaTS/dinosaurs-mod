@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:husbandry/root",
+  "criteria": {
+    "ride": {
+      "trigger": "minecraft:started_riding",
+      "conditions": {
+        "player": {
+          "vehicle": {
+            "type": "dinosaurs:triceratops"
+          }
+        }
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "item": "dinosaurs:dinosaur_saddle"
+    },
+    "title": {
+      "translate": "advancements.dinosaurs.ride_triceratops.title"
+    },
+    "description": {
+      "translate": "advancements.dinosaurs.ride_triceratops.description"
+    }
+  },
+  "requirements": [
+    [
+      "ride"
+    ]
+  ]
+}

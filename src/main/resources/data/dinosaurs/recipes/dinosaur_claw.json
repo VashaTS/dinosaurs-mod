@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "dinosaurs:raptor_claw"
+    },
+    "T": {
+      "item": "dinosaurs:t_rex_tooth"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "B": {
+      "item": "dinosaurs:dinosaur_bones"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    "CTC",
+    "NBN",
+    " S "
+  ],
+  "result": {
+    "item": "dinosaurs:dinosaur_claw"
+  }
+}

@@ -28,6 +28,7 @@ public class HerbivoreDino extends PathfinderMob implements AttackAnimated {
 
 	public HerbivoreDino(EntityType<? extends HerbivoreDino> type, Level level) {
 		super(type, level);
+		this.setMaxUpStep(ModEntities.stepHeight(type));
 		this.xpReward = profile().xp();
 	}
 
@@ -119,5 +120,10 @@ public class HerbivoreDino extends PathfinderMob implements AttackAnimated {
 	@Override
 	protected float getSoundVolume() {
 		return profile().volume();
+	}
+
+	@Override
+	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+		return ModEntities.eyeHeight(this.getType(), dimensions.height * 0.85F);
 	}
 }

@@ -394,22 +394,21 @@ public final class GuideBookContents {
 						num(1 + attr(CLAW_REFERENCE, Attributes.ATTACK_DAMAGE, hand))),
 				new StatRow(Component.translatable("book.dinosaurs.stats.attack_speed"), num(4 + attr(ours, Attributes.ATTACK_SPEED, hand)),
 						num(4 + attr(CLAW_REFERENCE, Attributes.ATTACK_SPEED, hand))),
-				new StatRow(Component.translatable("book.dinosaurs.stats.reach"), num(3 + attr(ours, Attributes.ENTITY_INTERACTION_RANGE, hand)),
-						num(3 + attr(CLAW_REFERENCE, Attributes.ENTITY_INTERACTION_RANGE, hand))),
+				new StatRow(Component.translatable("book.dinosaurs.stats.reach"), "3", "3"), // 1.20.1 has no entity interaction range attribute
 				new StatRow(Component.translatable("book.dinosaurs.stats.durability"), Integer.toString(ours.getMaxDamage()),
 						Integer.toString(CLAW_REFERENCE.getMaxDamage())),
 				new StatRow(Component.translatable("book.dinosaurs.stats.enchanting"), Integer.toString(enchantability(ours)),
 						Integer.toString(enchantability(CLAW_REFERENCE))));
 	}
 
-	private static double attr(ItemStack stack, Holder<Attribute> attribute, EquipmentSlot slot) {
-		double[] total = {0};
-		stack.forEachModifier(slot, (holder, modifier) -> {
-			if (holder.equals(attribute) && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
-				total[0] += modifier.amount();
+	private static double attr(ItemStack stack, Attribute attribute, EquipmentSlot slot) {
+		double total = 0;
+		for (AttributeModifier modifier : stack.getAttributeModifiers(slot).get(attribute)) {
+			if (modifier.getOperation() == AttributeModifier.Operation.ADDITION) {
+				total += modifier.getAmount();
 			}
-		});
-		return total[0];
+		}
+		return total;
 	}
 
 	private static String num(double value) {

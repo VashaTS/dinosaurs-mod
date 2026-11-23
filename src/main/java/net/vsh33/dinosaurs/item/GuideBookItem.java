@@ -30,7 +30,7 @@ public class GuideBookItem extends Item {
 	@Override
 	public void appendHoverText(
 			final ItemStack itemStack,
-			final Item.TooltipContext context,
+			final Level context,
 			final List<Component> builder,
 			final TooltipFlag tooltipFlag) {
 		builder.add(Component.translatable("item.dinosaurs.guide_book.desc").withStyle(ChatFormatting.GRAY));
