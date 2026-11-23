@@ -28,10 +28,12 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.TransientCraftingContainer;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.vsh33.dinosaurs.Dinosaurs;
 import net.vsh33.dinosaurs.entity.ModEntities;
@@ -41,7 +43,6 @@ import net.minecraft.world.InteractionResult;
 import net.vsh33.dinosaurs.item.ModItems;
 import net.vsh33.dinosaurs.item.DinosaurBoneBowItem;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -56,10 +57,31 @@ import java.util.Map;
 
 /** Server game tests (./gradlew runGameTest): amulet logic, saddle/riding logic, recipes and advancements. */
 public class DinosaursServerTest implements FabricGameTest {
+	// ---- 1.20.1 stand-ins for the 1.21 recipe inputs
+	private static final net.minecraft.world.inventory.AbstractContainerMenu DUMMY_MENU = new net.minecraft.world.inventory.AbstractContainerMenu(null, -1) {
+		@Override public ItemStack quickMoveStack(Player player, int slot) { return ItemStack.EMPTY; }
+		@Override public boolean stillValid(Player player) { return true; }
+	};
+
+	static CraftingContainer craftInput(int w, int h, List<ItemStack> items) {
+		CraftingContainer c = new TransientCraftingContainer(DUMMY_MENU, w, h);
+		for (int i = 0; i < items.size(); i++) c.setItem(i, items.get(i));
+		return c;
+	}
+
+	static Container smithInput(ItemStack template, ItemStack base, ItemStack addition) {
+		return new SimpleContainer(template, base, addition);
+	}
+
 	/** Survival mock player (the in-level mock player is creative, which no mob ever targets). */
 	static Player survivalPlayer(GameTestHelper helper) {
 		helper.getLevel().getServer().setDifficulty(Difficulty.NORMAL, true);
-		return helper.makeMockPlayer(GameType.SURVIVAL);
+		// 1.20.1's makeMockPlayer() is always creative; this is the same mock, in survival.
+		return new Player(helper.getLevel(), BlockPos.ZERO, 0.0F, new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "test-mock-player")) {
+			@Override public boolean isSpectator() { return false; }
+			@Override public boolean isCreative() { return false; }
+			@Override public boolean isLocalPlayer() { return true; }
+		};
 	}
 
 	private static void checkAmulet(GameTestHelper helper, Mob dino) {
@@ -124,7 +146,7 @@ public class DinosaursServerTest implements FabricGameTest {
 			player.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
 			Mob raptor = helper.spawn(ModEntities.VELOCIRAPTOR, new BlockPos(4, 1, 4));
 			ItemStack amulet = new ItemStack(ModItems.AMULET_OF_DINO_PROTECTION);
-			helper.assertTrue(amulet.is(TagKey.create(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath("trinkets", "chest/necklace"))), "amulet must be tagged #trinkets:chest/necklace");
+			helper.assertTrue(amulet.is(TagKey.create(net.minecraft.core.registries.Registries.ITEM, new ResourceLocation("trinkets", "chest/necklace"))), "amulet must be tagged #trinkets:chest/necklace");
 			var groups = TrinketsApi.getTrinketComponent(player).orElseThrow().getInventory();
 			helper.assertTrue(groups.containsKey("chest") && groups.get("chest").containsKey("necklace"), "player needs a chest/necklace slot, got " + groups.keySet());
 			TrinketInventory necklace = groups.get("chest").get("necklace");
@@ -136,7 +158,7 @@ public class DinosaursServerTest implements FabricGameTest {
 		}
 	}
 
-	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, skyAccess = true)
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void configSpawnToggles(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		BlockPos rel = new BlockPos(3, 2, 3);
@@ -162,22 +184,22 @@ public class DinosaursServerTest implements FabricGameTest {
 			helper.assertTrue(helper.getLevel().getRecipeManager().byKey(Dinosaurs.id(id)).isPresent(), "missing recipe " + id);
 		}
 		for (String id : new String[]{"amulet", "ride_triceratops", "recipes/equipment/dinosaur_saddle", "recipes/equipment/amulet_of_dino_protection", "recipes/misc/leather_from_brachiosaurus_hide", "recipes/equipment/dinosaur_bone_bow", "recipes/misc/bone_meal_from_dinosaur_bones"}) {
-			helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id(id)) != null, "missing advancement " + id);
+			helper.assertTrue(helper.getLevel().getServer().getAdvancements().getAdvancement(Dinosaurs.id(id)) != null, "missing advancement " + id);
 		}
 		helper.succeed();
 	}
 
-	private static List<String> craftingMatches(GameTestHelper helper, CraftingInput input) {
+	private static List<String> craftingMatches(GameTestHelper helper, CraftingContainer input) {
 		var level = helper.getLevel();
 		List<String> matches = new ArrayList<>();
-		for (RecipeHolder<?> holder : level.getServer().getRecipeManager().getRecipes()) {
-			if (holder.value().getType() != RecipeType.CRAFTING) {
+		for (Recipe<?> holder : level.getServer().getRecipeManager().getRecipes()) {
+			if (holder.getType() != RecipeType.CRAFTING) {
 				continue;
 			}
 			@SuppressWarnings("unchecked")
-			Recipe<CraftingInput> recipe = (Recipe<CraftingInput>) holder.value();
+			Recipe<CraftingContainer> recipe = (Recipe<CraftingContainer>) holder;
 			if (recipe.matches(input, level)) {
-				matches.add(holder.id().toString());
+				matches.add(holder.getId().toString());
 			}
 		}
 		return matches;
@@ -199,20 +221,20 @@ public class DinosaursServerTest implements FabricGameTest {
 		}
 		helper.assertTrue(tagged == expected.length, "trophy tag should hold " + expected.length + " items, has " + tagged);
 		CraftingRecipe recipe = (CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(Dinosaurs.id("guide_book")).orElseThrow().value();
+				.byKey(Dinosaurs.id("guide_book")).orElseThrow();
 		for (Item trophy : expected) {
 			helper.assertTrue(new ItemStack(trophy).is(trophies), trophy + " must be a guide book trophy");
-			CraftingInput input = CraftingInput.of(3, 1, List.of(new ItemStack(trophy), new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER)));
+			CraftingContainer input = craftInput(3, 1, List.of(new ItemStack(trophy), new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER)));
 			List<String> matches = craftingMatches(helper, input);
 			helper.assertTrue(matches.equals(List.of("dinosaurs:guide_book")), "book + leather + " + trophy + " matches " + matches);
 			ItemStack out = recipe.assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 			helper.assertTrue(out.is(ModItems.GUIDE_BOOK) && out.getCount() == 1, "should craft one guide book, got " + out);
 		}
-		List<String> plain = craftingMatches(helper, CraftingInput.of(2, 1, List.of(new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER))));
+		List<String> plain = craftingMatches(helper, craftInput(2, 1, List.of(new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER))));
 		helper.assertTrue(plain.isEmpty(), "book + leather must stay free, matches " + plain);
-		List<String> bone = craftingMatches(helper, CraftingInput.of(3, 1, List.of(new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER), new ItemStack(Items.BONE))));
+		List<String> bone = craftingMatches(helper, craftInput(3, 1, List.of(new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER), new ItemStack(Items.BONE))));
 		helper.assertTrue(bone.isEmpty(), "book + leather + bone must not match, got " + bone);
-		helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id("recipes/misc/guide_book")) != null, "missing guide book recipe advancement");
+		helper.assertTrue(helper.getLevel().getServer().getAdvancements().getAdvancement(Dinosaurs.id("recipes/misc/guide_book")) != null, "missing guide book recipe advancement");
 		Dinosaurs.LOGGER.info("[test] guide book: {} trophies, no conflicts, book + leather left free", expected.length);
 		helper.succeed();
 	}
@@ -221,27 +243,27 @@ public class DinosaursServerTest implements FabricGameTest {
 	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void skullHelmetRecipe(GameTestHelper helper) {
 		CraftingRecipe recipe = (CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(Dinosaurs.id("t_rex_skull_helmet")).orElseThrow().value();
+				.byKey(Dinosaurs.id("t_rex_skull_helmet")).orElseThrow();
 		List<List<ItemStack>> orders = List.of(
 				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER), new ItemStack(Items.NETHERITE_INGOT)),
 				List.of(new ItemStack(Items.NETHERITE_INGOT), new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER)));
 		for (List<ItemStack> items : orders) {
-			CraftingInput input = CraftingInput.of(3, 1, items);
+			CraftingContainer input = craftInput(3, 1, items);
 			List<String> matches = craftingMatches(helper, input);
 			helper.assertTrue(matches.equals(List.of("dinosaurs:t_rex_skull_helmet")), "skull + leather + netherite matches " + matches);
 			ItemStack out = recipe.assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 			helper.assertTrue(out.is(ModItems.T_REX_SKULL_HELMET) && out.getCount() == 1, "should craft one helmet, got " + out);
 		}
-		CraftingInput tall = CraftingInput.of(1, 3, List.of(new ItemStack(Items.LEATHER), new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.NETHERITE_INGOT)));
+		CraftingContainer tall = craftInput(1, 3, List.of(new ItemStack(Items.LEATHER), new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.NETHERITE_INGOT)));
 		helper.assertTrue(craftingMatches(helper, tall).equals(List.of("dinosaurs:t_rex_skull_helmet")), "shapeless recipe should work in a column too");
 		for (List<ItemStack> partial : List.of(
 				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.LEATHER)),
 				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.NETHERITE_INGOT)),
 				List.of(new ItemStack(ModItems.T_REX_SKULL), new ItemStack(Items.BOOK), new ItemStack(Items.LEATHER)))) {
-			List<String> matches = craftingMatches(helper, CraftingInput.of(partial.size(), 1, partial));
+			List<String> matches = craftingMatches(helper, craftInput(partial.size(), 1, partial));
 			helper.assertTrue(matches.isEmpty(), partial + " must not craft anything, got " + matches);
 		}
-		helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id("recipes/equipment/t_rex_skull_helmet")) != null,
+		helper.assertTrue(helper.getLevel().getServer().getAdvancements().getAdvancement(Dinosaurs.id("recipes/equipment/t_rex_skull_helmet")) != null,
 				"missing helmet recipe advancement");
 		helper.succeed();
 	}
@@ -261,8 +283,8 @@ public class DinosaursServerTest implements FabricGameTest {
 		helper.assertTrue(helmet.getMaxDamage() > netherite.getMaxDamage(), "durability should beat netherite");
 		helper.assertTrue(helmet.getItem().getEnchantmentValue()
 				>= netherite.getItem().getEnchantmentValue(), "enchantability at least netherite");
-		helper.assertTrue(helmet.has(net.minecraft.core.component.DataComponents.FIRE_RESISTANT), "helmet must be fire resistant");
-		helper.assertTrue(helmet.is(net.minecraft.tags.ItemTags.HEAD_ARMOR), "helmet must be #minecraft:head_armor (helmet enchantments)");
+		helper.assertTrue(helmet.getItem().isFireResistant(), "helmet must be fire resistant");
+		helper.assertTrue(Enchantments.RESPIRATION.canEnchant(helmet) && Enchantments.ALL_DAMAGE_PROTECTION.canEnchant(helmet), "helmet must take helmet enchantments (HelmetEnchantMixin)");
 		helper.assertTrue(helmet.getItem().isValidRepairItem(helmet, new ItemStack(Items.NETHERITE_INGOT))
 				&& helmet.getItem().isValidRepairItem(helmet, new ItemStack(ModItems.T_REX_SKULL)), "repair with netherite ingot or T-Rex skull");
 		helper.assertTrue(helmet.getItem() instanceof net.minecraft.world.item.Equipable e && e.getEquipmentSlot() == net.minecraft.world.entity.EquipmentSlot.HEAD
@@ -282,11 +304,13 @@ public class DinosaursServerTest implements FabricGameTest {
 
 	private static double[] headStats(ItemStack stack) {
 		double[] stats = new double[3];
-		stack.forEachModifier(net.minecraft.world.entity.EquipmentSlot.HEAD, (attribute, modifier) -> {
-			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR)) stats[0] += modifier.amount();
-			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS)) stats[1] += modifier.amount();
-			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE)) stats[2] += modifier.amount();
-		});
+		for (var __e : stack.getAttributeModifiers(net.minecraft.world.entity.EquipmentSlot.HEAD).entries()) {
+			var attribute = __e.getKey();
+			var modifier = __e.getValue();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR)) stats[0] += modifier.getAmount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS)) stats[1] += modifier.getAmount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE)) stats[2] += modifier.getAmount();
+		}
 		return stats;
 	}
 
@@ -297,16 +321,15 @@ public class DinosaursServerTest implements FabricGameTest {
 	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 100)
 	public void tRexSkullLoot(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
-		var table = level.getServer().reloadableRegistries().getLootTable(
-				ResourceKey.create(Registries.LOOT_TABLE, Dinosaurs.id("entities/t_rex")));
+		var table = level.getServer().getLootData().getLootTable(
+				Dinosaurs.id("entities/t_rex"));
 		Mob rex = helper.spawn(ModEntities.T_REX, new BlockPos(4, 1, 4));
 		Player player = survivalPlayer(helper);
 		int rolls = 4000;
 		int noPlayer = skulls(table, level, rex, null, rolls);
 		int plain = skulls(table, level, rex, player, rolls);
 		ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
-		sword.enchant(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
-				.getOrThrow(net.minecraft.world.item.enchantment.Enchantments.LOOTING), 3);
+		sword.enchant(net.minecraft.world.item.enchantment.Enchantments.MOB_LOOTING, 3);
 		player.setItemInHand(InteractionHand.MAIN_HAND, sword);
 		int looting = skulls(table, level, rex, player, rolls);
 		Dinosaurs.LOGGER.info("[test] T-Rex skull drops in {} rolls: no player {}, player {}, Looting III {}", rolls, noPlayer, plain, looting);
@@ -323,7 +346,7 @@ public class DinosaursServerTest implements FabricGameTest {
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, rex)
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, rex.position())
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.DAMAGE_SOURCE, source)
-				.withOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ATTACKING_ENTITY, player);
+				.withOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.KILLER_ENTITY, player);
 		if (player != null) {
 			builder.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.LAST_DAMAGE_PLAYER, player);
 		}
@@ -351,26 +374,26 @@ public class DinosaursServerTest implements FabricGameTest {
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
 		ItemStack w = new ItemStack(Items.BOW);
 		ItemStack n = new ItemStack(Items.NETHERITE_INGOT);
-		CraftingInput full = CraftingInput.of(3, 3, List.of(e, b, e, b, w, b, e, n, e));
+		CraftingContainer full = craftInput(3, 3, List.of(e, b, e, b, w, b, e, n, e));
 		List<String> matches = craftingMatches(helper, full);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_bone_bow")), "bone bow grid matches " + matches);
 		ItemStack out = ((CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(Dinosaurs.id("dinosaur_bone_bow")).orElseThrow().value())
+				.byKey(Dinosaurs.id("dinosaur_bone_bow")).orElseThrow())
 				.assemble(full, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_BONE_BOW) && out.getCount() == 1, "result " + out);
 		// Missing netherite / vanilla bones instead of dinosaur bones: no match at all.
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(e, b, e, b, w, b, e, e, e))).isEmpty(), "no-netherite grid must not craft");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(e, b, e, b, w, b, e, e, e))).isEmpty(), "no-netherite grid must not craft");
 		ItemStack vb = new ItemStack(Items.BONE);
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(e, vb, e, vb, w, vb, e, n, e))).isEmpty(), "vanilla bones must not craft the bow");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(e, vb, e, vb, w, vb, e, n, e))).isEmpty(), "vanilla bones must not craft the bow");
 		// Bone meal: 1 Dinosaur Bones -> 4 bone meal, the only match.
-		CraftingInput meal = CraftingInput.of(1, 1, List.of(b));
+		CraftingContainer meal = craftInput(1, 1, List.of(b));
 		List<String> mealMatches = craftingMatches(helper, meal);
 		helper.assertTrue(mealMatches.equals(List.of("dinosaurs:bone_meal_from_dinosaur_bones")), "bones alone match " + mealMatches);
 		// Vanilla recipes keep working: one vanilla bone still makes 3 bone meal, sticks + string still a bow.
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(1, 1, List.of(vb))).equals(List.of("minecraft:bone_meal")), "vanilla bone meal");
+		helper.assertTrue(craftingMatches(helper, craftInput(1, 1, List.of(vb))).equals(List.of("minecraft:bone_meal")), "vanilla bone meal");
 		ItemStack st = new ItemStack(Items.STICK);
 		ItemStack str = new ItemStack(Items.STRING);
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(e, st, str, st, e, str, e, st, str))).equals(List.of("minecraft:bow")), "vanilla bow");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(e, st, str, st, e, str, e, st, str))).equals(List.of("minecraft:bow")), "vanilla bow");
 		helper.succeed();
 	}
 
@@ -381,14 +404,12 @@ public class DinosaursServerTest implements FabricGameTest {
 		ItemStack bow = new ItemStack(ModItems.DINOSAUR_BONE_BOW);
 		helper.assertTrue(bow.getMaxDamage() >= 1000, "durability " + bow.getMaxDamage());
 		helper.assertTrue(bow.getMaxDamage() > new ItemStack(Items.BOW).getMaxDamage() * 2, "durability vs bow");
-		helper.assertTrue(bow.has(DataComponents.FIRE_RESISTANT), "bone bow must be fire resistant");
+		helper.assertTrue(bow.getItem().isFireResistant(), "bone bow must be fire resistant");
 		helper.assertTrue(bow.getItem().isValidRepairItem(bow, new ItemStack(ModItems.DINOSAUR_BONES)), "repairable with dinosaur bones");
 		helper.assertFalse(bow.getItem().isValidRepairItem(bow, new ItemStack(Items.STICK)), "not repairable with sticks");
-		helper.assertTrue(bow.is(net.minecraft.tags.ItemTags.BOW_ENCHANTABLE), "enchantable/bow tag");
-		helper.assertTrue(bow.is(net.minecraft.tags.ItemTags.DURABILITY_ENCHANTABLE), "enchantable/durability tag");
 		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-		for (var key : List.of(Enchantments.POWER, Enchantments.PUNCH, Enchantments.FLAME, Enchantments.INFINITY, Enchantments.UNBREAKING, Enchantments.MENDING)) {
-			helper.assertTrue(enchants.getOrThrow(key).value().canEnchant(bow), "bow must accept " + key.location());
+		for (var key : List.of(Enchantments.POWER_ARROWS, Enchantments.PUNCH_ARROWS, Enchantments.FLAMING_ARROWS, Enchantments.INFINITY_ARROWS, Enchantments.UNBREAKING, Enchantments.MENDING)) {
+			helper.assertTrue(key.canEnchant(bow), "bow must accept " + BuiltInRegistries.ENCHANTMENT.getKey(key));
 		}
 		helper.assertTrue(DinosaurBoneBowItem.getPowerForTime(DinosaurBoneBowItem.DRAW_TICKS) >= 1.0F, "full power at 15 ticks");
 		helper.assertTrue(net.minecraft.world.item.BowItem.getPowerForTime(DinosaurBoneBowItem.DRAW_TICKS) < 1.0F, "vanilla is not full at 15 ticks");
@@ -405,12 +426,13 @@ public class DinosaursServerTest implements FabricGameTest {
 	private static double shoot(GameTestHelper helper, ItemStack bow, int ticksHeld) {
 		ServerLevel level = helper.getLevel();
 		Player player = survivalPlayer(helper);
-		player.moveTo(helper.absoluteVec(new Vec3(2.5, 2, 2.5)), 0.0F, 0.0F);
+		Vec3 at = helper.absoluteVec(new Vec3(2.5, 2, 2.5));
+		player.moveTo(at.x, at.y, at.z, 0.0F, 0.0F);
 		player.setItemInHand(InteractionHand.MAIN_HAND, bow);
 		player.getInventory().add(new ItemStack(Items.ARROW, 16));
 		AABB box = new AABB(player.blockPosition()).inflate(8);
 		level.getEntitiesOfClass(AbstractArrow.class, box).forEach(net.minecraft.world.entity.Entity::discard);
-		bow.getItem().releaseUsing(bow, level, player, bow.getUseDuration(player) - ticksHeld);
+		bow.getItem().releaseUsing(bow, level, player, bow.getUseDuration() - ticksHeld);
 		List<AbstractArrow> arrows = level.getEntitiesOfClass(AbstractArrow.class, box);
 		helper.assertTrue(arrows.size() == 1, "expected one arrow, got " + arrows.size());
 		AbstractArrow arrow = arrows.get(0);
@@ -420,9 +442,9 @@ public class DinosaursServerTest implements FabricGameTest {
 		return speed;
 	}
 
-	private static ItemStack enchanted(GameTestHelper helper, Item item, net.minecraft.resources.ResourceKey<Enchantment> key) {
+	private static ItemStack enchanted(GameTestHelper helper, Item item, Enchantment key) {
 		ItemStack stack = new ItemStack(item);
-		stack.enchant(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key), 1);
+		stack.enchant(key, 1);
 		return stack;
 	}
 
@@ -436,27 +458,27 @@ public class DinosaursServerTest implements FabricGameTest {
 
 	private static boolean hasBoth(GameTestHelper helper, ItemStack stack) {
 		var enchants = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-		return EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.INFINITY), stack) == 1
-				&& EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.MENDING), stack) == 1;
+		return EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY_ARROWS, stack) == 1
+				&& EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, stack) == 1;
 	}
 
 	/** Anvil: Infinity + Mending combine on the bone bow (both orders); vanilla bows still refuse. */
 	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void boneBowInfinityMendingAnvil(GameTestHelper helper) {
 		var enchants = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-		Holder<Enchantment> infinity = enchants.getOrThrow(Enchantments.INFINITY);
-		Holder<Enchantment> mending = enchants.getOrThrow(Enchantments.MENDING);
-		helper.assertFalse(Enchantment.areCompatible(infinity, mending), "outside the bone bow the vanilla rule must stay");
+		Enchantment infinity = Enchantments.INFINITY_ARROWS;
+		Enchantment mending = Enchantments.MENDING;
+		helper.assertFalse(infinity.isCompatibleWith(mending), "outside the bone bow the vanilla rule must stay");
 
-		ItemStack a = anvil(helper, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.INFINITY), enchanted(helper, Items.ENCHANTED_BOOK, Enchantments.MENDING));
-		helper.assertTrue(a.is(ModItems.DINOSAUR_BONE_BOW) && hasBoth(helper, a), "Infinity bone bow + Mending book: " + a + " " + a.getEnchantments());
-		ItemStack b = anvil(helper, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.MENDING), enchanted(helper, Items.ENCHANTED_BOOK, Enchantments.INFINITY));
-		helper.assertTrue(b.is(ModItems.DINOSAUR_BONE_BOW) && hasBoth(helper, b), "Mending bone bow + Infinity book: " + b + " " + b.getEnchantments());
-		ItemStack c = anvil(helper, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.INFINITY), enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.MENDING));
-		helper.assertTrue(hasBoth(helper, c), "two bone bows combine: " + c.getEnchantments());
-		ItemStack v = anvil(helper, enchanted(helper, Items.BOW, Enchantments.INFINITY), enchanted(helper, Items.ENCHANTED_BOOK, Enchantments.MENDING));
-		helper.assertFalse(hasBoth(helper, v), "vanilla bow must not get both: " + v.getEnchantments());
-		helper.assertFalse(Enchantment.areCompatible(infinity, mending), "the anvil must not leak the exception");
+		ItemStack a = anvil(helper, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.INFINITY_ARROWS), enchanted(helper, Items.ENCHANTED_BOOK, Enchantments.MENDING));
+		helper.assertTrue(a.is(ModItems.DINOSAUR_BONE_BOW) && hasBoth(helper, a), "Infinity bone bow + Mending book: " + a + " " + EnchantmentHelper.getEnchantments(a));
+		ItemStack b = anvil(helper, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.MENDING), enchanted(helper, Items.ENCHANTED_BOOK, Enchantments.INFINITY_ARROWS));
+		helper.assertTrue(b.is(ModItems.DINOSAUR_BONE_BOW) && hasBoth(helper, b), "Mending bone bow + Infinity book: " + b + " " + EnchantmentHelper.getEnchantments(b));
+		ItemStack c = anvil(helper, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.INFINITY_ARROWS), enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.MENDING));
+		helper.assertTrue(hasBoth(helper, c), "two bone bows combine: " + EnchantmentHelper.getEnchantments(c));
+		ItemStack v = anvil(helper, enchanted(helper, Items.BOW, Enchantments.INFINITY_ARROWS), enchanted(helper, Items.ENCHANTED_BOOK, Enchantments.MENDING));
+		helper.assertFalse(hasBoth(helper, v), "vanilla bow must not get both: " + EnchantmentHelper.getEnchantments(v));
+		helper.assertFalse(infinity.isCompatibleWith(mending), "the anvil must not leak the exception");
 		helper.succeed();
 	}
 
@@ -465,10 +487,10 @@ public class DinosaursServerTest implements FabricGameTest {
 	public void boneBowInfinityMendingCommand(GameTestHelper helper) {
 		ServerLevel level = helper.getLevel();
 		ArmorStand boneStand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(1, 1, 1));
-		boneStand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.INFINITY));
+		boneStand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, enchanted(helper, ModItems.DINOSAUR_BONE_BOW, Enchantments.INFINITY_ARROWS));
 		boneStand.addTag("dino_bone_bow_test");
 		ArmorStand plainStand = helper.spawn(EntityType.ARMOR_STAND, new BlockPos(3, 1, 1));
-		plainStand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, enchanted(helper, Items.BOW, Enchantments.INFINITY));
+		plainStand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, enchanted(helper, Items.BOW, Enchantments.INFINITY_ARROWS));
 		plainStand.addTag("dino_plain_bow_test");
 		var server = level.getServer();
 		var source = server.createCommandSourceStack().withLevel(level).withPosition(boneStand.position()).withSuppressedOutput();
@@ -476,10 +498,10 @@ public class DinosaursServerTest implements FabricGameTest {
 		server.getCommands().performPrefixedCommand(source, "enchant @e[tag=dino_plain_bow_test,limit=1] minecraft:mending");
 		ItemStack bone = boneStand.getMainHandItem();
 		ItemStack plain = plainStand.getMainHandItem();
-		helper.assertTrue(hasBoth(helper, bone), "/enchant bone bow: " + bone.getEnchantments());
-		helper.assertFalse(hasBoth(helper, plain), "/enchant vanilla bow must fail: " + plain.getEnchantments());
+		helper.assertTrue(hasBoth(helper, bone), "/enchant bone bow: " + EnchantmentHelper.getEnchantments(bone));
+		helper.assertFalse(hasBoth(helper, plain), "/enchant vanilla bow must fail: " + EnchantmentHelper.getEnchantments(plain));
 		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-		helper.assertFalse(Enchantment.areCompatible(enchants.getOrThrow(Enchantments.INFINITY), enchants.getOrThrow(Enchantments.MENDING)), "/enchant must not leak the exception");
+		helper.assertFalse(Enchantments.INFINITY_ARROWS.isCompatibleWith(Enchantments.MENDING), "/enchant must not leak the exception");
 		boneStand.discard();
 		plainStand.discard();
 		helper.succeed();
@@ -501,7 +523,7 @@ public class DinosaursServerTest implements FabricGameTest {
 		StringBuilder log = new StringBuilder();
 		int x = 1;
 		for (EntityType<? extends Mob> type : ModEntities.ALL) {
-			var table = level.getServer().reloadableRegistries().getLootTable(type.getDefaultLootTable());
+			var table = level.getServer().getLootData().getLootTable(type.getDefaultLootTable());
 			Mob mob = helper.spawn(type, new BlockPos(x, 1, 4));
 			int rolls = 300;
 			int min = Integer.MAX_VALUE, max = 0, vanilla = 0;
@@ -535,7 +557,7 @@ public class DinosaursServerTest implements FabricGameTest {
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, mob)
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, mob.position())
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.DAMAGE_SOURCE, level.damageSources().playerAttack(player))
-				.withOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ATTACKING_ENTITY, player)
+				.withOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.KILLER_ENTITY, player)
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.LAST_DAMAGE_PLAYER, player)
 				.create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.ENTITY);
 	}
@@ -546,35 +568,35 @@ public class DinosaursServerTest implements FabricGameTest {
 		ServerLevel level = helper.getLevel();
 		var enchants = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 		ItemStack bow = new ItemStack(Items.BOW);
-		bow.enchant(enchants.getOrThrow(Enchantments.POWER), 5);
-		bow.enchant(enchants.getOrThrow(Enchantments.INFINITY), 1);
-		bow.enchant(enchants.getOrThrow(Enchantments.UNBREAKING), 3);
-		bow.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Old Faithful"));
-		bow.set(DataComponents.REPAIR_COST, 5);
+		bow.enchant(Enchantments.POWER_ARROWS, 5);
+		bow.enchant(Enchantments.INFINITY_ARROWS, 1);
+		bow.enchant(Enchantments.UNBREAKING, 3);
+		bow.setHoverName(net.minecraft.network.chat.Component.literal("Old Faithful"));
+		bow.setRepairCost(5);
 		bow.setDamageValue(100);
 
 		ItemStack out = craftBoneBow(helper, bow);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_BONE_BOW), "result " + out);
-		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.POWER), out) == 5, "Power V kept: " + out.getEnchantments());
-		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.INFINITY), out) == 1, "Infinity kept: " + out.getEnchantments());
-		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.UNBREAKING), out) == 3, "Unbreaking III kept: " + out.getEnchantments());
-		helper.assertTrue(out.getEnchantments().size() == 3, "exactly 3 enchantments: " + out.getEnchantments());
+		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.POWER_ARROWS, out) == 5, "Power V kept: " + EnchantmentHelper.getEnchantments(out));
+		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.INFINITY_ARROWS, out) == 1, "Infinity kept: " + EnchantmentHelper.getEnchantments(out));
+		helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.UNBREAKING, out) == 3, "Unbreaking III kept: " + EnchantmentHelper.getEnchantments(out));
+		helper.assertTrue(EnchantmentHelper.getEnchantments(out).size() == 3, "exactly 3 enchantments: " + EnchantmentHelper.getEnchantments(out));
 		helper.assertTrue("Old Faithful".equals(out.getHoverName().getString()), "name kept: " + out.getHoverName().getString());
-		helper.assertTrue(out.getOrDefault(DataComponents.REPAIR_COST, 0) == 5, "repair cost kept: " + out.get(DataComponents.REPAIR_COST));
+		helper.assertTrue(out.getBaseRepairCost() == 5, "repair cost kept: " + out.getBaseRepairCost());
 		helper.assertTrue(out.getMaxDamage() == 1152, "max durability is the bone bow's: " + out.getMaxDamage());
 		// 100/384 damaged -> 300/1152: the same fraction of durability, never a free repair.
 		helper.assertTrue(out.getDamageValue() == 300, "damage scaled 100/384 -> 300/1152, got " + out.getDamageValue());
-		helper.assertTrue(out.has(DataComponents.FIRE_RESISTANT), "still fire resistant");
+		helper.assertTrue(out.getItem().isFireResistant(), "still fire resistant");
 		helper.assertTrue(bow.getDamageValue() == 100 && bow.is(Items.BOW), "input stack untouched");
 
 		ItemStack plain = craftBoneBow(helper, new ItemStack(Items.BOW));
-		helper.assertTrue(ItemStack.isSameItemSameComponents(plain, new ItemStack(ModItems.DINOSAUR_BONE_BOW)), "plain bow -> plain bone bow, got " + plain.getComponentsPatch());
+		helper.assertTrue(ItemStack.isSameItemSameTags(plain, new ItemStack(ModItems.DINOSAUR_BONE_BOW)), "plain bow -> plain bone bow, got " + plain.getTag());
 
 		ItemStack nearlyBroken = new ItemStack(Items.BOW);
 		nearlyBroken.setDamageValue(383);
 		ItemStack worn = craftBoneBow(helper, nearlyBroken);
 		helper.assertTrue(worn.getDamageValue() == 1149, "1/384 left -> 3/1152 left: " + worn.getDamageValue());
-		Dinosaurs.LOGGER.info("[test] bone bow from enchanted bow: {} {} damage {}/{}", out.getHoverName().getString(), out.getEnchantments(), out.getDamageValue(), out.getMaxDamage());
+		Dinosaurs.LOGGER.info("[test] bone bow from enchanted bow: {} {} damage {}/{}", out.getHoverName().getString(), EnchantmentHelper.getEnchantments(out), out.getDamageValue(), out.getMaxDamage());
 		helper.succeed();
 	}
 
@@ -592,11 +614,13 @@ public class DinosaursServerTest implements FabricGameTest {
 	/** armor, toughness, knockback resistance of one piece in its own slot. */
 	private static double[] pieceStats(ItemStack stack) {
 		double[] stats = new double[3];
-		stack.forEachModifier(slotOf(stack.getItem()), (attribute, modifier) -> {
-			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR)) stats[0] += modifier.amount();
-			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS)) stats[1] += modifier.amount();
-			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE)) stats[2] += modifier.amount();
-		});
+		for (var __e : stack.getAttributeModifiers(slotOf(stack.getItem())).entries()) {
+			var attribute = __e.getKey();
+			var modifier = __e.getValue();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR)) stats[0] += modifier.getAmount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS)) stats[1] += modifier.getAmount();
+			if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE)) stats[2] += modifier.getAmount();
+		}
 		return stats;
 	}
 
@@ -626,20 +650,19 @@ public class DinosaursServerTest implements FabricGameTest {
 					row[0] + " durability " + ours.getMaxDamage() + " should be 41/37/33 x " + slotMul);
 			helper.assertTrue(enchantability(ours) - enchantability(neth) == enchantability(neth) - enchantability(dia),
 					row[0] + " enchantability " + enchantability(ours));
-			helper.assertTrue(ours.has(DataComponents.FIRE_RESISTANT), row[0] + " must be fire resistant");
+			helper.assertTrue(ours.getItem().isFireResistant(), row[0] + " must be fire resistant");
 			helper.assertTrue(ours.is(net.minecraft.tags.ItemTags.TRIMMABLE_ARMOR), row[0] + " must be trimmable armor");
 			helper.assertTrue(ours.getItem().isValidRepairItem(ours, new ItemStack(ModItems.DINOSAUR_BONES))
 					&& !ours.getItem().isValidRepairItem(ours, new ItemStack(Items.NETHERITE_INGOT)), row[0] + " repaired with dinosaur bones");
-			helper.assertTrue(slotOf(row[0]) == slotOf(row[1]) && ((net.minecraft.world.item.ArmorItem) row[0]).getMaterial().value().layers().get(0)
-					.texture(false).equals(Dinosaurs.id("textures/models/armor/dinosaur_layer_1.png")),
-					row[0] + " worn layer dinosaurs:dinosaur in " + slotOf(row[1]));
+			helper.assertTrue(slotOf(row[0]) == slotOf(row[1]) && ((net.minecraft.world.item.ArmorItem) row[0]).getMaterial().getName().equals("dinosaurs_dinosaur"),
+					row[0] + " worn layer minecraft:textures/models/armor/dinosaurs_dinosaur_layer_N.png in " + slotOf(row[1]));
 			log.append(String.format(" %s %.0f/%.1f/%.1f %d ench %d (netherite %.0f/%.1f/%.1f %d %d, diamond %.0f/%.1f/%.1f %d %d)",
 					BuiltInRegistries.ITEM.getKey(row[0]).getPath(), o[0], o[1], o[2], ours.getMaxDamage(), enchantability(ours),
 					n[0], n[1], n[2], neth.getMaxDamage(), enchantability(neth), d[0], d[1], d[2], dia.getMaxDamage(), enchantability(dia)));
 		}
-		helper.assertTrue(new ItemStack(ModItems.DINOSAUR_CHESTPLATE).is(net.minecraft.tags.ItemTags.CHEST_ARMOR_ENCHANTABLE)
-				&& new ItemStack(ModItems.DINOSAUR_LEGGINGS).is(net.minecraft.tags.ItemTags.LEG_ARMOR_ENCHANTABLE)
-				&& new ItemStack(ModItems.DINOSAUR_BOOTS).is(net.minecraft.tags.ItemTags.FOOT_ARMOR_ENCHANTABLE), "armor enchantment tags");
+		helper.assertTrue(Enchantments.ALL_DAMAGE_PROTECTION.canEnchant(new ItemStack(ModItems.DINOSAUR_CHESTPLATE))
+				&& Enchantments.SWIFT_SNEAK.canEnchant(new ItemStack(ModItems.DINOSAUR_LEGGINGS))
+				&& Enchantments.FALL_PROTECTION.canEnchant(new ItemStack(ModItems.DINOSAUR_BOOTS)), "armor enchantments");
 		// The set's helmet (T-Rex Skull Helmet) is at least the new tier in every stat.
 		ItemStack helmet = new ItemStack(ModItems.T_REX_SKULL_HELMET);
 		double[] h = headStats(helmet);
@@ -668,42 +691,42 @@ public class DinosaursServerTest implements FabricGameTest {
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
 		ItemStack nt = new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
 		ItemStack dt = new ItemStack(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE);
-		CraftingInput make = CraftingInput.of(3, 3, List.of(b, b, b, b, nt, b, b, b, b));
+		CraftingContainer make = craftInput(3, 3, List.of(b, b, b, b, nt, b, b, b, b));
 		List<String> matches = craftingMatches(helper, make);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_upgrade_smithing_template")), "template grid matches " + matches);
 		var level = helper.getLevel();
-		ItemStack out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, make, level).orElseThrow().value().assemble(make, net.minecraft.core.RegistryAccess.EMPTY);
+		ItemStack out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, make, level).orElseThrow().assemble(make, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE) && out.getCount() == 1, "one template, got " + out);
-		CraftingInput copy = CraftingInput.of(3, 3, List.of(b, dt, b, b, new ItemStack(Items.BONE_BLOCK), b, b, b, b));
+		CraftingContainer copy = craftInput(3, 3, List.of(b, dt, b, b, new ItemStack(Items.BONE_BLOCK), b, b, b, b));
 		matches = craftingMatches(helper, copy);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_upgrade_smithing_template_duplication")), "duplication grid matches " + matches);
-		out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, copy, level).orElseThrow().value().assemble(copy, net.minecraft.core.RegistryAccess.EMPTY);
+		out = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, copy, level).orElseThrow().assemble(copy, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_UPGRADE_SMITHING_TEMPLATE) && out.getCount() == 2, "duplication gives 2, got " + out);
 		// Vanilla bones instead of dinosaur bones: nothing.
 		ItemStack bone = new ItemStack(Items.BONE);
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(bone, bone, bone, bone, nt, bone, bone, bone, bone))).isEmpty(), "vanilla bones must not work");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(bone, bone, bone, bone, nt, bone, bone, bone, bone))).isEmpty(), "vanilla bones must not work");
 		for (String id : new String[]{"dinosaur_upgrade_smithing_template", "dinosaur_upgrade_smithing_template_duplication",
 				"dinosaur_chestplate_smithing", "dinosaur_leggings_smithing", "dinosaur_boots_smithing"}) {
 			helper.assertTrue(level.getRecipeManager().byKey(Dinosaurs.id(id)).isPresent(), "missing recipe " + id);
 		}
 		for (String id : new String[]{"recipes/misc/dinosaur_upgrade_smithing_template", "recipes/misc/dinosaur_upgrade_smithing_template_duplication",
 				"recipes/equipment/dinosaur_chestplate_smithing", "recipes/equipment/dinosaur_leggings_smithing", "recipes/equipment/dinosaur_boots_smithing"}) {
-			helper.assertTrue(level.getServer().getAdvancements().get(Dinosaurs.id(id)) != null, "missing advancement " + id);
+			helper.assertTrue(level.getServer().getAdvancements().getAdvancement(Dinosaurs.id(id)) != null, "missing advancement " + id);
 		}
 		helper.succeed();
 	}
 
-	private static List<String> smithingMatches(GameTestHelper helper, net.minecraft.world.item.crafting.SmithingRecipeInput input) {
+	private static List<String> smithingMatches(GameTestHelper helper, Container input) {
 		var level = helper.getLevel();
 		List<String> matches = new ArrayList<>();
-		for (RecipeHolder<?> holder : level.getServer().getRecipeManager().getRecipes()) {
-			if (holder.value().getType() != RecipeType.SMITHING) {
+		for (Recipe<?> holder : level.getServer().getRecipeManager().getRecipes()) {
+			if (holder.getType() != RecipeType.SMITHING) {
 				continue;
 			}
 			@SuppressWarnings("unchecked")
-			Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput> recipe = (Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput>) holder.value();
+			Recipe<Container> recipe = (Recipe<Container>) holder;
 			if (recipe.matches(input, level)) {
-				matches.add(holder.id().toString());
+				matches.add(holder.getId().toString());
 			}
 		}
 		return matches;
@@ -722,35 +745,35 @@ public class DinosaursServerTest implements FabricGameTest {
 		for (int r = 0; r < ARMOR.length; r++) {
 			Item[] row = ARMOR[r];
 			ItemStack base = new ItemStack(row[1]);
-			base.enchant(enchants.getOrThrow(Enchantments.PROTECTION), 4);
-			base.enchant(enchants.getOrThrow(Enchantments.MENDING), 1);
-			base.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Rex Guard " + r));
+			base.enchant(Enchantments.ALL_DAMAGE_PROTECTION, 4);
+			base.enchant(Enchantments.MENDING, 1);
+			base.setHoverName(net.minecraft.network.chat.Component.literal("Rex Guard " + r));
 			base.setDamageValue(57);
-			var input = new net.minecraft.world.item.crafting.SmithingRecipeInput(template, base, new ItemStack(row[2]));
+			var input = smithInput(template, base, new ItemStack(row[2]));
 			List<String> matches = smithingMatches(helper, input);
 			String id = "dinosaurs:" + BuiltInRegistries.ITEM.getKey(row[0]).getPath() + "_smithing";
 			helper.assertTrue(matches.equals(List.of(id)), row[0] + " smithing matches " + matches);
 			@SuppressWarnings("unchecked")
-			Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput> recipe = (Recipe<net.minecraft.world.item.crafting.SmithingRecipeInput>)
-					level.getServer().getRecipeManager().byKey(Dinosaurs.id(id.substring(10))).orElseThrow().value();
+			Recipe<Container> recipe = (Recipe<Container>)
+					level.getServer().getRecipeManager().byKey(Dinosaurs.id(id.substring(10))).orElseThrow();
 			ItemStack out = recipe.assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 			helper.assertTrue(out.is(row[0]) && out.getCount() == 1, "result " + out);
-			helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.PROTECTION), out) == 4
-					&& EnchantmentHelper.getItemEnchantmentLevel(enchants.getOrThrow(Enchantments.MENDING), out) == 1, "enchantments kept: " + out.getEnchantments());
+			helper.assertTrue(EnchantmentHelper.getItemEnchantmentLevel(Enchantments.ALL_DAMAGE_PROTECTION, out) == 4
+					&& EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING, out) == 1, "enchantments kept: " + EnchantmentHelper.getEnchantments(out));
 			helper.assertTrue(out.getHoverName().getString().equals("Rex Guard " + r), "name kept: " + out.getHoverName().getString());
 			helper.assertTrue(out.getDamageValue() == 57, "damage kept: " + out.getDamageValue());
-			log.append(' ').append(out.getHoverName().getString()).append('=').append(BuiltInRegistries.ITEM.getKey(out.getItem())).append(' ').append(out.getEnchantments());
+			log.append(' ').append(out.getHoverName().getString()).append('=').append(BuiltInRegistries.ITEM.getKey(out.getItem())).append(' ').append(EnchantmentHelper.getEnchantments(out));
 			// Wrong trophy (the next piece's), the diamond piece, or the vanilla netherite template: nothing.
 			Item wrong = ARMOR[(r + 1) % ARMOR.length][2];
-			helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(template, base, new ItemStack(wrong))).isEmpty(),
+			helper.assertTrue(smithingMatches(helper, smithInput(template, base, new ItemStack(wrong))).isEmpty(),
 					row[1] + " + " + wrong + " must not match");
-			helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(template, new ItemStack(row[3]), new ItemStack(row[2]))).isEmpty(),
+			helper.assertTrue(smithingMatches(helper, smithInput(template, new ItemStack(row[3]), new ItemStack(row[2]))).isEmpty(),
 					row[3] + " must not be upgraded directly");
-			helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), base,
+			helper.assertTrue(smithingMatches(helper, smithInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), base,
 					new ItemStack(row[2]))).isEmpty(), "netherite template + trophy must not match");
 		}
 		// No helmet recipe: the T-Rex Skull Helmet is the set's helmet.
-		helper.assertTrue(smithingMatches(helper, new net.minecraft.world.item.crafting.SmithingRecipeInput(template, new ItemStack(Items.NETHERITE_HELMET),
+		helper.assertTrue(smithingMatches(helper, smithInput(template, new ItemStack(Items.NETHERITE_HELMET),
 				new ItemStack(ModItems.T_REX_TOOTH))).isEmpty(), "no dinosaur helmet upgrade");
 		Dinosaurs.LOGGER.info("[test] dinosaur smithing:{}", log);
 		helper.succeed();
@@ -767,14 +790,14 @@ public class DinosaursServerTest implements FabricGameTest {
 		Object[][] cases = {{ModEntities.VELOCIRAPTOR, ModItems.RAPTOR_CLAW, 0, 1}, {ModEntities.PARASAUROLOPHUS, ModItems.PARASAUROLOPHUS_CREST, 0, 1},
 				{ModEntities.MEGALODON, ModItems.MEGALODON_TOOTH, 1, 3}};
 		ItemStack sword = new ItemStack(Items.NETHERITE_SWORD);
-		sword.enchant(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.LOOTING), 3);
+		sword.enchant(Enchantments.MOB_LOOTING, 3);
 		StringBuilder log = new StringBuilder();
 		int x = 1;
 		for (Object[] c : cases) {
 			@SuppressWarnings("unchecked")
 			EntityType<? extends Mob> type = (EntityType<? extends Mob>) c[0];
 			Item item = (Item) c[1];
-			var table = level.getServer().reloadableRegistries().getLootTable(type.getDefaultLootTable());
+			var table = level.getServer().getLootData().getLootTable(type.getDefaultLootTable());
 			Mob mob = helper.spawn(type, new BlockPos(x, 1, 4));
 			int[] plain = roll(table, level, mob, player, item, 400);
 			player.setItemInHand(InteractionHand.MAIN_HAND, sword.copy());
@@ -812,10 +835,10 @@ public class DinosaursServerTest implements FabricGameTest {
 		ItemStack e = ItemStack.EMPTY;
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
 		ItemStack n = new ItemStack(Items.NETHERITE_INGOT);
-		CraftingInput input = CraftingInput.of(3, 3, List.of(e, b, e, b, bow, b, e, n, e));
+		CraftingContainer input = craftInput(3, 3, List.of(e, b, e, b, bow, b, e, n, e));
 		var holder = level.getServer().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level).orElseThrow();
-		helper.assertTrue(holder.id().equals(Dinosaurs.id("dinosaur_bone_bow")), "matched " + holder.id());
-		return holder.value().assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
+		helper.assertTrue(holder.getId().equals(Dinosaurs.id("dinosaur_bone_bow")), "matched " + holder.getId());
+		return holder.assemble(input, net.minecraft.core.RegistryAccess.EMPTY);
 	}
 
 	// ---- 1.6.0: Dinosaur Claw
@@ -829,31 +852,33 @@ public class DinosaursServerTest implements FabricGameTest {
 		ItemStack n = new ItemStack(Items.NETHERITE_INGOT);
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
 		ItemStack s = new ItemStack(Items.STICK);
-		CraftingInput full = CraftingInput.of(3, 3, List.of(c, t, c, n, b, n, e, s, e));
+		CraftingContainer full = craftInput(3, 3, List.of(c, t, c, n, b, n, e, s, e));
 		List<String> matches = craftingMatches(helper, full);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dinosaur_claw")), "claw grid matches " + matches);
 		ItemStack out = ((CraftingRecipe) helper.getLevel().getServer().getRecipeManager()
-				.byKey(Dinosaurs.id("dinosaur_claw")).orElseThrow().value()).assemble(full, net.minecraft.core.RegistryAccess.EMPTY);
+				.byKey(Dinosaurs.id("dinosaur_claw")).orElseThrow()).assemble(full, net.minecraft.core.RegistryAccess.EMPTY);
 		helper.assertTrue(out.is(ModItems.DINOSAUR_CLAW) && out.getCount() == 1, "result " + out);
 		// Near misses make nothing: Megalodon Tooth for the T-Rex Tooth, vanilla bones, no stick, no netherite.
 		ItemStack m = new ItemStack(ModItems.MEGALODON_TOOTH);
 		ItemStack vb = new ItemStack(Items.BONE);
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, m, c, n, b, n, e, s, e))).isEmpty(), "megalodon tooth must not craft the claw");
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, t, c, n, vb, n, e, s, e))).isEmpty(), "vanilla bone must not craft the claw");
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, t, c, n, b, n, e, e, e))).isEmpty(), "no stick must not craft");
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(c, t, c, e, b, e, e, s, e))).isEmpty(), "no netherite must not craft");
-		helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id("recipes/equipment/dinosaur_claw")) != null,
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(c, m, c, n, b, n, e, s, e))).isEmpty(), "megalodon tooth must not craft the claw");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(c, t, c, n, vb, n, e, s, e))).isEmpty(), "vanilla bone must not craft the claw");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(c, t, c, n, b, n, e, e, e))).isEmpty(), "no stick must not craft");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(c, t, c, e, b, e, e, s, e))).isEmpty(), "no netherite must not craft");
+		helper.assertTrue(helper.getLevel().getServer().getAdvancements().getAdvancement(Dinosaurs.id("recipes/equipment/dinosaur_claw")) != null,
 				"missing recipe advancement");
 		helper.succeed();
 	}
 
-	private static double handModifier(ItemStack stack, Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute) {
+	private static double handModifier(ItemStack stack, net.minecraft.world.entity.ai.attributes.Attribute attribute) {
 		double[] total = {0};
-		stack.forEachModifier(net.minecraft.world.entity.EquipmentSlot.MAINHAND, (holder, modifier) -> {
+		for (var __e : stack.getAttributeModifiers(net.minecraft.world.entity.EquipmentSlot.MAINHAND).entries()) {
+			var holder = __e.getKey();
+			var modifier = __e.getValue();
 			if (holder.equals(attribute)) {
-				total[0] += modifier.amount();
+				total[0] += modifier.getAmount();
 			}
-		});
+		}
 		return total[0];
 	}
 
@@ -872,15 +897,13 @@ public class DinosaursServerTest implements FabricGameTest {
 		helper.assertTrue(claw.getMaxDamage() == 2501 && claw.getMaxDamage() > sword.getMaxDamage(), "durability " + claw.getMaxDamage());
 		int enchantable = claw.getItem().getEnchantmentValue();
 		helper.assertTrue(enchantable == 20, "enchantability " + enchantable);
-		helper.assertTrue(Math.abs(handModifier(claw, net.minecraft.world.entity.ai.attributes.Attributes.ENTITY_INTERACTION_RANGE) + 0.5) < 1e-6
-				&& handModifier(sword, net.minecraft.world.entity.ai.attributes.Attributes.ENTITY_INTERACTION_RANGE) == 0, "claw reach modifier -0.5");
-		helper.assertTrue(claw.has(DataComponents.FIRE_RESISTANT), "fire resistant");
+		helper.assertTrue(claw.getItem().isFireResistant(), "fire resistant");
 		helper.assertTrue(claw.is(net.minecraft.tags.ItemTags.SWORDS), "in #minecraft:swords (sweeping attack)");
-		helper.assertTrue(claw.getItem() instanceof net.minecraft.world.item.SwordItem && claw.has(DataComponents.TOOL), "weapon and sword tool (cobwebs) components");
+		helper.assertTrue(claw.getItem() instanceof net.minecraft.world.item.SwordItem && claw.getDestroySpeed(Blocks.COBWEB.defaultBlockState()) > 1.0F, "sword (cuts cobwebs)");
 		var enchants = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
 		for (var key : List.of(Enchantments.SHARPNESS, Enchantments.SMITE, Enchantments.BANE_OF_ARTHROPODS, Enchantments.SWEEPING_EDGE,
-				Enchantments.LOOTING, Enchantments.FIRE_ASPECT, Enchantments.KNOCKBACK, Enchantments.UNBREAKING, Enchantments.MENDING)) {
-			helper.assertTrue(enchants.getOrThrow(key).value().canEnchant(claw), "should take " + key.location());
+				Enchantments.MOB_LOOTING, Enchantments.FIRE_ASPECT, Enchantments.KNOCKBACK, Enchantments.UNBREAKING, Enchantments.MENDING)) {
+			helper.assertTrue(key.canEnchant(claw), "should take " + BuiltInRegistries.ENCHANTMENT.getKey(key));
 		}
 		// Repair: Dinosaur Bones yes, netherite ingot no (anvil).
 		ItemStack worn = claw.copy();
@@ -908,44 +931,6 @@ public class DinosaursServerTest implements FabricGameTest {
 		helper.succeed();
 	}
 
-	/**
-	 * Reach: holding the claw in the main hand lowers the player's entity interaction range from 3 to 2.5 (vanilla uses it
-	 * as the attack reach of weapons without an attack_range component). A target 2.75 blocks from the eyes can be hit
-	 * with a netherite sword but not with the claw; at 2.25 both reach. In the off hand the claw changes nothing.
-	 */
-	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
-	public void dinosaurClawReach(GameTestHelper helper) {
-		Player clawPlayer = survivalPlayer(helper), swordPlayer = survivalPlayer(helper), offhandPlayer = survivalPlayer(helper);
-		ItemStack claw = new ItemStack(ModItems.DINOSAUR_CLAW), sword = new ItemStack(Items.NETHERITE_SWORD);
-		clawPlayer.setItemInHand(InteractionHand.MAIN_HAND, claw.copy());
-		swordPlayer.setItemInHand(InteractionHand.MAIN_HAND, sword.copy());
-		offhandPlayer.setItemInHand(InteractionHand.OFF_HAND, claw.copy());
-		// Mock players are not ticked by the level; one tick applies the held item's attribute modifiers, like in game.
-		for (Player p : List.of(clawPlayer, swordPlayer, offhandPlayer)) {
-			p.moveTo(helper.absoluteVec(new Vec3(1.5, 1, 1.5)));
-			p.tick();
-		}
-		helper.runAfterDelay(1, () -> {
-			double clawRange = clawPlayer.entityInteractionRange(), swordRange = swordPlayer.entityInteractionRange();
-			helper.assertTrue(Math.abs(clawRange - 2.5) < 1e-6, "claw reach " + clawRange);
-			helper.assertTrue(Math.abs(swordRange - 3.0) < 1e-6, "netherite sword reach " + swordRange);
-			helper.assertTrue(Math.abs(offhandPlayer.entityInteractionRange() - 3.0) < 1e-6, "claw in the off hand: reach " + offhandPlayer.entityInteractionRange());
-			for (double gap : new double[]{2.25, 2.75}) {
-				boolean clawHits = clawPlayer.canInteractWithEntity(target(clawPlayer, gap), 0);
-				boolean swordHits = swordPlayer.canInteractWithEntity(target(swordPlayer, gap), 0);
-				helper.assertTrue(swordHits, "netherite sword should reach " + gap);
-				helper.assertTrue(clawHits == (gap < 2.5), "claw at " + gap + ": " + clawHits);
-			}
-			Dinosaurs.LOGGER.info("[test] dinosaur claw reach {} (netherite sword {}); 2.75 blocks: claw misses, sword hits", clawRange, swordRange);
-			helper.succeed();
-		});
-	}
-
-	/** A 0.6-wide box whose near face is {@code gap} blocks in front of the player's eyes (eye height level). */
-	private static net.minecraft.world.phys.AABB target(Player player, double gap) {
-		Vec3 eye = player.getEyePosition();
-		return new net.minecraft.world.phys.AABB(eye.x + gap, eye.y - 0.5, eye.z - 0.3, eye.x + gap + 0.6, eye.y + 0.5, eye.z + 0.3);
-	}
 
 	// ---- 1.7.0: Dino Collar, Megalodon size, spawn weights
 
@@ -1091,13 +1076,13 @@ public class DinosaursServerTest implements FabricGameTest {
 		ItemStack l = new ItemStack(Items.LEATHER);
 		ItemStack b = new ItemStack(ModItems.DINOSAUR_BONES);
 		ItemStack c = new ItemStack(Items.CHAIN);
-		CraftingInput full = CraftingInput.of(3, 3, List.of(t, t, t, l, b, l, e, c, e));
+		CraftingContainer full = craftInput(3, 3, List.of(t, t, t, l, b, l, e, c, e));
 		List<String> matches = craftingMatches(helper, full);
 		helper.assertTrue(matches.equals(List.of("dinosaurs:dino_collar")), "collar grid matches " + matches);
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(t, t, e, l, b, l, e, c, e))).isEmpty(), "2 teeth must not craft");
-		helper.assertTrue(craftingMatches(helper, CraftingInput.of(3, 3, List.of(t, t, t, l, b, l, e, e, e))).isEmpty(), "no chain must not craft");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(t, t, e, l, b, l, e, c, e))).isEmpty(), "2 teeth must not craft");
+		helper.assertTrue(craftingMatches(helper, craftInput(3, 3, List.of(t, t, t, l, b, l, e, e, e))).isEmpty(), "no chain must not craft");
 		for (String id : new String[]{"recipes/equipment/dino_collar", "collar_t_rex"}) {
-			helper.assertTrue(helper.getLevel().getServer().getAdvancements().get(Dinosaurs.id(id)) != null, "missing advancement " + id);
+			helper.assertTrue(helper.getLevel().getServer().getAdvancements().getAdvancement(Dinosaurs.id(id)) != null, "missing advancement " + id);
 		}
 		helper.succeed();
 	}
@@ -1106,7 +1091,7 @@ public class DinosaursServerTest implements FabricGameTest {
 	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
 	public void megalodonSize(GameTestHelper helper) {
 		var dims = ModEntities.MEGALODON.getDimensions();
-		helper.assertTrue(dims.width() == 5.0F && dims.height() == 3.6F, "megalodon size " + dims);
+		helper.assertTrue(dims.width == 5.0F && dims.height == 3.6F, "megalodon size " + dims);
 		helper.succeed();
 	}
 

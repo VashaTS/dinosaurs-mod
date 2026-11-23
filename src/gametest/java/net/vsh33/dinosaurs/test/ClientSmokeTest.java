@@ -173,8 +173,7 @@ public class ClientSmokeTest implements ClientModInitializer {
 			mc.createWorldOpenFlows().createFreshLevel(name,
 					new LevelSettings(name, GameType.CREATIVE, false, Difficulty.NORMAL, true, rules, WorldDataConfiguration.DEFAULT),
 					new WorldOptions(20260101L, true, false),
-					reg -> reg.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.NORMAL).value().createWorldDimensions(),
-					new TitleScreen());
+					reg -> reg.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.NORMAL).value().createWorldDimensions());
 		});
 		waitFor(mc -> mc.level != null && mc.player != null && mc.screen == null && mc.getSingleplayerServer() != null, 20 * 600, "world");
 		check(computeServer(s -> BuiltInRegistries.ITEM.containsKey(Dinosaurs.id("guide_book"))), "mod loaded: dinosaurs items registered");
@@ -184,9 +183,9 @@ public class ClientSmokeTest implements ClientModInitializer {
 			return;
 		}
 		check(computeServer(s -> s.getRecipeManager().byKey(Dinosaurs.id("guide_book")).isPresent()), "guide book recipe loaded");
-		long recipes = computeServer(s -> s.getRecipeManager().getRecipes().stream().filter(r -> r.id().getNamespace().equals("dinosaurs")).count());
+		long recipes = computeServer(s -> s.getRecipeManager().getRecipes().stream().filter(r -> r.getId().getNamespace().equals("dinosaurs")).count());
 		check(recipes == 14, "dinosaurs recipes loaded: " + recipes);
-		long adv = computeServer(s -> s.getAdvancements().getAllAdvancements().stream().filter(a -> a.id().getNamespace().equals("dinosaurs")).count());
+		long adv = computeServer(s -> s.getAdvancements().getAllAdvancements().stream().filter(a -> a.getId().getNamespace().equals("dinosaurs")).count());
 		check(adv == 17, "dinosaurs advancements loaded: " + adv);
 		cmd("time set noon");
 		cmd("weather clear");
@@ -375,7 +374,7 @@ public class ClientSmokeTest implements ClientModInitializer {
 		String bad = computeClient(mc -> {
 			StringBuilder sb = new StringBuilder();
 			for (String[] mob : MOBS) {
-				var file = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("xaerominimap", "entity/icon/definition/dinosaurs/" + mob[0] + ".json");
+				var file = new net.minecraft.resources.ResourceLocation("xaerominimap", "entity/icon/definition/dinosaurs/" + mob[0] + ".json");
 				var res = mc.getResourceManager().getResource(file);
 				try {
 					if (res.isEmpty() || !new String(res.get().open().readAllBytes()).contains("net.vsh33.dinosaurs.client.DinoModel;head")) sb.append(' ').append(mob[0]);
