@@ -157,6 +157,10 @@ public final class GuideBookContents {
 				ModItems.BRACHIOSAURUS_HIDE, Items.LEATHER, ModItems.BRACHIOSAURUS_HIDE,
 				Items.STRING, ModItems.PARASAUROLOPHUS_CREST, Items.STRING,
 				null, Items.IRON_INGOT, null);
+		RecipeGrid collar = shaped(new ItemStack(ModItems.DINO_COLLAR),
+				ModItems.T_REX_TOOTH, ModItems.T_REX_TOOTH, ModItems.T_REX_TOOTH,
+				Items.LEATHER, ModItems.DINOSAUR_BONES, Items.LEATHER,
+				null, Items.IRON_CHAIN, null);
 		RecipeGrid helmet = shapeless(new ItemStack(ModItems.T_REX_SKULL_HELMET), List.of(new ItemStack(ModItems.T_REX_SKULL)),
 				List.of(new ItemStack(Items.LEATHER)), List.of(new ItemStack(Items.NETHERITE_INGOT)));
 		RecipeGrid boneBow = shaped(new ItemStack(ModItems.DINOSAUR_BONE_BOW),
@@ -185,6 +189,7 @@ public final class GuideBookContents {
 				item("guide_book", ModItems.GUIDE_BOOK, List.of(guideBookRecipe()), List.of()),
 				item("amulet_of_dino_protection", ModItems.AMULET_OF_DINO_PROTECTION, List.of(amulet), List.of()),
 				item("dinosaur_saddle", ModItems.DINOSAUR_SADDLE, List.of(saddle), List.of()),
+				item("dino_collar", ModItems.DINO_COLLAR, List.of(collar), List.of()),
 				item("t_rex_skull_helmet", ModItems.T_REX_SKULL_HELMET, List.of(helmet), List.of(), helmetStats()),
 				armor,
 				item("dinosaur_upgrade_smithing_template", t, List.of(upgrade, upgradeCopy), List.of()),
@@ -232,7 +237,7 @@ public final class GuideBookContents {
 		if (type == ModEntities.ANKYLOSAURUS) return new Framing(23.0F, 0.0F, true);
 		if (type == ModEntities.BRACHIOSAURUS) return new Framing(11.0F, 0.0F, true);
 		if (type == ModEntities.PARASAUROLOPHUS) return new Framing(19.0F, 0.0F, true);
-		if (type == ModEntities.MEGALODON) return new Framing(15.0F, 0.5F, false);
+		if (type == ModEntities.MEGALODON) return new Framing(7.5F, 0.5F, false); // 1.7.0: the shark is twice as big
 		return new Framing(24.0F, 0.0F, false);
 	}
 

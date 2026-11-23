@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.biome.v1.ModificationPhase;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -31,6 +32,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.vsh33.dinosaurs.Dinosaurs;
@@ -77,7 +79,7 @@ public final class ModEntities {
 					.sized(1.2F, 2.4F).eyeHeight(2.0F).clientTrackingRange(10));
 	public static final EntityType<Megalodon> MEGALODON = register("megalodon",
 			EntityType.Builder.<Megalodon>of(Megalodon::new, MobCategory.WATER_CREATURE)
-					.sized(2.5F, 1.8F).eyeHeight(1.0F).clientTrackingRange(10).notInPeaceful());
+					.sized(5.0F, 3.6F).eyeHeight(2.0F).clientTrackingRange(12).notInPeaceful()); // 1.7.0: twice the size (was 2.5 x 1.8)
 	public static final EntityType<Pteranodon> PTERANODON = register("pteranodon",
 			EntityType.Builder.<Pteranodon>of(Pteranodon::new, MobCategory.CREATURE)
 					.sized(1.0F, 0.9F).eyeHeight(0.6F).clientTrackingRange(10));
@@ -133,6 +135,7 @@ public final class ModEntities {
 		placement(PTERANODON, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING, false, ModEntities::checkPteranodonSpawn);
 
 		// Biomes: every species has its own home so they are spread over the world.
+		// Default weights; the config can change them (per species and globally, see DinoConfig).
 		addSpawn(MobCategory.MONSTER, T_REX, 4, 1, 1, Biomes.PLAINS, Biomes.SUNFLOWER_PLAINS, Biomes.FOREST, Biomes.DARK_FOREST);
 		addSpawn(MobCategory.MONSTER, VELOCIRAPTOR, 14, 2, 4, Biomes.SAVANNA, Biomes.SAVANNA_PLATEAU, Biomes.WINDSWEPT_SAVANNA, Biomes.BADLANDS, Biomes.WOODED_BADLANDS, Biomes.ERODED_BADLANDS);
 		addSpawn(MobCategory.MONSTER, SPINOSAURUS, 6, 1, 1, Biomes.MANGROVE_SWAMP, Biomes.BEACH);
@@ -145,9 +148,27 @@ public final class ModEntities {
 		addSpawn(MobCategory.CREATURE, PTERANODON, 8, 1, 3, Biomes.WINDSWEPT_HILLS, Biomes.WINDSWEPT_GRAVELLY_HILLS, Biomes.STONY_PEAKS, Biomes.JAGGED_PEAKS);
 	}
 
+	private static final Map<EntityType<?>, Integer> DEFAULT_WEIGHTS = new HashMap<>();
+
+	/** The species' built-in spawn weight (the config's default). */
+	public static int defaultSpawnWeight(EntityType<?> type) {
+		return DEFAULT_WEIGHTS.getOrDefault(type, 0);
+	}
+
+	/**
+	 * Adds the species to its biomes' spawn lists. The weight is read from the config when the biome modifications run,
+	 * i.e. every time a world is loaded / the server starts, so a changed weight applies after re-joining the world.
+	 */
 	@SafeVarargs
 	private static void addSpawn(MobCategory category, EntityType<?> type, int weight, int min, int max, ResourceKey<Biome>... biomes) {
-		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(biomes), category, type, weight, min, max);
+		DEFAULT_WEIGHTS.put(type, weight);
+		BiomeModifications.create(Dinosaurs.id("spawn_" + BuiltInRegistries.ENTITY_TYPE.getKey(type).getPath()))
+				.add(ModificationPhase.ADDITIONS, BiomeSelectors.includeByKey(biomes), context -> {
+					int effective = DinoConfig.get().effectiveSpawnWeight(type);
+					if (effective > 0) {
+						context.getMobSpawnSettings().addSpawn(category, new MobSpawnSettings.SpawnerData(type, min, max), effective);
+					}
+				});
 	}
 
 	/** Hostile species (T. rex, Velociraptor, Spinosaurus, Megalodon) - used by the "no hostile spawns in daylight" option. */
@@ -208,6 +229,10 @@ public final class ModEntities {
 		}
 		if (EntitySpawnReason.isSpawner(reason)) {
 			return true;
+		}
+		// 1.7.0: the shark is 3.6 blocks tall now, it needs at least 4 blocks of water.
+		if (!level.getFluidState(pos.above(2)).is(FluidTags.WATER) || !level.getFluidState(pos.above(3)).is(FluidTags.WATER)) {
+			return false;
 		}
 		return pos.getY() <= level.getSeaLevel() - 10 && random.nextInt(3) == 0 && countNearby(level, type, pos, 96) < 1;
 	}

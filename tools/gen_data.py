@@ -88,6 +88,7 @@ ITEMS = {  # id: (English, Polish)
     "brachiosaurus_hide": ("Brachiosaurus Hide", "Skóra brachiozaura"),
     "parasaurolophus_crest": ("Parasaurolophus Crest", "Grzebień parazaurolofa"),
     "dinosaur_saddle": ("Dinosaur Saddle", "Siodło na dinozaura"),
+    "dino_collar": ("Dino Collar", "Obroża na dinozaura"),
     "guide_book": ("Dinosaur Field Guide", "Przewodnik po dinozaurach"),
     "t_rex_skull": ("T-Rex Skull", "Czaszka tyranozaura"),
     "t_rex_skull_helmet": ("T-Rex Skull Helmet", "Hełm z czaszki tyranozaura"),
@@ -103,6 +104,15 @@ ITEMS = {  # id: (English, Polish)
 
 EXTRA_LANG = {  # key: (English, Polish)
     "item.dinosaurs.amulet_of_dino_protection.desc": ("Hostile dinosaurs ignore you until you attack them", "Wrogie dinozaury ignorują cię, dopóki ich nie zaatakujesz"),
+    "item.dinosaurs.dino_collar.desc": ("Use on a T-Rex while carrying the amulet", "Użyj na tyranozaurze, mając przy sobie amulet"),
+    "item.dinosaurs.dino_collar.desc2": ("It will follow you and fight for you", "Będzie za tobą chodził i walczył dla ciebie"),
+    "message.dinosaurs.dino_collar.need_amulet": (
+        "You need the Amulet of Dino Protection to collar a T-Rex", "Potrzebujesz amuletu ochrony przed dinozaurami, by założyć obrożę"),
+    "message.dinosaurs.dino_collar.collared": ("The T-Rex is yours now!", "Ten tyranozaur jest teraz twój!"),
+    "message.dinosaurs.dino_collar.has_owner": ("This T-Rex already has an owner", "Ten tyranozaur ma już właściciela"),
+    "message.dinosaurs.dino_collar.already_yours": ("This T-Rex already wears your collar", "Ten tyranozaur nosi już twoją obrożę"),
+    "message.dinosaurs.dino_collar.sit": ("T-Rex: sit and stay", "Tyranozaur: siad i zostań"),
+    "message.dinosaurs.dino_collar.follow": ("T-Rex: follow me", "Tyranozaur: za mną"),
     "item.dinosaurs.dinosaur_saddle.desc": ("Use on a Triceratops to ride it", "Użyj na triceratopsie, aby na nim jeździć"),
     "item.dinosaurs.t_rex_skull.desc": ("Rare T. rex trophy. Craft it into a helmet", "Rzadkie trofeum z tyranozaura. Zrób z niej hełm"),
     "item.dinosaurs.dinosaur_bones.desc": ("From large dinosaurs. Bone bow, or 4 bone meal", "Z dużych dinozaurów. Na łuk lub 4 mączki kostne"),
@@ -123,16 +133,30 @@ EXTRA_LANG = {  # key: (English, Polish)
         "When OFF, T-Rex, Velociraptor, Spinosaurus and Megalodon only spawn at night, in darkness (light level 7 or less).",
         "Gdy WYŁĄCZONE, tyranozaur, welociraptor, spinozaur i megalodon pojawiają się tylko w nocy, w ciemności (poziom światła 7 lub mniej)."),
     "config.dinosaurs.spawn": ("Spawn: %s", "Pojawianie się: %s"),
+    "config.dinosaurs.category.frequency": ("Spawn frequency", "Częstotliwość pojawiania"),
+    "config.dinosaurs.frequency": ("All dinosaurs: %", "Wszystkie dinozaury: %"),
+    "config.dinosaurs.frequency.tooltip": (
+        "Multiplies every species' spawn weight (100% = default, 200% = twice as common, 0% = no natural spawns). Applies after re-joining the world or restarting the server.",
+        "Mnoży wagę pojawiania każdego gatunku (100% = domyślnie, 200% = dwa razy częściej, 0% = brak naturalnego pojawiania). Działa po ponownym wejściu do świata lub restarcie serwera."),
+    "config.dinosaurs.weight": ("Weight: %s", "Waga: %s"),
+    "config.dinosaurs.weight.tooltip": (
+        "How often this dinosaur spawns in its biomes, compared with other mobs there (cow, sheep, pig: 10-12; default %s; 0 = never). Applies after re-joining the world or restarting the server.",
+        "Jak często ten dinozaur pojawia się w swoich biomach w porównaniu z innymi mobami (krowa, owca, świnia: 10-12; domyślnie %s; 0 = nigdy). Działa po ponownym wejściu do świata lub restarcie serwera."),
+    "config.dinosaurs.restart_note": (
+        "Weights apply after re-joining the world (or restarting the server). The on/off switches work at once.",
+        "Wagi działają po ponownym wejściu do świata (lub restarcie serwera). Przełączniki wł./wył. działają od razu."),
     "config.dinosaurs.spawn.tooltip": (
         "Natural spawning of this dinosaur. Spawn eggs, spawners and /summon always work.",
         "Naturalne pojawianie się tego dinozaura. Jaja przywołania, spawnery i /summon działają zawsze."),
     "advancements.dinosaurs.amulet.title": ("Dino Whisperer", "Zaklinacz dinozaurów"),
     "advancements.dinosaurs.amulet.description": ("Get an Amulet of Dino Protection", "Zdobądź amulet ochrony przed dinozaurami"),
+    "advancements.dinosaurs.collar_t_rex.title": ("Who's a Good Rex?", "Kto tu jest grzecznym rexem?"),
+    "advancements.dinosaurs.collar_t_rex.description": ("Put a Dino Collar on a T-Rex", "Załóż obrożę tyranozaurowi"),
     "advancements.dinosaurs.ride_triceratops.title": ("Three Horns, One Rider", "Trzy rogi, jeden jeździec"),
     "advancements.dinosaurs.ride_triceratops.description": ("Ride a saddled Triceratops", "Pojedź na osiodłanym triceratopsie"),
     "modmenu.descriptionTranslation.dinosaurs": (
-        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops, a T-Rex Skull Helmet, a Dinosaur Bone Bow, Dinosaur Armor and the Dinosaur Claw gauntlet.",
-        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, hełm z czaszki tyranozaura, łuk z kości dinozaura, dinozaurową zbroję i miecz: dinozaurowy pazur."),
+        "Adds well-known dinosaurs as new mobs. Each species spawns in its own biomes; carnivores are hostile, herbivores are passive or neutral. Craft an Amulet of Dino Protection, a saddle to ride a Triceratops, a T-Rex Skull Helmet, a Dinosaur Bone Bow, Dinosaur Armor, the Dinosaur Claw gauntlet and a Dino Collar that makes a T-Rex your companion.",
+        "Dodaje znane dinozaury jako nowe moby. Każdy gatunek pojawia się w swoich biomach; mięsożercy są wrodzy, roślinożercy pokojowi lub neutralni. Wytwórz amulet ochrony przed dinozaurami, siodło, by jeździć na triceratopsie, hełm z czaszki tyranozaura, łuk z kości dinozaura, dinozaurową zbroję, szponiastą rękawicę (dinozaurowy pazur) i obrożę, z którą tyranozaur zostaje twoim towarzyszem."),
 }
 
 RECIPES = {
@@ -142,6 +166,8 @@ RECIPES = {
     "dinosaur_saddle": dict(pattern=["HLH", "SCS", " I "], key={"H": "dinosaurs:brachiosaurus_hide", "L": "minecraft:leather", "S": "minecraft:string", "C": "dinosaurs:parasaurolophus_crest", "I": "minecraft:iron_ingot"}, category="equipment", unlock="dinosaurs:brachiosaurus_hide"),
     # Dinosaur Claw gauntlet: Raptor Claw, T-Rex Tooth, Raptor Claw / Netherite Ingot, Dinosaur Bones, Netherite Ingot / stick.
     "dinosaur_claw": dict(pattern=["CTC", "NBN", " S "], key={"C": "dinosaurs:raptor_claw", "T": "dinosaurs:t_rex_tooth", "N": "minecraft:netherite_ingot", "B": "dinosaurs:dinosaur_bones", "S": "minecraft:stick"}, category="equipment", unlock="dinosaurs:raptor_claw"),
+    # Dino Collar (1.7.0): 3 T-Rex Teeth / Leather, Dinosaur Bones, Leather / Iron Chain.
+    "dino_collar": dict(pattern=["TTT", "LBL", " C "], key={"T": "dinosaurs:t_rex_tooth", "L": "minecraft:leather", "B": "dinosaurs:dinosaur_bones", "C": "minecraft:iron_chain"}, category="equipment", unlock="dinosaurs:t_rex_tooth"),
     # Netherite Upgrade surrounded by 8 Dinosaur Bones -> Dinosaur Upgrade.
     "dinosaur_upgrade_smithing_template": dict(pattern=["BBB", "BTB", "BBB"], key={"B": "dinosaurs:dinosaur_bones", "T": "minecraft:netherite_upgrade_smithing_template"}, category="misc", unlock="dinosaurs:dinosaur_bones"),
     # Duplication like vanilla's (template on top, 7 of the material, the cheap block in the middle): 2 templates.
@@ -193,6 +219,11 @@ def riding_predicate(modifier_key):
     if modifier_key == "modifier":  # 26.3
         return {"type": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:vehicle": {"minecraft:entity_type": "dinosaurs:triceratops"}}}
     return [{"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:vehicle": {"minecraft:entity_type": "dinosaurs:triceratops"}}}]
+
+def entity_type_predicate(entity_type, modifier_key):
+    if modifier_key == "modifier":  # 26.3
+        return {"type": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:entity_type": entity_type}}
+    return [{"condition": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:entity_type": entity_type}}]
 
 def data_files(modifier_key):
     rkey = "recipes" if modifier_key == "modifier" else "recipe"
@@ -262,6 +293,13 @@ def data_files(modifier_key):
         "criteria": {"amulet": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": "dinosaurs:amulet_of_dino_protection"}]}}},
         "display": {"icon": {"id": "dinosaurs:amulet_of_dino_protection"}, "title": {"translate": "advancements.dinosaurs.amulet.title"}, "description": {"translate": "advancements.dinosaurs.amulet.description"}, "frame": "goal"},
         "requirements": [["amulet"]],
+    })
+    w(f"{D}/advancement/collar_t_rex.json", {
+        "parent": "dinosaurs:amulet",
+        "criteria": {"collar": {"trigger": "minecraft:player_interacted_with_entity", "conditions": {
+            "item": {"items": "dinosaurs:dino_collar"}, "entity": entity_type_predicate("dinosaurs:t_rex", modifier_key)}}},
+        "display": {"icon": {"id": "dinosaurs:dino_collar"}, "title": {"translate": "advancements.dinosaurs.collar_t_rex.title"}, "description": {"translate": "advancements.dinosaurs.collar_t_rex.description"}, "frame": "goal"},
+        "requirements": [["collar"]],
     })
     w(f"{D}/advancement/ride_triceratops.json", {
         "parent": "minecraft:husbandry/root",

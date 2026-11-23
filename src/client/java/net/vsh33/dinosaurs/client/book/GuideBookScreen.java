@@ -578,6 +578,16 @@ public class GuideBookScreen extends Screen {
 				? title.copy().withStyle(Style.EMPTY.withUnderlined(true).withColor(LINK_HOVER))
 				: title.copy().withStyle(Style.EMPTY.withColor(LINK));
 		List<FormattedCharSequence> lines = this.font.split(label, textW);
+		Component tooltip = null;
+		if (height < LIST_ROW_COMPACT && lines.size() > 2) {
+			// Tight rows hold two lines: shorten the second one with "..." and show the full name in the tooltip.
+			tooltip = title;
+			String full = label.getString();
+			String first = this.font.getSplitter().splitLines(label, textW, label.getStyle()).getFirst().getString();
+			String rest = full.substring(Math.min(full.length(), first.length())).trim();
+			lines = List.of(Component.literal(first).withStyle(label.getStyle()).getVisualOrderText(),
+					this.fitOneLine(Component.literal(rest).withStyle(label.getStyle()), textW).getVisualOrderText());
+		}
 		int shown = Math.min(3, lines.size());
 		int textY = iconY + 8 - shown * 9 / 2 + 1;
 		for (int i = 0; i < shown; i++) {
@@ -586,20 +596,31 @@ public class GuideBookScreen extends Screen {
 		this.hotspots.add(new Hotspot(x, y, width, height - 1, () -> {
 			this.clickSound();
 			this.goTo(target, true);
-		}, ItemStack.EMPTY, null));
+		}, ItemStack.EMPTY, tooltip));
 		return height;
 	}
 
 	/** List row height: 22 px for one or two lines of link text, 31 px for three. */
 	private static int rowHeight(Font font, Component title, int row) {
+		if (row < LIST_ROW_COMPACT) {
+			return row; // tight rows: at most two lines
+		}
 		return font.split(title, PAGE_W - 18).size() > 2 ? row + 9 : row;
 	}
 
 	/** Compact rows (just the 16 px icon) when the roomy ones would need more than the two pages. */
 	public static final int LIST_ROW_COMPACT = 18;
+	/** Last resort: rows one icon tall with at most two lines (longer names shortened, full name in the tooltip). */
+	public static final int LIST_ROW_ONE_LINE = 17;
 
 	private static int listRow(Font font, Component title, List<Entry> entries) {
-		return listPages(font, title, entries, LIST_ROW) <= 2 ? LIST_ROW : LIST_ROW_COMPACT;
+		// Roomy rows if they fit, else compact ones, else rows just one icon tall.
+		for (int row : new int[] {LIST_ROW, LIST_ROW_COMPACT}) {
+			if (listPages(font, title, entries, row) <= 2) {
+				return row;
+			}
+		}
+		return LIST_ROW_ONE_LINE;
 	}
 
 	private static int listPages(Font font, Component title, List<Entry> entries, int row) {

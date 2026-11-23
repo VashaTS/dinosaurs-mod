@@ -18,12 +18,13 @@ carnivores are hostile, armoured or horned herbivores defend themselves, the oth
 | Ankylosaurus (heavily armoured) | Neutral: fights back when hit | Taiga (all), Windswept Hills / Forest / Gravelly Hills | 1-3 **Dinosaur Bones**, bone meal |
 | Brachiosaurus | Passive: flees when hurt and avoids carnivores | Jungle, Sparse Jungle, Bamboo Jungle | 2-5 **Dinosaur Bones**, bone meal, 1-3 **Brachiosaurus Hide** |
 | Parasaurolophus | Passive: flees when hurt and avoids carnivores | Swamp, River | 1-2 **Dinosaur Bones**, 0-1 **Parasaurolophus Crest** |
-| Megalodon | Hostile to players **in the water**, very rare | Deep Ocean, Deep Cold / Lukewarm / Frozen Ocean | 3-6 bones, bone meal, 1-3 **Megalodon Teeth** |
+| Megalodon | Hostile to players **in the water**, very rare. Huge: 5 blocks long, 3.6 tall (1.7.0) | Deep Ocean, Deep Cold / Lukewarm / Frozen Ocean | 3-6 bones, bone meal, 1-3 **Megalodon Teeth** |
 | Pteranodon | Passive: flies around, perches on the highest nearby point, flees when hurt | Windswept Hills, Windswept Gravelly Hills, Stony Peaks, Jagged Peaks | 0-2 bones |
 
 * Hostile species do not spawn on Peaceful difficulty. Predators spawn during the day too, but they are
   limited per area (for example only one T. rex within 64 blocks) so they never flood a biome.
-* Herbivores and pterosaurs stay in the world like vanilla animals; predators despawn like monsters.
+* Herbivores and pterosaurs stay in the world like vanilla animals; predators despawn like monsters (except a
+  collared T. rex, see the Dino Collar).
 * Every mob has a spawn egg (creative tab **Dinosaurs** and the vanilla Spawn Eggs tab).
 * Looting increases every drop by up to 1 per level (the rare T-Rex Skull: 4%, with Looting I/II/III 6/8/10%).
 * Sounds reuse vanilla sounds.
@@ -174,18 +175,51 @@ attribute as the attack reach of weapons without an `attack_range` component), s
 block closer; it shows in the tooltip. It fights like a sword (`#minecraft:swords`): sweeping attack, every sword
 enchantment (Sharpness, Sweeping Edge, Looting, Fire Aspect...), cuts cobwebs. Fire resistant, repaired with Dinosaur Bones.
 
-Advancements: *Dino Whisperer* (get the amulet) and *Three Horns, One Rider* (ride a Triceratops).
+### Dino Collar (1.7.0)
+
+A studded leather collar with three T-Rex teeth. Carry the **Amulet of Dino Protection** (inventory or Trinkets
+necklace slot) and use the collar on a **Tyrannosaurus Rex**: the collar is used up and the T. rex becomes yours. Shaped recipe:
+
+```
+  T  T  T     T = T-Rex Tooth (Tyrannosaurus Rex)
+  L  B  L     L = Leather, B = Dinosaur Bones
+     C        C = Iron Chain
+```
+
+A collared T. rex (you can see the collar on its neck):
+
+* **follows you** like a tamed wolf and teleports next to you when it falls more than 12 blocks behind;
+* **fights for you**: attacks whatever you attack and whatever attacks you, and never attacks you;
+* is **neutral to other players**: it ignores them unless they attack you (or the T. rex itself);
+* **never despawns** (not even on Peaceful) and does not keep you from sleeping;
+* sneak + use with an empty hand: **sit** (stays put, does not fight) / follow again; feed it any meat to heal it;
+* drops its collar when it dies; the owner is saved with the mob (`Owner` UUID), so it stays yours after a restart.
+
+Without the amulet the collar does nothing; only the T. rex takes a collar, and a collared one keeps its first owner.
+
+Advancements: *Dino Whisperer* (get the amulet), *Who's a Good Rex?* (collar a T. rex) and *Three Horns, One Rider*
+(ride a Triceratops).
 
 ## Configuration
 
-`config/dinosaurs.json` (created on first start; changes apply immediately):
+`config/dinosaurs.json` (created on first start):
 
 * `hostileSpawnInDaylight` (default `true`) – set to `false` and hostile dinosaurs only spawn at night,
-  in darkness (light level 7 or less).
+  in darkness (light level 7 or less). Applies immediately.
 * `spawning` – turn natural spawning of each species on or off. Spawn eggs, spawners and `/summon` always work.
+  Applies immediately.
+* `spawnFrequencyPercent` (1.7.0, default `100`, 0-500) – global spawn frequency: multiplies every species' weight
+  (200 = twice as common, 0 = no natural dinosaur spawns).
+* `spawnWeights` (1.7.0, 0-100 per species) – spawn weight of each species in its biomes, compared with the other mobs
+  there (vanilla cow / sheep / pig: 10-12). Defaults: T. rex 4, Velociraptor 14, Spinosaurus 6, Triceratops 6,
+  Stegosaurus 6, Ankylosaurus 5, Brachiosaurus 5, Parasaurolophus 8, Megalodon 1, Pteranodon 8. 0 = never.
+
+The weights go into the biomes' spawn lists, which the game builds when a world loads: **change them, then leave and
+re-join the world (or restart the server)**. The on/off switches work at once.
 
 With [Mod Menu](https://modrinth.com/mod/modmenu) **and** [Cloth Config](https://modrinth.com/mod/cloth-config)
-installed, the same settings are available in-game (Mods → Dinosaurs → config button), in English and Polish.
+installed, the same settings are available in-game (Mods → Dinosaurs → config button), in English and Polish:
+a *Spawning* tab (switches) and a *Spawn frequency* tab (global percentage slider and a weight slider per species).
 
 ## Optional integrations
 
@@ -243,8 +277,10 @@ python3 tools/gen_bow.py /path/to/vanilla/textures/item   # Dinosaur Bones and B
 python3 tools/gen_skull.py          # regenerates the 3D T-Rex Skull / helmet models and their textures
 python3 tools/gen_armor.py          # Dinosaur Armor worn layers, item icons, the upgrade template and smithing slot icons
 python3 tools/gen_claw.py           # Dinosaur Claw icon, gauntlet texture and 3D held model
-./gradlew runGameTest               # server game tests (dinosaur claw recipe / stats / reach, amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot, dinosaur armor stats / smithing / template recipes / trophy loot); add -PwithTrinkets=true
+python3 tools/gen_collar.py         # Dino Collar icon and the collar texture worn by a collared T. rex
+./gradlew runGameTest               # server game tests (dino collar: amulet, ownership, never attacks the owner, defends the owner, persistence / no despawn, sit, drop, recipe; megalodon size; spawn weights; dinosaur claw recipe / stats / reach, amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot, dinosaur armor stats / smithing / template recipes / trophy loot); add -PwithTrinkets=true
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, claw, armor, helmet, bone bow and mob screenshots
+./gradlew runClientGameTest -PcollarOnly=true -PwithCloth=true   # 1.7.0: collared T-Rex, follow/teleport, 2x Megalodon, config screen, collar recipe (/workspace/dino-collar)
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest -PxaeroJar=/path/to/xaerominimap-fabric-26.3-26.6.2.jar [-PxaeroRadar=always]
                                     # Xaero's Minimap radar screenshots only (icons with Tab held, or always on with names)
 ```
@@ -300,9 +336,17 @@ więc nie pojawiają się wszystkie w jednym miejscu.
   pazur raptora / sztabka netherytu, kości dinozaura, sztabka netherytu / patyk na dole w środku. Obrażenia 11
   (netherytowy miecz 8), szybkość 1,6, zasięg 2,5 bloku zamiast 3, trwałość 2501, zaklinalność 20. Atak zamaszysty
   i wszystkie zaklęcia miecza, odporny na ogień, naprawiany kośćmi dinozaura.
+* **Nowe w 1.7.0: Obroża na dinozaura** – 3 zęby tyranozaura / skóra, kości dinozaura, skóra / żelazny łańcuch na dole
+  w środku. Mając przy sobie amulet ochrony przed dinozaurami, użyj obroży na tyranozaurze: zostaje twój (obrożę
+  widać na szyi). Chodzi za tobą (teleportuje się, gdy zostanie ponad 12 bloków z tyłu), atakuje to, co ty atakujesz,
+  i każdego, kto zaatakuje ciebie, nigdy ciebie; innych graczy ignoruje, chyba że cię zaatakują. Nigdy nie znika
+  (nawet na poziomie „Pokojowy”). Kucnięcie + pusta ręka: siad / za mną; mięso go leczy. Po śmierci upuszcza obrożę.
+  **Megalodon jest dwa razy większy** (5 × 3,6 bloku). **Częstotliwość pojawiania się** w ustawieniach: waga każdego
+  gatunku i mnożnik dla wszystkich (procent); działa po ponownym wejściu do świata lub restarcie serwera.
 * **Nowe w 1.5.1: ikony na minimapie Xaero** (Xaero's Minimap / Better PvP) – każdy dinozaur, także megalodon
   i pteranodon, ma na radarze ikonę głowy jak zwykłe moby, zamiast nazwy. Same pliki zasobów, bez zależności.
 * **Konfiguracja** (`config/dinosaurs.json`, albo w grze przez Mod Menu + Cloth Config): wyłączenie pojawiania się
-  wrogich dinozaurów za dnia oraz osobny przełącznik pojawiania się dla każdego gatunku.
+  wrogich dinozaurów za dnia, osobny przełącznik pojawiania się dla każdego gatunku, a od 1.7.0 także waga
+  (częstość) każdego gatunku i wspólny mnożnik w procentach (po zmianie wag wejdź ponownie do świata).
 * Na poziomie trudności „Pokojowy” wrogie gatunki się nie pojawiają.
 * Mod jest po polsku i po angielsku – język zmienia się automatycznie razem z językiem gry.

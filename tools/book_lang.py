@@ -121,9 +121,12 @@ BOOK_LANG = {
     "book.dinosaurs.item.dinosaur_saddle": (
         "Use it on a Triceratops, then right-click to ride and steer. Sneak with an empty hand to take it off.",
         "Użyj na triceratopsie, potem PPM, by jeździć i sterować. Kucnij z pustą ręką, by je zdjąć."),
+    "book.dinosaurs.item.dino_collar": (
+        "Carry the amulet and use the collar on a T-Rex: it follows you, fights for you, ignores other players unless they hit you, and never despawns. Sneak + empty hand: sit / follow. Meat heals it.",
+        "Miej przy sobie amulet i użyj obroży na tyranozaurze: chodzi za tobą, walczy dla ciebie, ignoruje innych graczy, chyba że cię zaatakują, i nigdy nie znika. Skradanie + pusta ręka: siad / za mną. Mięso go leczy."),
     "book.dinosaurs.item.t_rex_tooth": (
-        "1-2 from every Tyrannosaurus Rex, more with Looting. Part of the amulet and of the Dinosaur Claw.",
-        "1-2 z każdego tyranozaura, więcej z Grabieżą. Składnik amuletu i dinozaurowego pazura."),
+        "1-2 from every Tyrannosaurus Rex, more with Looting. Part of the amulet, the Dinosaur Claw and the Dino Collar (3).",
+        "1-2 z każdego tyranozaura, więcej z Grabieżą. Składnik amuletu, dinozaurowego pazura i obroży (3)."),
     "book.dinosaurs.item.raptor_claw": (
         "Up to 1 from a Velociraptor, more with Looting. The amulet and the Dinosaur Claw need 2. Also makes Dinosaur Boots.",
         "Do 1 z welociraptora, więcej z Grabieżą. Amulet i dinozaurowy pazur potrzebują 2. Daje też dinozaurowe buty."),

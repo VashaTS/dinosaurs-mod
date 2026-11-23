@@ -74,7 +74,7 @@ public class BowScreenshotTest implements FabricClientGameTest {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void runTest(ClientGameTestContext context) {
-		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY) {
+		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY || CollarScreenshotTest.ONLY) {
 			return; // -PxaeroJar / -PclawOnly run: only that test
 		}
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
