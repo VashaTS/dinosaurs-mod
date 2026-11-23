@@ -6,9 +6,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "#dinosaurs:guide_book_trophies"
-            ]
+            "tag": "dinosaurs:guide_book_trophies"
           }
         ]
       }

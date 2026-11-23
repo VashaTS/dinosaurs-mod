@@ -444,7 +444,11 @@ public class DinosaursServerTest implements FabricGameTest {
 
 	private static ItemStack enchanted(GameTestHelper helper, Item item, Enchantment key) {
 		ItemStack stack = new ItemStack(item);
-		stack.enchant(key, 1);
+		if (stack.is(Items.ENCHANTED_BOOK)) {
+			net.minecraft.world.item.EnchantedBookItem.addEnchantment(stack, new net.minecraft.world.item.enchantment.EnchantmentInstance(key, 1));
+		} else {
+			stack.enchant(key, 1);
+		}
 		return stack;
 	}
 

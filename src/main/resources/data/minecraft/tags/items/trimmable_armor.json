@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "dinosaurs:dinosaur_chestplate",
+    "dinosaurs:dinosaur_leggings",
+    "dinosaurs:dinosaur_boots"
+  ]
+}

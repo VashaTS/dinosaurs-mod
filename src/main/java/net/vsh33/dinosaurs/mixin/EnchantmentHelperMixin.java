@@ -14,6 +14,6 @@ public abstract class EnchantmentHelperMixin {
 	@WrapOperation(method = "getAvailableEnchantmentResults", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/world/item/enchantment/EnchantmentCategory;canEnchant(Lnet/minecraft/world/item/Item;)Z"))
 	private static boolean dinosaurs$helmetIsArmor(EnchantmentCategory category, Item item, Operation<Boolean> original) {
-		return HelmetEnchantMixin.check(category, item, original);
+		return net.vsh33.dinosaurs.item.HelmetEnchantments.isHelmetCategory(category, item) || original.call(category, item);
 	}
 }

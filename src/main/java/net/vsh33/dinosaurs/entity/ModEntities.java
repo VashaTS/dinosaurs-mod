@@ -39,6 +39,8 @@ import net.vsh33.dinosaurs.config.DinoConfig;
 
 public final class ModEntities {
 	public static final List<EntityType<? extends Mob>> ALL = new ArrayList<>();
+	/** Eye heights (EntityType.Builder.eyeHeight does not exist in 1.20.1; the mobs override getStandingEyeHeight). */
+	private static final Map<EntityType<?>, Float> EYE_HEIGHTS = new HashMap<>();
 	private static final Map<EntityType<?>, DinoProfile> PROFILES = new HashMap<>();
 
 	// ---- Carnivores (hostile)
@@ -83,8 +85,6 @@ public final class ModEntities {
 			EntityType.Builder.<Pteranodon>of(Pteranodon::new, MobCategory.CREATURE)
 					.sized(1.0F, 0.9F).clientTrackingRange(10), 0.6F);
 
-	/** Eye heights (EntityType.Builder.eyeHeight does not exist in 1.20.1; the mobs override getStandingEyeHeight). */
-	private static final Map<EntityType<?>, Float> EYE_HEIGHTS = new HashMap<>();
 
 	/** Step heights (no STEP_HEIGHT attribute in 1.20.1; applied with setMaxUpStep in the constructors). */
 	public static float stepHeight(EntityType<?> type) {

@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentCategory;
-import net.vsh33.dinosaurs.item.ModItems;
+import net.vsh33.dinosaurs.item.HelmetEnchantments;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -19,13 +19,7 @@ public abstract class HelmetEnchantMixin {
 	@WrapOperation(method = "canEnchant", require = 1, at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/world/item/enchantment/EnchantmentCategory;canEnchant(Lnet/minecraft/world/item/Item;)Z"))
 	private boolean dinosaurs$helmetIsArmor(EnchantmentCategory category, Item item, Operation<Boolean> original) {
-		return check(category, item, original);
+		return HelmetEnchantments.isHelmetCategory(category, item) || original.call(category, item);
 	}
 
-	static boolean check(EnchantmentCategory category, Item item, Operation<Boolean> original) {
-		if (item == ModItems.T_REX_SKULL_HELMET && (category == EnchantmentCategory.ARMOR || category == EnchantmentCategory.ARMOR_HEAD)) {
-			return true;
-		}
-		return original.call(category, item);
-	}
 }
