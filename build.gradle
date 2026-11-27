@@ -120,6 +120,13 @@ tasks.matching { it.name == "runClientGameTest" }.configureEach {
 	if (project.findProperty("collarShots")) {
 		systemProperty "dinosaurs.collarShots", project.property("collarShots")
 	}
+	// -PmegalodonOnly=true: run only the Megalodon close-up culling test (1.7.1). -PmegalodonShots=dir (default /workspace/dino-megalodon).
+	if (project.findProperty("megalodonOnly")) {
+		systemProperty "dinosaurs.megalodonOnly", "true"
+	}
+	if (project.findProperty("megalodonShots")) {
+		systemProperty "dinosaurs.megalodonShots", project.property("megalodonShots")
+	}
 }
 
 if (project.findProperty("xaeroJar")) {
