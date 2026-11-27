@@ -785,6 +785,45 @@ public class DinosaursServerTest implements FabricGameTest {
 	}
 
 	/**
+	 * 1.7.2: armor trims. Each Dinosaur Armor piece takes a trim on the smithing table (the item icon shows it through
+	 * the trimmed item models, the worn armor through the equipment layer); the T-Rex Skull Helmet is drawn as its 3D model,
+	 * where a trim could never show, so it is not trimmable armor and the smithing table refuses it.
+	 */
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE, timeoutTicks = 40)
+	public void armorTrims(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		StringBuilder log = new StringBuilder();
+		Item[][] cases = {{ModItems.DINOSAUR_CHESTPLATE, Items.RIB_ARMOR_TRIM_SMITHING_TEMPLATE, Items.GOLD_INGOT},
+				{ModItems.DINOSAUR_LEGGINGS, Items.SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE, Items.DIAMOND},
+				{ModItems.DINOSAUR_BOOTS, Items.SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE, Items.AMETHYST_SHARD}};
+		for (Item[] c : cases) {
+			ItemStack template = new ItemStack(c[1]), base = new ItemStack(c[0]), mat = new ItemStack(c[2]);
+			helper.assertTrue(base.is(net.minecraft.tags.ItemTags.TRIMMABLE_ARMOR), c[0] + " must be trimmable armor");
+			var input = new SimpleContainer(template.copy(), base, mat.copy());
+			Recipe<Container> recipe = null;
+			for (Recipe<?> holder : level.getServer().getRecipeManager().getRecipes()) {
+				if (holder.getType() != RecipeType.SMITHING) continue;
+				@SuppressWarnings("unchecked") Recipe<Container> r = (Recipe<Container>) holder;
+				if (r.matches(input, level)) { recipe = r; }
+			}
+			helper.assertTrue(recipe != null, c[0] + ": no trim recipe matches");
+			ItemStack out = recipe.assemble(input, level.registryAccess());
+			var trim = net.minecraft.world.item.armortrim.ArmorTrim.getTrim(level.registryAccess(), out).orElse(null);
+			String got = trim == null ? "none" : trim.pattern().unwrapKey().orElseThrow().location() + "/" + trim.material().unwrapKey().orElseThrow().location();
+			String want = BuiltInRegistries.ITEM.getKey(c[1]).toString().replace("_armor_trim_smithing_template", "") + "/"
+					+ (c[2] == Items.GOLD_INGOT ? "minecraft:gold" : c[2] == Items.DIAMOND ? "minecraft:diamond" : "minecraft:amethyst");
+			helper.assertTrue(out.is(c[0]) && got.equals(want), c[0] + " trimmed: " + out + " " + got + ", expected " + want);
+			log.append(' ').append(BuiltInRegistries.ITEM.getKey(c[0]).getPath()).append('=').append(got);
+		}
+		ItemStack helmet = new ItemStack(ModItems.T_REX_SKULL_HELMET);
+		helper.assertFalse(helmet.is(net.minecraft.tags.ItemTags.TRIMMABLE_ARMOR), "skull helmet must not be trimmable armor");
+		ItemStack template = new ItemStack(Items.RIB_ARMOR_TRIM_SMITHING_TEMPLATE), mat = new ItemStack(Items.GOLD_INGOT);
+		helper.assertTrue(smithingMatches(helper, new SimpleContainer(template.copy(), new ItemStack(ModItems.T_REX_SKULL_HELMET), mat.copy())).isEmpty(), "skull helmet must not take a trim");
+		Dinosaurs.LOGGER.info("[test] trims:{}; skull helmet not trimmable", log);
+		helper.succeed();
+	}
+
+	/**
 	 * The three trophies used by the armor still drop as before (no Looting): Raptor Claw 0-1 from the Velociraptor,
 	 * Parasaurolophus Crest 0-1, Megalodon Tooth 1-3; Looting III raises the maximum by 3.
 	 */

@@ -65,6 +65,10 @@ loom {
 				// -PmegalodonOnly=true: only the 1.7.1 Megalodon close-up culling check
 				vmArg "-Ddinosaurs.megalodonOnly=true"
 			}
+			if (project.findProperty("trimOnly")) {
+				// -PtrimOnly=true: only the 1.7.2 armor trim check and screenshots
+				vmArg "-Ddinosaurs.trimOnly=true"
+			}
 			runDir "build/clientsmoke"
 			source sourceSets.gametest
 		}
