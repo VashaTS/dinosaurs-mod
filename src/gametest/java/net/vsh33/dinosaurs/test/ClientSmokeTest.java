@@ -184,10 +184,15 @@ public class ClientSmokeTest implements ClientModInitializer {
 			xaeroRadar();
 			return;
 		}
+		if (Boolean.getBoolean("dinosaurs.trimOnly")) {
+			trims();
+			return;
+		}
 		megalodonCulling();
 		if (Boolean.getBoolean("dinosaurs.megalodonOnly")) {
 			return;
 		}
+		trims();
 		check(computeServer(s -> s.getRecipeManager().byKey(Dinosaurs.id("guide_book")).isPresent()), "guide book recipe loaded");
 		long recipes = computeServer(s -> s.getRecipeManager().getRecipes().stream().filter(r -> r.id().getNamespace().equals("dinosaurs")).count());
 		check(recipes == 14, "dinosaurs recipes loaded: " + recipes);
@@ -481,6 +486,146 @@ public class ClientSmokeTest implements ClientModInitializer {
 	}
 
 	/** Removes mobs without loot or death messages. */
+	// ---- 1.7.2: armor trims
+
+	private static final boolean NBT_TRIMS = false; // 1.20.1: trims live in the item NBT (Trim:{...}), 1.21.1: the minecraft:trim component
+
+	private static String trimmed(String item, String pattern, String material) {
+		String t = "material:\"minecraft:" + material + "\",pattern:\"minecraft:" + pattern + "\"";
+		return NBT_TRIMS ? "dinosaurs:" + item + "{Trim:{" + t + "}}" : "dinosaurs:" + item + "[trim={" + t + "}]";
+	}
+
+	private static String standItem(String item, String pattern, String material) {
+		String id = "id:\"dinosaurs:" + item + "\"";
+		if (pattern == null) {
+			return NBT_TRIMS ? "{" + id + ",Count:1b}" : "{" + id + ",count:1}";
+		}
+		String t = "{material:\"minecraft:" + material + "\",pattern:\"minecraft:" + pattern + "\"}";
+		return NBT_TRIMS ? "{" + id + ",Count:1b,tag:{Trim:" + t + "}}" : "{" + id + ",count:1,components:{\"minecraft:trim\":" + t + "}}";
+	}
+
+	private static void trimStand(double x, float yaw, String pattern, String material) {
+		cmd(String.format(java.util.Locale.ROOT, "summon minecraft:armor_stand %.1f 201 4.5 {ShowArms:1b,Silent:1b,PersistenceRequired:1b,Rotation:[%.0ff,0f],ArmorItems:[%s,%s,%s,%s]}",
+				x, yaw, standItem("dinosaur_boots", pattern, material), standItem("dinosaur_leggings", pattern, material),
+				standItem("dinosaur_chestplate", pattern, material), standItem("t_rex_skull_helmet", null, null)));
+	}
+
+	/**
+	 * Trimmed Dinosaur Armor: the trimmed item models are picked for every material (the baked model differs from the
+	 * untrimmed one), armor stands and the player wear trims, the inventory and the smithing table show the trimmed icons,
+	 * and the T-Rex Skull Helmet (3D model, not trimmable) gets no smithing result. Screenshots trims_*.png.
+	 */
+	private static void trims() {
+		cmd("gamerule sendCommandFeedback false");
+		cmd("gamerule doMobSpawning false");
+		cmd("time set noon");
+		cmd("weather clear");
+		cmd("forceload add -16 -16 16 16");
+		cmd("fill -12 200 -12 12 200 12 minecraft:grass_block");
+		cmd("fill -12 201 -12 12 215 12 minecraft:air");
+		cmd("gamemode creative @a");
+		clearMobs();
+		String[] materials = {"quartz", "iron", "netherite", "redstone", "copper", "gold", "emerald", "diamond", "lapis", "amethyst"};
+		StringBuilder missing = new StringBuilder();
+		for (String item : new String[]{"dinosaur_chestplate", "dinosaur_leggings", "dinosaur_boots"}) {
+			for (String mat : materials) {
+				cmd("item replace entity @p hotbar.0 with " + trimmed(item, "rib", mat));
+				cmd("item replace entity @p hotbar.1 with dinosaurs:" + item);
+				waitTicks(2);
+				boolean differs = computeClient(mc -> {
+					ItemStack t = mc.player.getInventory().getItem(0), plain = mc.player.getInventory().getItem(1);
+					var m1 = mc.getItemRenderer().getModel(t, mc.level, mc.player, 0);
+					var m2 = mc.getItemRenderer().getModel(plain, mc.level, mc.player, 0);
+					return m1 != m2 && m1 != mc.getModelManager().getMissingModel();
+				});
+				if (!differs) missing.append(' ').append(item).append('/').append(mat);
+			}
+		}
+		check(missing.isEmpty(), "trimmed item model used for every piece and material" + missing);
+		cmd("clear @p");
+
+		trimStand(-2.0, 200, "rib", "gold");
+		trimStand(0.5, 180, "sentry", "diamond");
+		trimStand(3.0, 160, "silence", "amethyst");
+		trimStand(5.5, 160, null, null);
+		cmd("tp @p 1.75 202.0 0.6 facing 1.75 202.0 4.5");
+		client(mc -> mc.options.hideGui = true);
+		waitTicks(40);
+		shot("trims_stands-untrimmed_silence-amethyst_sentry-diamond_rib-gold");
+		cmd("tp @p 0.5 202 2.4 facing 0.5 202.0 4.5");
+		waitTicks(10);
+		shot("trims_stand-sentry-diamond-close");
+		clearMobs();
+
+		cmd("item replace entity @p armor.head with dinosaurs:t_rex_skull_helmet");
+		cmd("item replace entity @p armor.chest with " + trimmed("dinosaur_chestplate", "wild", "redstone"));
+		cmd("item replace entity @p armor.legs with " + trimmed("dinosaur_leggings", "wild", "redstone"));
+		cmd("item replace entity @p armor.feet with " + trimmed("dinosaur_boots", "wild", "redstone"));
+		cmd("tp @p 0.5 201 0.5 180 -15");
+		client(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+		waitTicks(20);
+		shot("trims_player-wild-redstone-front");
+		client(mc -> {
+			mc.options.setCameraType(CameraType.FIRST_PERSON);
+			mc.options.hideGui = false;
+		});
+
+		cmd("gamemode survival @a");
+		String[] hotbar = {"dinosaurs:dinosaur_chestplate", trimmed("dinosaur_chestplate", "rib", "gold"), trimmed("dinosaur_chestplate", "sentry", "diamond"),
+				trimmed("dinosaur_chestplate", "coast", "emerald"), trimmed("dinosaur_leggings", "silence", "amethyst"), trimmed("dinosaur_leggings", "dune", "copper"),
+				trimmed("dinosaur_boots", "tide", "lapis"), trimmed("dinosaur_boots", "vex", "netherite"),
+				trimmed("dinosaur_boots", "eye", "quartz")};
+		for (int i = 0; i < hotbar.length; i++) {
+			cmd("item replace entity @p hotbar." + i + " with " + hotbar[i]);
+		}
+		cmd("item replace entity @p inventory.0 with dinosaurs:dinosaur_leggings");
+		cmd("item replace entity @p inventory.1 with dinosaurs:dinosaur_boots");
+		cmd("item replace entity @p inventory.2 with " + trimmed("dinosaur_leggings", "rib", "iron"));
+		cmd("item replace entity @p inventory.3 with " + trimmed("dinosaur_boots", "rib", "gold"));
+		waitTicks(5);
+		client(mc -> mc.setScreen(new InventoryScreen(mc.player)));
+		waitTicks(15);
+		shot("trims_inventory-icons");
+		client(mc -> mc.setScreen(null));
+		cmd("clear @p");
+		waitTicks(5);
+
+		cmd("setblock 1 201 2 minecraft:smithing_table");
+		server(s -> {
+			ServerPlayer p = player(s);
+			net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(1, 201, 2);
+			p.openMenu(new net.minecraft.world.SimpleMenuProvider((id, inv, pl) -> new net.minecraft.world.inventory.SmithingMenu(id, inv,
+					net.minecraft.world.inventory.ContainerLevelAccess.create(p.level(), pos)), net.minecraft.network.chat.Component.translatable("container.upgrade")));
+			p.containerMenu.getSlot(0).set(new ItemStack(Items.RIB_ARMOR_TRIM_SMITHING_TEMPLATE));
+			p.containerMenu.getSlot(1).set(new ItemStack(ModItems.DINOSAUR_CHESTPLATE));
+			p.containerMenu.getSlot(2).set(new ItemStack(Items.GOLD_INGOT));
+			p.containerMenu.broadcastChanges();
+		});
+		waitTicks(15);
+		check(computeClient(mc -> mc.player.containerMenu.getSlot(3).getItem().is(ModItems.DINOSAUR_CHESTPLATE)
+				&& mc.getItemRenderer().getModel(mc.player.containerMenu.getSlot(3).getItem(), mc.level, mc.player, 0)
+				!= mc.getItemRenderer().getModel(new ItemStack(ModItems.DINOSAUR_CHESTPLATE), mc.level, mc.player, 0)),
+				"smithing table offers a trimmed Dinosaur Chestplate with the trimmed icon");
+		shot("trims_smithing-chestplate-rib-gold");
+		server(s -> {
+			ServerPlayer p = player(s);
+			p.containerMenu.getSlot(1).set(new ItemStack(ModItems.T_REX_SKULL_HELMET));
+			p.containerMenu.broadcastChanges();
+		});
+		waitTicks(10);
+		check(computeClient(mc -> mc.player.containerMenu.getSlot(3).getItem().isEmpty()), "smithing table gives no trim result for the T-Rex Skull Helmet");
+		shot("trims_smithing-skull-helmet-no-trim");
+		server(s -> {
+			ServerPlayer p = player(s);
+			for (int i = 0; i < 3; i++) p.containerMenu.getSlot(i).set(ItemStack.EMPTY);
+			p.containerMenu.broadcastChanges();
+			p.closeContainer();
+		});
+		waitTicks(5);
+		cmd("gamemode creative @a");
+		clearMobs();
+	}
+
 	private static void clearMobs() {
 		cmd("tp @e[type=!player] 0 -300 0");
 		cmd("kill @e[type=!player]");

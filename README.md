@@ -80,7 +80,7 @@ forward, with teeth and eye sockets (on players, armor stands, mannequins and mo
 Since 1.5.0 it is the helmet of the Dinosaur Armor set, so its toughness, knockback resistance and enchantability
 were raised to the set's values.
 
-Fire resistant like netherite, takes all helmet enchantments (`#minecraft:head_armor`), repaired with a
+Fire resistant like netherite, takes all helmet enchantments (`#minecraft:enchantable/head_armor`; not trimmable, a trim could not show on the 3D skull), repaired with a
 netherite ingot or another T-Rex Skull.
 
 ```
@@ -144,7 +144,7 @@ netherite is better than diamond, and the armor points are raised too:
 | Enchantability | 10 | 15 | **20** |
 
 Armor points are also higher than netherite: 10 / 8 / 4 (netherite 8 / 6 / 3). Full set with the skull helmet:
-26 armor, 16 toughness, 80% knockback resistance. Fire resistant, takes all armor enchantments and trims, repaired
+26 armor, 16 toughness, 80% knockback resistance. Fire resistant, takes all armor enchantments and trims (shown on the item icon and when worn), repaired
 with Dinosaur Bones. When worn it looks bony: ribs and sternum on the chest, vertebrae down the back, bone shoulder
 plates, segmented legs with knee caps and toe claws, with dark netherite between the bones.
 
