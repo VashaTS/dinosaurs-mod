@@ -61,6 +61,10 @@ loom {
 			name = "Client Smoke"
 			vmArg "-Ddinosaurs.smoke=true"
 			vmArg "-Ddinosaurs.smokeShots=" + (project.findProperty("smokeShots") ?: "/workspace/dino-backport/" + project.minecraft_version)
+			if (project.findProperty("megalodonOnly")) {
+				// -PmegalodonOnly=true: only the 1.7.1 Megalodon close-up culling check
+				vmArg "-Ddinosaurs.megalodonOnly=true"
+			}
 			runDir "build/clientsmoke"
 			source sourceSets.gametest
 		}

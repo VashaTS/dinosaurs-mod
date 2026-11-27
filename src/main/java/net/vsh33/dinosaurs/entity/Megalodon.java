@@ -24,6 +24,14 @@ import net.minecraft.world.phys.Vec3;
 
 /** Giant prehistoric shark. Lives in deep oceans and attacks players that are in the water. */
 public class Megalodon extends WaterAnimal implements AttackAnimated {
+	/**
+	 * 1.7.1: no random despawn while a player is this close. Vanilla lets a water creature vanish at random (1 in 800 per
+	 * tick after 30 s without a player within 32 blocks), and the 14-block shark is easy to see from much further away than
+	 * that, so it could vanish right in front of a player swimming towards it (with the amulet it does not swim at the
+	 * player, so it stays "idle"). Beyond 128 blocks it still despawns at once, like every water creature.
+	 */
+	public static final double NO_RANDOM_DESPAWN_DISTANCE = 96.0;
+
 	private int attackTicks;
 	private final DinoProtection protection = new DinoProtection();
 
@@ -77,6 +85,11 @@ public class Megalodon extends WaterAnimal implements AttackAnimated {
 		} else {
 			super.travel(input);
 		}
+	}
+
+	@Override
+	public boolean removeWhenFarAway(double distSqr) {
+		return distSqr > NO_RANDOM_DESPAWN_DISTANCE * NO_RANDOM_DESPAWN_DISTANCE && super.removeWhenFarAway(distSqr);
 	}
 
 	@Override
