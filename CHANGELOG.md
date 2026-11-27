@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.1
+
+* Fix: the **Megalodon disappeared in front of the player** when they swam up to it.
+  * Rendering: the game hid the whole shark as soon as its hitbox (5 blocks) left the screen, but the model is 14 blocks
+    long, so looking at its head or tail up close made it vanish. Dinosaurs are now culled with a box that covers the
+    whole model (all species, the long-necked and long-tailed ones had the same issue to a smaller degree).
+  * Despawning: like every water mob, a Megalodon could despawn at random once no player had been within 32 blocks for
+    30 seconds, even while a player could see it and was swimming towards it (with the Amulet of Dino Protection it does
+    not come at you, so this was easy to hit). It now never despawns at random while a player is within 96 blocks; it
+    still despawns at once more than 128 blocks away, and name-tagged ones stay as before.
+
 ## 1.7.0
 
 * New item: **Dino Collar**. Shaped recipe: T-Rex Tooth ×3 (top row) / Leather, Dinosaur Bones, Leather / Iron Chain

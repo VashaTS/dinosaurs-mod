@@ -34,6 +34,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.vsh33.dinosaurs.Dinosaurs;
+import net.vsh33.dinosaurs.entity.Megalodon;
 import net.vsh33.dinosaurs.entity.ModEntities;
 import net.vsh33.dinosaurs.entity.Triceratops;
 import net.vsh33.dinosaurs.entity.HostileDino;
@@ -1107,6 +1108,20 @@ public class DinosaursServerTest implements FabricGameTest {
 	public void megalodonSize(GameTestHelper helper) {
 		var dims = ModEntities.MEGALODON.getDimensions();
 		helper.assertTrue(dims.width() == 5.0F && dims.height() == 3.6F, "megalodon size " + dims);
+		helper.succeed();
+	}
+
+	/**
+	 * 1.7.1: the Megalodon never vanishes at random while a player is within 96 blocks (vanilla: 32), but still despawns
+	 * beyond 128 blocks.
+	 */
+	@GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
+	public void megalodonNoRandomDespawnNearby(GameTestHelper helper) {
+		Megalodon shark = helper.spawn(ModEntities.MEGALODON, new BlockPos(4, 1, 4));
+		for (double d : new double[]{10, 33, 50, 80, 95}) {
+			helper.assertTrue(!shark.removeWhenFarAway(d * d), "megalodon may despawn at random " + d + " blocks from a player");
+		}
+		helper.assertTrue(shark.removeWhenFarAway(97 * 97) && shark.removeWhenFarAway(130 * 130), "megalodon must still despawn far away");
 		helper.succeed();
 	}
 

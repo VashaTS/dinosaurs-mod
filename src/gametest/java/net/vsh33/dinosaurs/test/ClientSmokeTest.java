@@ -25,6 +25,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
+import net.vsh33.dinosaurs.entity.Megalodon;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
@@ -181,6 +182,10 @@ public class ClientSmokeTest implements ClientModInitializer {
 		checkXaeroDefinitions();
 		if (Boolean.getBoolean("dinosaurs.xaeroOnly")) {
 			xaeroRadar();
+			return;
+		}
+		megalodonCulling();
+		if (Boolean.getBoolean("dinosaurs.megalodonOnly")) {
 			return;
 		}
 		check(computeServer(s -> s.getRecipeManager().byKey(Dinosaurs.id("guide_book")).isPresent()), "guide book recipe loaded");
@@ -413,6 +418,66 @@ public class ClientSmokeTest implements ClientModInitializer {
 		waitTicks(100);
 		client(mc -> mc.gui.getChat().clearMessages(false));
 		shot("xaero_radar");
+	}
+
+	/**
+	 * 1.7.1: the Megalodon must stay visible up close. The camera is put next to its tail with the hitbox off screen (the
+	 * model is 14 blocks long, the hitbox 5): 1.7.0 culled the whole shark there, 1.7.1 renders it.
+	 */
+	private static void megalodonCulling() {
+		cmd("gamerule sendCommandFeedback false");
+		cmd("gamerule doMobSpawning false");
+		cmd("time set noon");
+		cmd("weather clear");
+		cmd("forceload add -32 -32 32 32");
+		cmd("fill -24 188 -24 24 188 24 minecraft:sand");
+		cmd("fill -24 189 -24 24 196 24 minecraft:water");
+		cmd("fill -24 197 -24 24 204 24 minecraft:water");
+		cmd("fill -24 205 -24 24 215 24 minecraft:air");
+		cmd("gamemode spectator @a");
+		cmd("effect give @a minecraft:night_vision infinite 0 true");
+		cmd("summon dinosaurs:megalodon 0.5 194 0.5 {NoAI:1b,Rotation:[0f,0f],PersistenceRequired:1b}");
+		client(mc -> mc.options.hideGui = true);
+		waitTicks(40);
+		String[][] poses = {
+				{"megalodon-overview", "14.5 197.0 -2.0", "0.5 196.0 0.5"},
+				{"megalodon-close-tail", "2.5 196.0 -3.5", "0.5 196.0 -7.5"},
+				{"megalodon-close-snout", "2.5 195.8 4.0", "0.5 195.6 6.0"},
+				{"megalodon-close-tail-fin", "1.5 197.5 -4.0", "0.5 197.0 -7.0"}};
+		List<String> culledBefore = new ArrayList<>();
+		for (String[] p : poses) {
+			cmd("tp @p " + p[1] + " facing " + p[2]);
+			waitTicks(15);
+			boolean[] vis = computeClient(mc -> {
+				Megalodon shark = null;
+				for (Entity e : mc.level.entitiesForRendering()) {
+					if (e instanceof Megalodon m) shark = m;
+				}
+				if (shark == null) throw new AssertionError("no megalodon on the client");
+				net.minecraft.client.renderer.culling.Frustum frustum;
+				try {
+					java.lang.reflect.Field f = net.minecraft.client.renderer.LevelRenderer.class.getDeclaredField("cullingFrustum");
+					f.setAccessible(true);
+					frustum = (net.minecraft.client.renderer.culling.Frustum) f.get(mc.levelRenderer);
+				} catch (ReflectiveOperationException e) {
+					throw new RuntimeException(e);
+				}
+				net.minecraft.world.phys.Vec3 c = mc.gameRenderer.getMainCamera().getPosition();
+				boolean old = frustum.isVisible(shark.getBoundingBox().inflate(0.5));
+				boolean now = mc.getEntityRenderDispatcher().shouldRender(shark, frustum, c.x, c.y, c.z);
+				return new boolean[]{old, now};
+			});
+			Dinosaurs.LOGGER.info("[smoke] {}: hitbox in view (1.7.0 culling) = {}, rendered (1.7.1) = {}", p[0], vis[0], vis[1]);
+			check(vis[1], "megalodon rendered at " + p[0] + " (1.7.0 culling: " + (vis[0] ? "visible" : "hidden") + ")");
+			if (!vis[0]) culledBefore.add(p[0]);
+			shot(p[0]);
+		}
+		check(!culledBefore.isEmpty(), "close-up poses where 1.7.0 hid the megalodon: " + culledBefore);
+		clearMobs();
+		cmd("effect clear @a");
+		cmd("fill -24 188 -24 24 196 24 minecraft:air");
+		cmd("fill -24 197 -24 24 204 24 minecraft:air");
+		client(mc -> mc.options.hideGui = false);
 	}
 
 	/** Removes mobs without loot or death messages. */
