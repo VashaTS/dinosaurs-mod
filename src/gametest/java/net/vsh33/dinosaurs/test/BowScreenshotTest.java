@@ -74,6 +74,9 @@ public class BowScreenshotTest implements FabricClientGameTest {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void runTest(ClientGameTestContext context) {
+		if (TrimScreenshotTest.ONLY) {
+			return; // -PtrimOnly run: only the trim screenshots
+		}
 		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY || CollarScreenshotTest.ONLY || MegalodonScreenshotTest.ONLY) {
 			return; // -PxaeroJar / -PclawOnly run: only that test
 		}

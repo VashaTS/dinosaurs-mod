@@ -48,6 +48,10 @@ RARE_DROPS = {
     "t_rex": ("t_rex_skull", 0.04, 0.06, 0.02),
 }
 
+# Dinosaur Armor pieces with trimmed item models (1.7.2), and the vanilla trim materials in vanilla's order.
+TRIMMED_PIECES = {"dinosaur_chestplate": "chestplate", "dinosaur_leggings": "leggings", "dinosaur_boots": "boots"}
+TRIM_MATERIALS = ["quartz", "iron", "netherite", "redstone", "copper", "gold", "emerald", "diamond", "lapis", "amethyst", "resin"]
+
 # Items with a hand-made 3D model (written by gen_skull.py), not a flat item/generated one.
 CUSTOM_MODELS = {"t_rex_skull", "t_rex_skull_helmet", "dinosaur_bone_bow"}
 # Worn on the fist: flat icon in the GUI, on the ground and in item frames, the 3D gauntlet (tools/gen_claw.py) in the hands.
@@ -284,10 +288,14 @@ def data_files(modifier_key):
     w(f"{D}/tags/item/guide_book_trophies.json", {"replace": False, "values": TROPHIES})
     # The skull helmet: repaired with netherite or another skull, enchantable like any helmet.
     w(f"{D}/tags/item/repairs_t_rex_skull_helmet.json", {"replace": False, "values": ["minecraft:netherite_ingot", "dinosaurs:t_rex_skull"]})
-    w(os.path.join(ROOT, "src/main/resources/data/minecraft/tags/item/head_armor.json"), {"replace": False, "values": ["dinosaurs:t_rex_skull_helmet"]})
+    # 1.7.2: not in #minecraft:head_armor, which feeds #minecraft:trimmable_armor: the helmet is drawn as its 3D model, so a
+    # trim would never show. It gets the helmet enchanting tags directly instead.
+    for tag in ("enchantable/head_armor", "enchantable/equippable"):
+        w(os.path.join(ROOT, f"src/main/resources/data/minecraft/tags/item/{tag}.json"), {"replace": False, "values": ["dinosaurs:t_rex_skull_helmet"]})
     # The bone bow takes every bow enchantment (Power, Punch, Flame, Infinity) and Unbreaking / Mending.
-    for tag in ("enchantable/bow", "enchantable/durability"):
-        w(os.path.join(ROOT, f"src/main/resources/data/minecraft/tags/item/{tag}.json"), {"replace": False, "values": ["dinosaurs:dinosaur_bone_bow"]})
+    w(os.path.join(ROOT, "src/main/resources/data/minecraft/tags/item/enchantable/bow.json"), {"replace": False, "values": ["dinosaurs:dinosaur_bone_bow"]})
+    w(os.path.join(ROOT, "src/main/resources/data/minecraft/tags/item/enchantable/durability.json"), {"replace": False,
+      "values": ["dinosaurs:dinosaur_bone_bow", "dinosaurs:t_rex_skull_helmet"]})
     w(f"{D}/advancement/amulet.json", {
         "parent": "minecraft:adventure/root",
         "criteria": {"amulet": {"trigger": "minecraft:inventory_changed", "conditions": {"items": [{"items": "dinosaurs:amulet_of_dino_protection"}]}}},
@@ -348,6 +356,15 @@ def main(modifier_key):
             w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:select", "property": "minecraft:display_context",
                                                   "cases": [{"when": ["gui", "ground", "fixed", "on_shelf"], "model": m(iid)}],
                                                   "fallback": m(f"{iid}_held")}})
+        elif iid in TRIMMED_PIECES:
+            # 1.7.2: trimmed icons like vanilla armor: the vanilla trim overlay (paletted per material) as layer1.
+            piece = TRIMMED_PIECES[iid]
+            for mat in TRIM_MATERIALS:
+                w(f"{A}/models/item/{iid}_{mat}_trim.json", {"parent": "minecraft:item/generated", "textures": {
+                    "layer0": f"dinosaurs:item/{iid}", "layer1": f"minecraft:trims/items/{piece}_trim_{mat}"}})
+            w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:select", "property": "minecraft:trim_material",
+                "cases": [{"when": f"minecraft:{mat}", "model": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}_{mat}_trim"}} for mat in TRIM_MATERIALS],
+                "fallback": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}"}}})
         else:
             w(f"{A}/items/{iid}.json", {"model": {"type": "minecraft:model", "model": f"dinosaurs:item/{iid}"}})
         if iid not in CUSTOM_MODELS:

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.2
+
+* **Armor trims now show on the Dinosaur Armor icons.** The Dinosaur Chestplate, Leggings and Boots already took a trim on
+  the smithing table and showed it when worn, but the item icon stayed the same. They now have trimmed item models like
+  vanilla armor: the trim pattern shows in the trim material's colour in the inventory, hotbar and smithing table
+  preview (every vanilla trim material).
+* The **T-Rex Skull Helmet** can no longer be trimmed. It is worn as its 3D skull model, so a trim could never show on it
+  (the smithing table took the trim and nothing changed). It still takes every helmet enchantment (Respiration, Aqua
+  Affinity, Protection, Thorns, Unbreaking, Mending, Curse of Binding...). Helmets trimmed before 1.7.2 keep their
+  (invisible) trim.
+
 ## 1.7.1
 
 * Fix: the **Megalodon disappeared in front of the player** when they swam up to it.

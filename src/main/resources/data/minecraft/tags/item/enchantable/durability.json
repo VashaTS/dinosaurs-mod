@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "dinosaurs:dinosaur_bone_bow"
+    "dinosaurs:dinosaur_bone_bow",
+    "dinosaurs:t_rex_skull_helmet"
   ]
 }

@@ -127,6 +127,13 @@ tasks.matching { it.name == "runClientGameTest" }.configureEach {
 	if (project.findProperty("megalodonShots")) {
 		systemProperty "dinosaurs.megalodonShots", project.property("megalodonShots")
 	}
+	// -PtrimOnly=true: run only the armor trim screenshot test (1.7.2). -PtrimShots=dir (default /workspace/dino-trims).
+	if (project.findProperty("trimOnly")) {
+		systemProperty "dinosaurs.trimOnly", "true"
+	}
+	if (project.findProperty("trimShots")) {
+		systemProperty "dinosaurs.trimShots", project.property("trimShots")
+	}
 }
 
 if (project.findProperty("xaeroJar")) {
