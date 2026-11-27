@@ -80,7 +80,7 @@ forward, with teeth and eye sockets (on players, armor stands, mannequins and mo
 Since 1.5.0 it is the helmet of the Dinosaur Armor set, so its toughness, knockback resistance and enchantability
 were raised to the set's values.
 
-Fire resistant like netherite, takes all helmet enchantments (`#minecraft:head_armor`), repaired with a
+Fire resistant like netherite, takes all helmet enchantments (`#minecraft:enchantable/head_armor`; not trimmable, a trim could not show on the 3D skull), repaired with a
 netherite ingot or another T-Rex Skull.
 
 ```
@@ -144,7 +144,7 @@ netherite is better than diamond, and the armor points are raised too:
 | Enchantability | 10 | 15 | **20** |
 
 Armor points are also higher than netherite: 10 / 8 / 4 (netherite 8 / 6 / 3). Full set with the skull helmet:
-26 armor, 16 toughness, 80% knockback resistance. Fire resistant, takes all armor enchantments and trims, repaired
+26 armor, 16 toughness, 80% knockback resistance. Fire resistant, takes all armor enchantments and trims (shown on the item icon and when worn), repaired
 with Dinosaur Bones. When worn it looks bony: ribs and sternum on the chest, vertebrae down the back, bone shoulder
 plates, segmented legs with knee caps and toe claws, with dark netherite between the bones.
 
@@ -282,6 +282,7 @@ python3 tools/gen_collar.py         # Dino Collar icon and the collar texture wo
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, claw, armor, helmet, bone bow and mob screenshots
 ./gradlew runClientGameTest -PcollarOnly=true -PwithCloth=true   # 1.7.0: collared T-Rex, follow/teleport, 2x Megalodon, config screen, collar recipe (/workspace/dino-collar)
 ./gradlew runClientGameTest -PmegalodonOnly=true                 # 1.7.1: Megalodon close-ups, checks it is not culled with the hitbox off screen (/workspace/dino-megalodon)
+./gradlew runClientGameTest -PtrimOnly=true                      # 1.7.2: trimmed Dinosaur Armor worn and as item icons, smithing table, skull helmet not trimmable (/workspace/dino-trims)
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest -PxaeroJar=/path/to/xaerominimap-fabric-26.3-26.6.2.jar [-PxaeroRadar=always]
                                     # Xaero's Minimap radar screenshots only (icons with Tab held, or always on with names)
 ```

@@ -29,6 +29,9 @@ public class MegalodonScreenshotTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		if (TrimScreenshotTest.ONLY) {
+			return; // -PtrimOnly run: only the trim screenshots
+		}
 		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY || CollarScreenshotTest.ONLY) {
 			return;
 		}

@@ -47,6 +47,9 @@ public class ArmorScreenshotTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		if (TrimScreenshotTest.ONLY) {
+			return; // -PtrimOnly run: only the trim screenshots
+		}
 		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY || CollarScreenshotTest.ONLY || MegalodonScreenshotTest.ONLY) {
 			return; // -PxaeroJar / -PclawOnly run: only that test
 		}

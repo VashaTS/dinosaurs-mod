@@ -79,6 +79,9 @@ public class XaeroRadarScreenshotTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		if (TrimScreenshotTest.ONLY) {
+			return; // -PtrimOnly run: only the trim screenshots
+		}
 		checkIconDefinitions(context);
 		if (!FabricLoader.getInstance().isModLoaded("xaerominimap")) {
 			return;
