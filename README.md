@@ -281,6 +281,7 @@ python3 tools/gen_collar.py         # Dino Collar icon and the collar texture wo
 ./gradlew runGameTest               # server game tests (dino collar: amulet, ownership, never attacks the owner, defends the owner, persistence / no despawn, sit, drop, recipe; megalodon size; spawn weights; dinosaur claw recipe / stats / reach, amulet, saddle/riding, config, recipes, guide book, helmet, skull loot, bone bow, Infinity + Mending, dinosaur bones loot, dinosaur armor stats / smithing / template recipes / trophy loot); add -PwithTrinkets=true
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest   # guide book layout check + screenshots, claw, armor, helmet, bone bow and mob screenshots
 ./gradlew runClientGameTest -PcollarOnly=true -PwithCloth=true   # 1.7.0: collared T-Rex, follow/teleport, 2x Megalodon, config screen, collar recipe (/workspace/dino-collar)
+./gradlew runClientGameTest -PmegalodonOnly=true                 # 1.7.1: Megalodon close-ups, checks it is not culled with the hitbox off screen (/workspace/dino-megalodon)
 SDL_VIDEODRIVER=offscreen ./gradlew runClientGameTest -PxaeroJar=/path/to/xaerominimap-fabric-26.3-26.6.2.jar [-PxaeroRadar=always]
                                     # Xaero's Minimap radar screenshots only (icons with Tab held, or always on with names)
 ```

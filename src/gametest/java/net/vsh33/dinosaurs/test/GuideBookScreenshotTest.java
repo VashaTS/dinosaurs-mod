@@ -34,7 +34,7 @@ public class GuideBookScreenshotTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
-		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY || CollarScreenshotTest.ONLY) {
+		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY || CollarScreenshotTest.ONLY || MegalodonScreenshotTest.ONLY) {
 			return; // -PxaeroJar / -PclawOnly run: only that test
 		}
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {

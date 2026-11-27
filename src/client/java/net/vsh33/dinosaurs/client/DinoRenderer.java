@@ -5,6 +5,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.AABB;
 import net.vsh33.dinosaurs.entity.AttackAnimated;
 import net.vsh33.dinosaurs.entity.HostileDino;
 import net.vsh33.dinosaurs.entity.Pteranodon;
@@ -44,6 +45,23 @@ public class DinoRenderer extends MobRenderer<Mob, DinoRenderState, DinoModel> {
 			state.attackProgress = 0.0F;
 		}
 	}
+
+	/**
+	 * 1.7.1: the models are scaled up and longer than the hitbox (the Megalodon is 14 blocks long with a 5-block hitbox),
+	 * so culling with the bare hitbox hid the whole mob as soon as the hitbox left the screen, even with the head or tail
+	 * still in view: the shark "disappeared in front of the player's eyes" up close. Cull with a box that covers the model.
+	 */
+	@Override
+	protected AABB getBoundingBoxForCulling(Mob entity) {
+		return super.getBoundingBoxForCulling(entity).inflate(cullingMargin());
+	}
+
+	/** How far (blocks) the model can reach past the hitbox: the longest models are about 3.5 model blocks long. */
+	public float cullingMargin() {
+		return modelScale * CULLING_MARGIN_PER_SCALE;
+	}
+
+	public static final float CULLING_MARGIN_PER_SCALE = 1.75F;
 
 	/** Adds the saddle overlay layer (drawn only while the entity is saddled). */
 	public DinoRenderer withSaddle(Identifier saddleTexture) {

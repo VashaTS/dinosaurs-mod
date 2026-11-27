@@ -75,7 +75,7 @@ public class CollarScreenshotTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
-		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY) {
+		if (XaeroRadarScreenshotTest.ONLY || ClawScreenshotTest.ONLY || MegalodonScreenshotTest.ONLY) {
 			return;
 		}
 		try (TestSingleplayerContext world = context.worldBuilder().create()) {
